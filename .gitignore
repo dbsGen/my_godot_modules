@@ -1,4 +1,4 @@
 *.o
 *.pyc
 *.obj
-
+/behaviornode/.DS_Store
