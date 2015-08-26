@@ -1,0 +1,10 @@
+Import('env')
+
+env.add_source_files(env.modules_sources,"*.cpp")
+env.add_source_files(env.modules_sources,"behaviornodes/*.cpp")
+env.add_source_files(env.modules_sources,"hit_status/*.cpp")
+env.add_source_files(env.modules_sources,"camera/*.cpp")
+env.add_source_files(env.modules_sources,"map/*.cpp")
+
+
+
