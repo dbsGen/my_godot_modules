@@ -14,7 +14,7 @@
 #include "../behaviornode/behaviornode.h"
 #include "../../scene/2d/node_2d.h"
 #include "../../scene/2d/visibility_notifier_2d.h"
-#include "../../scene/2d/ray_cast_2d.h"]
+#include "../../scene/2d/ray_cast_2d.h"
 #include "attack_area.h"
 
 

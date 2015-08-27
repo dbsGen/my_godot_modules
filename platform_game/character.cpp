@@ -93,7 +93,7 @@ void Character::update_right_ray() {
 }
 
 void Character::set_face_left(bool p_face_left) {
-    if (!can_turn || face_left == p_face_left) return;
+    if (!can_turn || face_left == p_face_left || get_tree()->is_editor_hint()) return;
     face_left = p_face_left;
     if (is_inside_tree() && _cha_sprite) {
         if (face_left == default_face_left) {
