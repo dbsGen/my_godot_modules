@@ -160,7 +160,11 @@ public:
         max_health=100;
         can_turn = true;
         set_fixed_process(true);
-        colliding = {false, false, false, false, Vector2()};
+        colliding.left = false;
+        colliding.right = false;
+        colliding.top = false;
+        colliding.bottom = false;
+        colliding.normal = Vector2();
     }
 };
 

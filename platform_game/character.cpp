@@ -140,7 +140,11 @@ void Character::_notification(int p_notification) {
                 Vector2 inv = move(_move);
 
                 Vector2 floor_velocity;
-                colliding = {false, false, false, false, Vector2()};
+                colliding.left = false;
+                colliding.right = false;
+                colliding.top = false;
+                colliding.bottom = false;
+                colliding.normal = Vector2();
                 if (is_colliding()) {
                     Vector2 n = get_collision_normal();
                     colliding.normal = n;
