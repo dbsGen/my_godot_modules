@@ -50,6 +50,7 @@ void Character::update_behavior_node() {
 }
 
 void Character::update_sprite() {
+    if (!is_inside_tree() || get_tree()->is_editor_hint()) return;
     if (is_inside_tree() && _sprite_path != NodePath() && has_node(_sprite_path)) {
         _cha_sprite = get_node(_sprite_path)->cast_to<Node2D>();
         if (_cha_sprite) {
@@ -93,9 +94,9 @@ void Character::update_right_ray() {
 }
 
 void Character::set_face_left(bool p_face_left) {
-    if (!can_turn || face_left == p_face_left || get_tree()->is_editor_hint()) return;
+    if (!can_turn || face_left == p_face_left) return;
     face_left = p_face_left;
-    if (is_inside_tree() && _cha_sprite) {
+    if (is_inside_tree() &&  !get_tree()->is_editor_hint() && _cha_sprite) {
         if (face_left == default_face_left) {
             _cha_sprite->set_scale(_source_scale);
         }else {
@@ -109,6 +110,8 @@ void Character::set_face_left(bool p_face_left) {
 void Character::_notification(int p_notification) {
     switch (p_notification) {
         case NOTIFICATION_ENTER_TREE: {
+            if (!is_inside_tree() || get_tree()->is_editor_hint())
+                break;
             update_behavior_node();
             update_visibility_notifier();
             update_right_ray();
@@ -117,7 +120,7 @@ void Character::_notification(int p_notification) {
             break;
         }
         case NOTIFICATION_FIXED_PROCESS: {
-            if (get_tree()->is_editor_hint())
+            if (!is_inside_tree() || get_tree()->is_editor_hint())
                 break;
             float fixed_process_time = get_fixed_process_delta_time();
             on_floor = (_left_ray != NULL && _left_ray->is_colliding()) || (_right_ray != NULL && _right_ray->is_colliding());
