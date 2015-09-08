@@ -37,6 +37,7 @@
 #include "behaviornodes/gravity.h"
 #include "behaviornodes/action.h"
 #include "behaviornodes/attack_node.h"
+#include "behaviornodes/cancel_node.h"
 #include "camera/following_camera.h"
 #include "story_script.h"
 #include "kill_zone.h"
@@ -51,6 +52,7 @@ void register_platform_game_types() {
     ObjectTypeDB::register_type<AttackArea>();
     ObjectTypeDB::register_type<HitStatus>();
     ObjectTypeDB::register_type<HitStatusProgress>();
+    ObjectTypeDB::register_type<CancelNode>();
     ObjectTypeDB::register_type<Gravity>();
     ObjectTypeDB::register_type<Action>();
     ObjectTypeDB::register_type<AttackNode>();

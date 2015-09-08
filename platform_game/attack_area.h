@@ -10,6 +10,7 @@
 #include "../../core/math/math_2d.h"
 #include "hit_status/hit_status.h"
 #include "../../core/script_language.h"
+#include "../../scene/resources/packed_scene.h"
 
 class Character;
 
@@ -26,6 +27,7 @@ private:
 
     bool attack_enable;
     Ref<HitStatus> hit_status;
+    Ref<PackedScene> spark_scene;
     int hit_count;
     float attack_span;
     HashMap< uint32_t, HitStatusInfo > count_store;
@@ -42,6 +44,9 @@ public:
 
     _FORCE_INLINE_ Ref<HitStatus> get_hit_status() {return hit_status;}
     _FORCE_INLINE_ void set_hit_status(Ref<HitStatus> p_status) {hit_status=p_status;}
+
+    _FORCE_INLINE_ Ref<PackedScene> get_spark_scene() {return spark_scene;}
+    _FORCE_INLINE_ void set_spark_scene(Ref<PackedScene> p_scene) {spark_scene = p_scene;}
 
     void set_attack_enable(bool p_attack_enable) {
         if (attack_enable != p_attack_enable) {

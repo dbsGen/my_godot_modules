@@ -17,8 +17,6 @@ void TimerBNode::_bind_methods() {
 
 
 BehaviorNode::Status TimerBNode::_step(const Variant& target, Dictionary &env) {
-    if (!env.has("timestep"))
-        return STATUS_FAILURE;
     if (_time <= 0) {
 	    if (!timeout) {
             _timeout_behavior(target, env);
@@ -29,7 +27,7 @@ BehaviorNode::Status TimerBNode::_step(const Variant& target, Dictionary &env) {
             return BehaviorNode::_step(target, env);
         }
     }else {
-        float timestep = env["timestep"];
+        float timestep = get_fixed_process_delta_time();
         _time -= timestep;
         _during_behavior(target, env);
         _script_during_behavior(target, env);

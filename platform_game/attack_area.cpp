@@ -42,6 +42,16 @@ bool AttackArea::attack(Character *from) {
                         hs->set_stun_velocity(Vector2(p_force.x, 0));
                     }
                     if (cha->attack_by(hs, from)) {
+                        if (spark_scene != NULL) {
+                            Node2D* spark = spark_scene->instance()->cast_to<Node2D>();
+                            if (spark) {
+                                cha->get_parent()->add_child(spark);
+                                spark->set_global_pos(cha->get_global_pos());
+                                spark->set_scale(Vector2(from->get_face_left()?-1:1, 1));
+                                Vector2 v2 = spark->get_global_pos();
+                            }
+                        }
+
                         _attack_to(hs, cha);
                         if (get_script_instance()) {
                             Variant v1 = hs;
@@ -106,6 +116,9 @@ void AttackArea::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_hit_status", "hit_status"), &AttackArea::set_hit_status);
     ObjectTypeDB::bind_method(_MD("get_hit_status"), &AttackArea::get_hit_status);
 
+    ObjectTypeDB::bind_method(_MD("set_spark_scene", "spark_scene"), &AttackArea::set_spark_scene);
+    ObjectTypeDB::bind_method(_MD("get_spark_scene"), &AttackArea::get_spark_scene);
+
     ObjectTypeDB::bind_method(_MD("set_hit_count", "hit_count"), &AttackArea::set_hit_count);
     ObjectTypeDB::bind_method(_MD("get_hit_count"), &AttackArea::get_hit_count);
 
@@ -129,4 +142,5 @@ void AttackArea::_bind_methods() {
     ADD_PROPERTY( PropertyInfo( Variant::BOOL, "attack/attack_enable" ), _SCS("set_attack_enable"),_SCS("get_attack_enable" ) );
     ADD_PROPERTY( PropertyInfo( Variant::BOOL, "attack/face_relative" ), _SCS("set_face_relative"),_SCS("get_face_relative" ) );
     ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/hit_status",PROPERTY_HINT_RESOURCE_TYPE,"HitStatus"), _SCS("set_hit_status"),_SCS("get_hit_status" ) );
+    ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/spark_scene",PROPERTY_HINT_RESOURCE_TYPE,"PackedScene"), _SCS("set_spark_scene"),_SCS("get_spark_scene" ) );
 }

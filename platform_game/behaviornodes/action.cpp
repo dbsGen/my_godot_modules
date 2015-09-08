@@ -12,11 +12,17 @@
 void Action::refresh_cancel_list() {
     cancel_list.clear();
     for (int i = 0, t = get_child_count(); i < t; ++i) {
-        LinkerBNode *linkerBNode = get_child(i)->cast_to<LinkerBNode>();
-        if (linkerBNode && linkerBNode->get_link_target()) {
-            Action *action = linkerBNode->get_link_target()->cast_to<Action>();
-            if (action) {
-                cancel_list.push_back(action);
+        CancelNode* cancelNode = get_child(i)->cast_to<CancelNode>();
+        if (cancelNode && cancelNode->get_link_target()) {
+            if (cancelNode->get_link_target()->cast_to<Action>())
+                cancel_nodes.push_back(cancelNode);
+        }else {
+            LinkerBNode *linkerBNode = get_child(i)->cast_to<LinkerBNode>();
+            if (linkerBNode && linkerBNode->get_link_target()) {
+                Action *action = linkerBNode->get_link_target()->cast_to<Action>();
+                if (action) {
+                    cancel_list.push_back(action);
+                }
             }
         }
     }
@@ -38,19 +44,6 @@ void Action::_notification(int p_notification) {
 
 
 void Action::_during_behavior(const Variant &target, Dictionary &env) {
-    bool check_cancel = false;
-    switch (cancel_type) {
-        case CANCEL_TYPE_TIME: {
-            if (get_delay()-get_time() > cancel_time) check_cancel = true;
-            break;
-        };
-        case CANCEL_TYPE_HIT: {
-            if (_is_hit) check_cancel = true;
-            break;
-        };
-        default:
-            break;
-    }
     Vector2 v2 = env["move"];
     float abs_x = Math::abs(v2.x);
     if (abs_x > max_move) {
@@ -70,21 +63,58 @@ void Action::_during_behavior(const Variant &target, Dictionary &env) {
     }
     env["move"] = v2;
     old_move = v2.x;
-    if (check_cancel) {
-        if (!checked_cancel_list) {
-            refresh_cancel_list();
-        }
-        for (int i = 0, t = cancel_list.size(); i < t; ++i) {
-            Action* action = cancel_list[i];
-            if ((bool)action->call("pre_behavior", target, env)) {
-                action->set_focus();
-                reset_from_cancel = true;
-                reset(target);
-                reset_from_cancel = false;
+
+    if (!checked_cancel_list) {
+        refresh_cancel_list();
+    }
+#define setforce(NODE)  NODE->set_focus();\
+    reset_from_cancel = true;\
+    reset(target);\
+    reset_from_cancel = false;\
+    return;
+
+    bool has_cancel = false;
+    if (cancel_list.size() != 0) {
+        bool check_cancel = false;
+        switch (cancel_type) {
+            case CANCEL_TYPE_TIME: {
+                if (get_delay()-get_time() > cancel_time) check_cancel = true;
                 break;
+            };
+            case CANCEL_TYPE_HIT: {
+                if (_is_hit) check_cancel = true;
+                break;
+            };
+            default:
+                break;
+        }
+        if (check_cancel) {
+            for (int i = 0, t = cancel_list.size(); i < t; ++i) {
+                Action* action = cancel_list[i];
+                if ((bool)action->call("pre_behavior", target, env)) {
+                    setforce(action);
+                }
             }
         }
     }
+    if (cancel_nodes.size() != 0){
+        for (int i = 0, t = cancel_nodes.size(); i < t; ++i) {
+            CancelNode *node = cancel_nodes[i];
+            switch (node->get_cancel_type()) {
+                case CancelNode::HIT: {
+                    if (_is_hit && node->get_link_target()->call("pre_behavior", target, env)) {
+                        setforce(node->get_link_target());
+                    }
+                }
+                case CancelNode::TIME: {
+                    if (get_delay()-get_time() > node->get_cancel_time() && node->get_link_target()->call("pre_behavior", target, env)) {
+                        setforce(node->get_link_target());
+                    }
+                }
+            }
+        }
+    }
+#undef setforce
 }
 
 void Action::set_animation_path(NodePath path) {

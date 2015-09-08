@@ -8,6 +8,7 @@
 #include "../../behaviornode/timebnode.h"
 #include "../../../core/object.h"
 #include "../../../core/reference.h"
+#include "cancel_node.h"
 
 class Action : public TimerBNode {
 OBJ_TYPE(Action, TimerBNode);
@@ -19,6 +20,7 @@ public:
     };
 private:
     Vector< Action* > cancel_list;
+    Vector< CancelNode* > cancel_nodes;
     bool checked_cancel_list;
     bool _is_hit;
     float cancel_time;

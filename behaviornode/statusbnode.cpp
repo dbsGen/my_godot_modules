@@ -13,7 +13,7 @@ BehaviorNode::Status StatusBNode::_step(const Variant &target, Dictionary &env) 
         }else if (_selected >= get_child_count()) {
             _selected = get_child_count() - 1;
         }
-        BehaviorNode *b_node = get_child(_selected)->cast_to<BehaviorNode>();\
+        BehaviorNode *b_node = get_child(_selected)->cast_to<BehaviorNode>();
         Status childrenStatus = STATUS_FAILURE;
         if (b_node) {
             childrenStatus =   b_node->step(target, env);
