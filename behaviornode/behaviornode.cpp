@@ -53,7 +53,7 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
 BehaviorNode::Status BehaviorNode::_step(const Variant& target, Dictionary &env) {
     if (!_behavior_enable)
         return STATUS_FAILURE;
-    if ((bool)call("pre_behavior",target, env)) {
+    if ((bool)call("pre_behavior", target, env)) {
         Status childrenStatus =  _traversal_children(target, env);
         Status status = (Status)((int)call(StringName("behavior"),target, Variant(env)));
         if (status == STATUS_DEPEND_ON_CHILDREN)
@@ -112,7 +112,7 @@ void BehaviorNode::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_will_focus","will_focus"),&BehaviorNode::set_will_focus);
     ObjectTypeDB::bind_method(_MD("get_will_focus"),&BehaviorNode::get_will_focus);
 
-    ObjectTypeDB::bind_method(_MD("pre_behavior", "target", "env"), &BehaviorNode::_pre_behavior);
+    ObjectTypeDB::bind_method(_MD("pre_behavior:bool", "target", "env"),&BehaviorNode::_pre_behavior);
     ObjectTypeDB::bind_method(_MD("behavior", "target", "env"), &BehaviorNode::_behavior);
 
     ObjectTypeDB::bind_method(_MD("set_focus"),&BehaviorNode::set_focus);

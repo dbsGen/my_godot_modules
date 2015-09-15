@@ -7,10 +7,11 @@ class TimerBNode : public BehaviorNode {
 OBJ_TYPE(TimerBNode, BehaviorNode);
 private:
     float delay;
-    float _time;
     bool cancel;
-    bool timeout;
 protected:
+    bool timeout;
+    float _time;
+
     virtual Status  _step(const Variant& target, Dictionary &env);
     virtual Status _behavior(const Variant& target, Dictionary env);
 

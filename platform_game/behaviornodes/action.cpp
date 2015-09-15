@@ -42,6 +42,19 @@ void Action::_notification(int p_notification) {
     }
 }
 
+BehaviorNode::Status Action::_step(const Variant& target, Dictionary &env) {
+    if (_time <= 0 && timeout && force_enter) {
+        force_enter = false;
+        Status childrenStatus =  _traversal_children(target, env);
+        Status status = (Status)((int)call(StringName("behavior"),target, Variant(env)));
+        if (status == STATUS_DEPEND_ON_CHILDREN)
+            return childrenStatus;
+        else
+            return status;
+    }else {
+        TimerBNode::_step(target, env);
+    }
+}
 
 void Action::_during_behavior(const Variant &target, Dictionary &env) {
     Vector2 v2 = env["move"];
@@ -73,7 +86,6 @@ void Action::_during_behavior(const Variant &target, Dictionary &env) {
     reset_from_cancel = false;\
     return;
 
-    bool has_cancel = false;
     if (cancel_list.size() != 0) {
         bool check_cancel = false;
         switch (cancel_type) {
@@ -130,6 +142,14 @@ void Action::update_animation_path() {
     }
 }
 
+void Action::update_next_action() {
+    if (is_inside_tree() && next_action_path != NodePath() && has_node(next_action_path)) {
+        next_action = get_node(next_action_path)->cast_to<Action>();
+    }else {
+        next_action = NULL;
+    }
+}
+
 BehaviorNode::Status Action::_behavior(const Variant& target, Dictionary env) {
     TimerBNode::_behavior(target, env);
     old_move = ((Vector2)env["move"]).x;
@@ -180,6 +200,11 @@ void Action::_reset(const Variant &target) {
 
 void Action::_timeout_behavior(const Variant& target, Dictionary& env) {
     cancel_animation();
+    if (next_action) {
+        next_action->reset(target);
+        next_action->force_enter = true;
+        next_action->set_focus();
+    }
 }
 
 void Action::_cancel_behavior(const Variant& target) {
@@ -215,6 +240,9 @@ void Action::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_animation_name", "animation_name"), &Action::set_animation_name);
     ObjectTypeDB::bind_method(_MD("get_animation_name"), &Action::get_animation_name);
 
+    ObjectTypeDB::bind_method(_MD("set_next_action_path", "naxt_action_path"), &Action::set_next_action_path);
+    ObjectTypeDB::bind_method(_MD("get_next_action_path"), &Action::get_next_action_path);
+
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/max_move"), _SCS("set_max_move"), _SCS("get_max_move"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/drag"), _SCS("set_drag"), _SCS("get_drag"));
 
@@ -223,6 +251,8 @@ void Action::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "action/animation_path"), _SCS("set_animation_path"), _SCS("get_animation_path"));
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "action/animation_type"), _SCS("set_animation_type"), _SCS("get_animation_type"));
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "action/animation_name"), _SCS("set_animation_name"), _SCS("get_animation_name"));
+
+    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "next_action_path"), _SCS("set_next_action_path"), _SCS("get_next_action_path"));
 
     BIND_VMETHOD( MethodInfo("_cancel_behavior", PropertyInfo(Variant::OBJECT,"target")) );
 

@@ -19,6 +19,8 @@ public:
         CANCEL_TYPE_NONE
     };
 private:
+    bool force_enter;
+
     Vector< Action* > cancel_list;
     Vector< CancelNode* > cancel_nodes;
     bool checked_cancel_list;
@@ -38,9 +40,14 @@ private:
     String      animation_type;
     String      animation_name;
 
+    NodePath    next_action_path;
+    Action      *next_action;
+    void        update_next_action();
+
     void        cancel_animation();
 protected:
     void _notification(int p_notification);
+    virtual Status  _step(const Variant& target, Dictionary &env);
     virtual void    _during_behavior(const Variant& target, Dictionary& env);
     virtual void    _timeout_behavior(const Variant& target, Dictionary& env);
     virtual void    _cancel_behavior(const Variant& target);
@@ -77,7 +84,18 @@ public:
     _FORCE_INLINE_ String get_animation_name() {return animation_name;}
     _FORCE_INLINE_ void set_animation_name(String name) {animation_name = name;}
 
-    Action() {checked_cancel_list= false;_is_hit= false;cancel_time=0.5;animation_node=NULL;max_move=2;drag=0.2;reset_from_cancel = false;}
+    _FORCE_INLINE_ void set_next_action_path(NodePath path) {next_action_path=path;update_next_action();}
+    _FORCE_INLINE_ NodePath get_next_action_path() {return next_action_path;}
+
+    Action() {
+        checked_cancel_list= false;
+        _is_hit= false;
+        force_enter = false;
+        cancel_time=0.5;
+        animation_node=NULL;
+        max_move=2;drag=0.2;
+        reset_from_cancel = false;
+    }
 };
 
 VARIANT_ENUM_CAST(Action::CancelType);
