@@ -13,6 +13,8 @@ class MainMap : public Resource {
 private:
     int width;
     int height;
+    int x;
+    int y;
     bool *map_checked;
 
     Ref<Texture> texture;
@@ -33,6 +35,9 @@ public:
 
     bool checked_at(int x, int y);
     void set_checked(int x, int y, bool checked);
+    void at(int x, int y);
+    _FORCE_INLINE_ int get_x() {return x;}
+    _FORCE_INLINE_ int get_y() {return y;}
 
     Dictionary get_data();
     void set_data(Dictionary data);

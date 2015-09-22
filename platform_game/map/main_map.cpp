@@ -29,7 +29,14 @@ void MainMap::set_checked(int x, int y, bool checked) {
         if (get_script_instance()) {
             get_script_instance()->call_multilevel(checked ? "turn_on":"turn_off", x, y);
         }
+        emit_signal(checked ? "turn_on":"turn_off", x, y);
     }
+}
+
+void MainMap::at(int p_x, int p_y) {
+    x = p_x;
+    y = p_y;
+    set_checked(p_x, p_y, true);
 }
 
 Dictionary MainMap::get_data() {
@@ -74,6 +81,10 @@ void MainMap::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("checked_at", "x", "y"), &MainMap::checked_at);
     ObjectTypeDB::bind_method(_MD("set_checked", "x", "y", "checked"), &MainMap::set_checked);
+
+    ObjectTypeDB::bind_method(_MD("at", "x", "y"), &MainMap::at);
+    ObjectTypeDB::bind_method(_MD("get_x"), &MainMap::get_x);
+    ObjectTypeDB::bind_method(_MD("get_y"), &MainMap::get_y);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "width"), _SCS("set_width"), _SCS("get_width"));
     ADD_PROPERTY(PropertyInfo(Variant::INT, "height"), _SCS("set_height"), _SCS("get_height"));
