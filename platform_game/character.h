@@ -14,7 +14,8 @@
 #include "../behaviornode/behaviornode.h"
 #include "../../scene/2d/node_2d.h"
 #include "../../scene/2d/visibility_notifier_2d.h"
-#include "../../scene/2d/ray_cast_2d.h"]
+#include "../../scene/2d/ray_cast_2d.h"
+#include "anim_controller.h"
 #include "attack_area.h"
 
 
@@ -31,16 +32,19 @@ private:
     BehaviorNode    *behavior_root;
     Ref<HitStatus>  hit_status;
     Vector<Ref <Buff> >  buffs;
+    AnimController  *anim_controller;
 
     NodePath        _sprite_path;
     NodePath        _left_ray_path;
     NodePath        _right_ray_path;
+    NodePath        _anim_path;
     Node2D          *_cha_sprite;
     RayCast2D       *_left_ray;
     RayCast2D       *_right_ray;
     void            update_sprite();
     void            update_left_ray();
     void            update_right_ray();
+    void            update_anim_controller();
 
     void update_behavior_node();
     bool can_buff;
@@ -60,6 +64,7 @@ private:
     bool first_set;
     bool face_left;
     bool default_face_left;
+    bool _unlock_face;
 
     float reset_guard_point;
     float max_guard_point;
@@ -94,6 +99,10 @@ public:
     _FORCE_INLINE_ void set_move(Vector2 p_move) {_move=p_move;}
     _FORCE_INLINE_ Vector2 get_move() {return _move;}
 
+    _FORCE_INLINE_ AnimController *get_anim_controller() {return anim_controller;}
+    _FORCE_INLINE_ void set_anim_path(NodePath p_anim_path) {_anim_path=p_anim_path;update_anim_controller();}
+    _FORCE_INLINE_ NodePath get_anim_path() {return _anim_path;}
+
     _FORCE_INLINE_ Node2D *get_sprite() {return _cha_sprite;}
     _FORCE_INLINE_ NodePath get_sprite_path() {return _sprite_path;}
     _FORCE_INLINE_ void set_sprite_path(NodePath p_sprite_path) {_sprite_path = p_sprite_path;update_sprite();}
@@ -120,9 +129,13 @@ public:
     void set_face_left(bool p_face_left);
 
     _FORCE_INLINE_ bool get_can_turn() { return can_turn; }
-    _FORCE_INLINE_ void set_can_turn(bool m_can_turn) { can_turn = m_can_turn; }
+    _FORCE_INLINE_ void set_can_turn(bool m_can_turn) { can_turn = m_can_turn;_unlock_face=false;}
+    _FORCE_INLINE_ void lock_face() {can_turn = false;_unlock_face=false;}
+    _FORCE_INLINE_ void unlock_face() {_unlock_face = true;}
 
-    _FORCE_INLINE_ void freeze(float time) {freeze_time = time;}
+    _FORCE_INLINE_ void freeze(float time) {freeze_time = time;
+        if (anim_controller) anim_controller->freeze(time);
+    }
     _FORCE_INLINE_ float get_freeze_time() {return freeze_time;}
 
     _FORCE_INLINE_ float get_guard_point() {return guard_point;}
@@ -153,6 +166,7 @@ public:
         _left_ray = NULL;
         _right_ray = NULL;
         _cha_sprite = NULL;
+        anim_controller = NULL;
         guard_point = 0;
         freeze_time = 0;
         guard_percent = 0.8;
@@ -165,6 +179,7 @@ public:
         colliding.top = false;
         colliding.bottom = false;
         colliding.normal = Vector2();
+        _unlock_face = false;
     }
 };
 

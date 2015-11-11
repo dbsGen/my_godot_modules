@@ -93,6 +93,14 @@ void Character::update_right_ray() {
     }
 }
 
+void Character::update_anim_controller() {
+    if (is_inside_tree() && _anim_path != NodePath() && has_node(_anim_path)) {
+        anim_controller = get_node(_anim_path)->cast_to<AnimController>();
+    }else {
+        anim_controller = NULL;
+    }
+}
+
 void Character::set_face_left(bool p_face_left) {
     if (!can_turn || face_left == p_face_left) return;
     face_left = p_face_left;
@@ -117,6 +125,7 @@ void Character::_notification(int p_notification) {
             update_right_ray();
             update_left_ray();
             update_sprite();
+            update_anim_controller();
             break;
         }
         case NOTIFICATION_FIXED_PROCESS: {
@@ -126,6 +135,10 @@ void Character::_notification(int p_notification) {
             on_floor = (_left_ray != NULL && _left_ray->is_colliding()) || (_right_ray != NULL && _right_ray->is_colliding());
             if (freeze_time <= 0 && behavior_root != NULL) {
                 Dictionary dic = call("behavior_data");
+                if (_unlock_face) {
+                    _unlock_face = false;
+                    can_turn = true;
+                }
                 behavior_root->step(this, dic);
                 if (_move_vec == Vector2()) {
                     _move = dic["move"];
@@ -257,14 +270,16 @@ bool Character::attack_by(Ref<HitStatus> p_hit_status, Character *from) {
 
 bool Character::_attack_by(Ref<HitStatus> p_hit_status, Object *from) {
     guard_point -= p_hit_status->get_power();
-    bool res = guard_point < 0;
+    bool res = guard_point <= 0;
     float nh = health - p_hit_status->get_damage();
 
     if (res) {
         set_hit_status(p_hit_status);
         behavior_root->reset(this);
+        freeze(p_hit_status->get_freeze_time());
     }else {
         nh = health - p_hit_status->get_damage() * (1-guard_percent);
+        freeze(p_hit_status->get_freeze_time() * (1-guard_percent));
     }
     if (p_hit_status->get_face_me()) {
         if (p_hit_status->get_force().x > 0) {
@@ -304,6 +319,10 @@ void Character::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_move", "move"), &Character::set_move);
     ObjectTypeDB::bind_method(_MD("get_move"), &Character::get_move);
 
+    ObjectTypeDB::bind_method(_MD("set_anim_path", "anim_path"), &Character::set_anim_path);
+    ObjectTypeDB::bind_method(_MD("get_anim_path"), &Character::get_anim_path);
+    ObjectTypeDB::bind_method(_MD("get_anim_controller:AnimController"), &Character::get_anim_controller);
+
     ObjectTypeDB::bind_method(_MD("set_sprite_path", "sprite_path"), &Character::set_sprite_path);
     ObjectTypeDB::bind_method(_MD("get_sprite_path"), &Character::get_sprite_path);
     ObjectTypeDB::bind_method(_MD("get_sprite:Node2D"), &Character::get_sprite);
@@ -324,6 +343,8 @@ void Character::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("set_can_turn", "can_turn"), &Character::set_can_turn);
     ObjectTypeDB::bind_method(_MD("get_can_turn"), &Character::get_can_turn);
+    ObjectTypeDB::bind_method(_MD("lock_face"), &Character::lock_face);
+    ObjectTypeDB::bind_method(_MD("unlock_face"), &Character::unlock_face);
 
     ObjectTypeDB::bind_method(_MD("set_face_left", "face_left"), &Character::set_face_left);
     ObjectTypeDB::bind_method(_MD("get_face_left"), &Character::get_face_left);
@@ -365,6 +386,7 @@ void Character::_bind_methods() {
     ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/visibility_path" ), _SCS("set_visibility_path"),_SCS("get_visibility_path") );
     ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/left_ray" ), _SCS("set_left_ray_path"),_SCS("get_left_ray_path") );
     ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/right_ray" ), _SCS("set_right_ray_path"),_SCS("get_right_ray_path") );
+    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/anim_path" ), _SCS("set_anim_path"),_SCS("get_anim_path") );
 
     ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/can_buff" ), _SCS("set_can_buff"),_SCS("get_can_buff" ) );
     ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/can_attack" ), _SCS("set_can_attack"),_SCS("get_can_attack" ) );

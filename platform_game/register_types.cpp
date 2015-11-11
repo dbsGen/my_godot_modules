@@ -44,6 +44,7 @@
 #include "map/main_map.h"
 #include "map/scene_map.h"
 #include "parallax.h"
+#include "anim_controller.h"
 
 void register_platform_game_types() {
 	ObjectTypeDB::register_type<Character>();
@@ -63,6 +64,7 @@ void register_platform_game_types() {
     ObjectTypeDB::register_type<MainMap>();
     ObjectTypeDB::register_type<SceneMap>();
     ObjectTypeDB::register_type<ParallaxBG>();
+    ObjectTypeDB::register_type<AnimController>();
 }
 
 void unregister_platform_game_types() {

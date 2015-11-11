@@ -1,11 +1,11 @@
 /*************************************************************************/
-/*  register_types.cpp                                                   */
+/*  register_types.h                                                     */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -26,20 +26,5 @@
 /* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
-#include "register_types.h"
-#include "object_type_db.h"
-#include "new_timer.h"
-#include "core/globals.h"
-#include "new_tween.h"
-
-void register_my_extends_types() {
-    Globals::get_singleton()->add_singleton(Globals::Singleton("NewTimer", NewTimer::get_singleton()));
-    Globals::get_singleton()->add_singleton(Globals::Singleton("NewTween", memnew(NewTween)));
-	ObjectTypeDB::register_type<NewTimer>();
-    ObjectTypeDB::register_type<TimerObject>();
-    ObjectTypeDB::register_type<NewTween>();
-    ObjectTypeDB::register_type<TweenAction>();
-}
-
-void unregister_my_extends_types() {
-}
+void register_gdscript_types();
+void unregister_gdscript_types();

@@ -6,8 +6,9 @@
 #include "character.h"
 
 bool AttackArea::attack(Character *from) {
-    if (hit_status == NULL || !from->get_can_attack())
+    if (hit_status == NULL || !from->get_can_attack()) {
         return false;
+    }
     Ref<HitStatus> from_hit = from->get_hit_status();
     if (from_hit != NULL && from_hit->get_hit_type() != HitStatus::HS_NO_HIT) {
         return false;
@@ -46,9 +47,8 @@ bool AttackArea::attack(Character *from) {
                             Node2D* spark = spark_scene->instance()->cast_to<Node2D>();
                             if (spark) {
                                 cha->get_parent()->add_child(spark);
-                                spark->set_global_pos(cha->get_global_pos());
+                                spark->set_global_pos(cha->get_global_pos() + Vector2(spark_range.x * (Math::randf()*2-1), spark_range.y * (Math::randf()*2-1)));
                                 spark->set_scale(Vector2(from->get_face_left()?-1:1, 1));
-                                Vector2 v2 = spark->get_global_pos();
                             }
                         }
 
@@ -131,6 +131,9 @@ void AttackArea::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_face_relative", "face_relative"), &AttackArea::set_face_relative);
     ObjectTypeDB::bind_method(_MD("get_face_relative"), &AttackArea::get_face_relative);
 
+    ObjectTypeDB::bind_method(_MD("set_spark_range", "spark_range"), &AttackArea::set_spark_range);
+    ObjectTypeDB::bind_method(_MD("get_spark_range"), &AttackArea::get_spark_range);
+
     BIND_VMETHOD(MethodInfo("_attack_to", PropertyInfo(Variant::OBJECT, "hit", PROPERTY_HINT_RESOURCE_TYPE, "HitStatus"), PropertyInfo(Variant::OBJECT, "to") ));
 
     ADD_PROPERTY( PropertyInfo( Variant::BOOL, "always_attack" ), _SCS("set_always_attack"),_SCS("get_always_attack" ) );
@@ -143,4 +146,5 @@ void AttackArea::_bind_methods() {
     ADD_PROPERTY( PropertyInfo( Variant::BOOL, "attack/face_relative" ), _SCS("set_face_relative"),_SCS("get_face_relative" ) );
     ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/hit_status",PROPERTY_HINT_RESOURCE_TYPE,"HitStatus"), _SCS("set_hit_status"),_SCS("get_hit_status" ) );
     ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/spark_scene",PROPERTY_HINT_RESOURCE_TYPE,"PackedScene"), _SCS("set_spark_scene"),_SCS("get_spark_scene" ) );
+    ADD_PROPERTY( PropertyInfo( Variant::VECTOR2, "attack/spark_range"), _SCS("set_spark_range"), _SCS("get_spark_range"));
 }

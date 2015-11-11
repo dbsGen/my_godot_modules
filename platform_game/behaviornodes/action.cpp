@@ -5,7 +5,7 @@
 #include "action.h"
 #include "../../behaviornode/linkerbnode.h"
 #include "../../../scene/animation/animation_player.h"
-#include "../../my_extends/animation_manager.h"
+#include "../anim_controller.h"
 #include "../../../core/math/math_defs.h"
 #include "../../../core/math/math_2d.h"
 
@@ -117,12 +117,12 @@ void Action::_during_behavior(const Variant &target, Dictionary &env) {
                     if (_is_hit && node->get_link_target()->call("pre_behavior", target, env)) {
                         setforce(node->get_link_target());
                     }
-                }
+                } break;
                 case CancelNode::TIME: {
                     if (get_delay()-get_time() > node->get_cancel_time() && node->get_link_target()->call("pre_behavior", target, env)) {
                         setforce(node->get_link_target());
                     }
-                }
+                } break;
             }
         }
     }
@@ -155,10 +155,10 @@ BehaviorNode::Status Action::_behavior(const Variant& target, Dictionary env) {
     old_move = ((Vector2)env["move"]).x;
     _is_hit = false;
     if (animation_node) {
-        AnimationManager *manager = animation_node->cast_to<AnimationManager>();
+        AnimController *manager = animation_node->cast_to<AnimController>();
         if (manager) {
             if (animation_type != "" && animation_name != "")
-                manager->play(animation_type, animation_name);
+                manager->set_status(animation_type, animation_name);
         }else {
             AnimationPlayer *player = animation_node->cast_to<AnimationPlayer>();
             if (player && animation_name != "")
@@ -170,10 +170,10 @@ BehaviorNode::Status Action::_behavior(const Variant& target, Dictionary env) {
 
 void Action::cancel_animation() {
     if (animation_node) {
-        AnimationManager *manager = animation_node->cast_to<AnimationManager>();
+        AnimController *manager = animation_node->cast_to<AnimController>();
         if (manager) {
             if (animation_type != "" && animation_name != "") {
-                manager->stop_with_name(animation_type, animation_name);
+                manager->remove_status_with(animation_type, animation_name);
             }
         }
     }

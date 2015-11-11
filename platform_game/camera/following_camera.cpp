@@ -21,15 +21,16 @@ Matrix32 FollowingCamera::get_camera_transform()  {
         return Matrix32();
     Vector2 view_size = get_viewport_rect().size * get_zoom();
     Vector2 global_pos = get_global_pos();
+    Vector2 offset = get_offset();
     if (target != NULL) {
         if (shaking_during > 0) {
             global_pos = shake_base + Math::sin(shaking_time*31.4)*shake_force;
         }else {
-            Vector2 target_pos = target->get_global_pos();
-            float min_pos_x = limit_left + view_size.x/2;
-            float min_pos_y = limit_top + view_size.y/2;
-            float max_pos_x = limit_right - view_size.x/2;
-            float max_pos_y = limit_bottom - view_size.y/2;
+            Vector2 target_pos = target->get_global_pos() + offset;
+            float min_pos_x = limit_left + view_size.x/2 - offset.x;
+            float min_pos_y = limit_top + view_size.y/2 - offset.x;
+            float max_pos_x = limit_right - view_size.x/2 - offset.y;
+            float max_pos_y = limit_bottom - view_size.y/2 - offset.y;
             target_pos.x = MIN(MAX(target_pos.x, min_pos_x), max_pos_x);
             target_pos.y = MIN(MAX(target_pos.y, min_pos_y), max_pos_y);
             if (target_pos.distance_to(global_pos) > 2) {
@@ -53,8 +54,8 @@ Matrix32 FollowingCamera::get_camera_transform()  {
     }
     xform.scale_basis(get_zoom());
     Vector2 point = (global_pos - view_size*0.5)/get_zoom();
-    point.x = Math::round(point.x);
-    point.y = Math::round(point.y);
+    point.x = (float)Math::round(point.x);
+    point.y = (float)Math::round(point.y);
     point=point*get_zoom();
     xform.set_origin(point);
     return (xform).affine_inverse();

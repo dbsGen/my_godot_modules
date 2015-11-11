@@ -35,6 +35,8 @@ private:
     float time_record;
     bool force_invert;
     bool face_relative;
+
+    Vector2 spark_range;
 protected:
     static void _bind_methods();
     virtual void _attack_to(Ref<HitStatus> hit, Character* to) {}
@@ -70,6 +72,9 @@ public:
 
     _FORCE_INLINE_ void set_face_relative(bool p_face_relative) {face_relative = p_face_relative;}
     _FORCE_INLINE_ bool get_face_relative(){return face_relative;}
+
+    _FORCE_INLINE_ Vector2 get_spark_range() {return spark_range;}
+    _FORCE_INLINE_ void set_spark_range(Vector2 p_spark_range) {spark_range = p_spark_range;}
 
     void reset();
 

@@ -95,6 +95,7 @@ public:
         animation_node=NULL;
         max_move=2;drag=0.2;
         reset_from_cancel = false;
+        next_action = NULL;
     }
 };
 

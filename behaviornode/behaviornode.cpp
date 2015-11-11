@@ -24,6 +24,8 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
                 return STATUS_RUNNING;
             }else {
                 checked = child;
+                _focus_node_path = NodePath();
+                return STATUS_RUNNING;
             }
         }
     }
