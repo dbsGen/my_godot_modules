@@ -34,7 +34,6 @@
 #include "io/resource_saver.h"
 #include "os/thread.h"
 #include "pair.h"
-#include "../../core/object.h"
 
 class GDInstance;
 class GDScript;

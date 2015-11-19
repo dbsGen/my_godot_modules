@@ -32,7 +32,6 @@
 #include "gd_compiler.h"
 #include "os/file_access.h"
 #include "io/file_access_encrypted.h"
-#include "../../core/object.h"
 
 /* TODO:
 
