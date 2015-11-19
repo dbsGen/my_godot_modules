@@ -52,7 +52,7 @@ BehaviorNode::Status Action::_step(const Variant& target, Dictionary &env) {
         else
             return status;
     }else {
-        return TimerBNode::_step(target, env);
+        TimerBNode::_step(target, env);
     }
 }
 

@@ -21,6 +21,21 @@ void AnimController::_notification(int p_notification) {
     switch (p_notification) {
         case NOTIFICATION_FIXED_PROCESS:
         {
+            float fixed_delta = get_fixed_process_delta_time();
+            Vector<String> keys;
+            for (Map<String, float >::Element *E = remove_counts.front(); E; E = E->next()) {
+                float time = E->value();
+                time -= fixed_delta;
+                if (time <= 0) {
+                    keys.push_back(E->key());
+                }else {
+                    E->value() = time;
+                }
+            }
+            for (int n = 0, t = keys.size(); n < t; n++) {
+                remove_status(keys[n]);
+            }
+
             if (_changed) {
                 _changed = false;
                 _status_changed(added_anims, removed_anims);
@@ -70,13 +85,16 @@ void AnimController::freeze(float time) {
     }
 }
 
-void AnimController::set_status(String p_key, String p_name) {
+void AnimController::set_status(String p_key, String p_name, float p_time) {
     if (!current_anims.has(p_key) || current_anims[p_key] != p_name) {
         if (current_anims.has(p_key)) {
             remove_anim(p_key, current_anims[p_key]);
         }
         current_anims[p_key] = p_name;
         add_anim(p_key, p_name);
+        if (p_time > 0) {
+            remove_counts[p_key] = p_time;
+        }
         _changed = true;
     }
 }
@@ -84,14 +102,20 @@ void AnimController::set_status(String p_key, String p_name) {
 void AnimController::remove_status(String p_key) {
     if (current_anims.has(p_key)) {
         remove_anim(p_key, current_anims[p_key]);
+        if (remove_counts.has(p_key)) {
+            remove_counts.erase(p_key);
+        }
         current_anims.erase(p_key);
         _changed = true;
     }
 }
 
-void AnimController::remove_status_with(String p_key, String p_name) {
+void AnimController::remove_status_with(const String& p_key, const String& p_name) {
     if (current_anims.has(p_key) && current_anims[p_key] == p_name) {
         remove_anim(p_key, p_name);
+        if (remove_counts.has(p_key)) {
+            remove_counts.erase(p_key);
+        }
         current_anims.erase(p_key);
         _changed = true;
     }
@@ -133,7 +157,7 @@ void AnimController::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("remove_all"),&AnimController::remove_all);
     ObjectTypeDB::bind_method(_MD("remove_status_with", "key", "name"),&AnimController::remove_status_with);
     ObjectTypeDB::bind_method(_MD("remove_status", "key"),&AnimController::remove_status);
-    ObjectTypeDB::bind_method(_MD("set_status", "key", "name"),&AnimController::set_status);
+    ObjectTypeDB::bind_method(_MD("set_status", "key", "name", "time"),&AnimController::set_status, DEFVAL(0));
     ObjectTypeDB::bind_method(_MD("_animation_finished", "anim"),&AnimController::_animation_finished);
 
     BIND_VMETHOD( MethodInfo("_status_changed", PropertyInfo(Variant::DICTIONARY, "added"), PropertyInfo(Variant::DICTIONARY, "removed")));

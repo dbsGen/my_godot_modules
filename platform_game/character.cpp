@@ -140,15 +140,20 @@ void Character::_notification(int p_notification) {
                     can_turn = true;
                 }
                 behavior_root->step(this, dic);
-                if (_move_vec == Vector2()) {
-                    _move = dic["move"];
+                if (_stop_moving) {
+                    _move_duration = 0;
+                    _move = _move_vec = Vector2();
                 }else {
-                    _move = dic["move"];
-                    _move.x = _move_vec.x == 0 ? _move.x : _move_vec.x;
-                    _move.y = _move_vec.y == 0 ? _move.y : _move_vec.y;
-                    _move_duration -= fixed_process_time;
-                    if (_move_duration < 0)
-                        _move_vec = Vector2();
+                    if (_move_vec == Vector2()) {
+                        _move = dic["move"];
+                    }else {
+                        _move = dic["move"];
+                        _move.x = _move_vec.x == 0 ? _move.x : _move_vec.x;
+                        _move.y = _move_vec.y == 0 ? _move.y : _move_vec.y;
+                        _move_duration -= fixed_process_time;
+                        if (_move_duration < 0)
+                            _move_vec = Vector2();
+                    }
                 }
                 Vector2 inv = move(_move);
 
@@ -318,6 +323,8 @@ void Character::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("set_move", "move"), &Character::set_move);
     ObjectTypeDB::bind_method(_MD("get_move"), &Character::get_move);
+
+    ObjectTypeDB::bind_method(_MD("stop_moving"), &Character::stop_moving);
 
     ObjectTypeDB::bind_method(_MD("set_anim_path", "anim_path"), &Character::set_anim_path);
     ObjectTypeDB::bind_method(_MD("get_anim_path"), &Character::get_anim_path);

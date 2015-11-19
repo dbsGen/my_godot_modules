@@ -14,6 +14,7 @@ class AnimationPlayer;
 class AnimController : public Node {
     OBJ_TYPE(AnimController, Node);
 private:
+
     struct AnimationStatus {
         StringName name;
         float position;
@@ -28,6 +29,7 @@ private:
     Map<StringName, Node*> anim_nodes;
     List<AnimationStatus> status_cache;
     HashMap<String, String> current_anims;
+    Map<String, float > remove_counts;
     Dictionary removed_anims;
     Dictionary added_anims;
     float _freeze_time;
@@ -57,9 +59,9 @@ protected:
 public:
 
     Variant get_status(String p_key);
-    void set_status(String p_key, String p_name);
+    void set_status(String p_key, String p_name, float time = 0);
     void remove_status(String p_key);
-    void remove_status_with(String p_key, String p_name);
+    void remove_status_with(const String& p_key, const String& p_name);
     void remove_all();
     void freeze(float time);
 

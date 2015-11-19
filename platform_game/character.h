@@ -65,6 +65,7 @@ private:
     bool face_left;
     bool default_face_left;
     bool _unlock_face;
+    bool _stop_moving;
 
     float reset_guard_point;
     float max_guard_point;
@@ -98,6 +99,8 @@ public:
 
     _FORCE_INLINE_ void set_move(Vector2 p_move) {_move=p_move;}
     _FORCE_INLINE_ Vector2 get_move() {return _move;}
+
+    _FORCE_INLINE_ void stop_moving() {_stop_moving = true;}
 
     _FORCE_INLINE_ AnimController *get_anim_controller() {return anim_controller;}
     _FORCE_INLINE_ void set_anim_path(NodePath p_anim_path) {_anim_path=p_anim_path;update_anim_controller();}
