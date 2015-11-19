@@ -20,10 +20,10 @@ void InputNode::pressed_action(const String &action) {
 void InputNode::down_action(const String &action) {
     _down_actions.append(action);
 }
-bool InputNode::is_pressed(const String &action) {
+bool InputNode::is_pressed(const String &action) const {
     return _pressed_actions.find(action) >= 0;
 }
-bool InputNode::is_pressed(const StringArray& actions) {
+bool InputNode::is_pressed(const StringArray& actions) const {
     for (int i = 0, t = actions.size(); i < t; ++i) {
         if (!is_pressed(actions[i])) {
             return false;
@@ -31,10 +31,10 @@ bool InputNode::is_pressed(const StringArray& actions) {
     }
     return true;
 }
-bool InputNode::is_down(const String &action) {
+bool InputNode::is_down(const String &action) const {
     return _down_actions.find(action) >= 0;
 }
-bool InputNode::is_down(const StringArray &actions) {
+bool InputNode::is_down(const StringArray &actions) const {
     for (int i = 0, t = actions.size(); i < t; ++i) {
         if (!is_down(actions[i])) {
             return false;
@@ -42,7 +42,7 @@ bool InputNode::is_down(const StringArray &actions) {
     }
     return true;
 }
-int InputNode::queue_down(const StringArray &actions, int offset) {
+int InputNode::queue_down(const StringArray &actions, int offset) const {
     int ac = actions.size();
     ERR_FAIL_COND_V(offset >= ac, 0);
     int af = ac - offset - 1, dc = _down_actions.size(), df = dc - 1, res = 0;
@@ -97,11 +97,7 @@ void InputStorage::close() {
 }
 
 void InputStorage::frame_begin() {
-    _this_frame = Ref<InputNode>(memnew(InputNode));
-    storage_events.append(_this_frame);
-    if (storage_events.size() > storage_size) {
-        storage_events.remove(0);
-    }
+    _this_frame = storage_events.push(InputNode());
 }
 
 void InputStorage::pressed_event(const String &event) {
@@ -117,8 +113,8 @@ void InputStorage::down_event(const String &event) {
 bool InputStorage::test_down(const StringArray &events, int in_frame) {
     int count = storage_events.size(), t = in_frame < count ? count - 1 - in_frame: 0, offset = 0, e_count = events.size();
     for (int j = t; j < count; ++j) {
-        Ref<InputNode> node = storage_events[j];
-        offset += node->queue_down(events, offset);
+        const InputNode& node = storage_events[j];
+        offset += node.queue_down(events, offset);
         if (e_count <= offset) {
             return true;
         }
@@ -166,11 +162,11 @@ int InputStorage::down_frame(const Variant &event, int in_frame) {
 
 bool InputStorage::_down_in_frame(const Variant &input, int frame) {
     ERR_FAIL_COND_V(!(frame >= 0 && frame < storage_events.size()), false);
-    Ref<InputNode> node = storage_events[frame];
+    const InputNode& node = storage_events[frame];
     Variant::Type type = input.get_type();
-    if (type == Variant::STRING && node->is_down((const String&)input)) {
+    if (type == Variant::STRING && node.is_down((const String&)input)) {
         return true;
-    }else if ((type == Variant::STRING_ARRAY || type == Variant::ARRAY) && node->is_down((const StringArray&)input)) {
+    }else if ((type == Variant::STRING_ARRAY || type == Variant::ARRAY) && node.is_down((const StringArray&)input)) {
         return true;
     }
     return false;
@@ -178,11 +174,11 @@ bool InputStorage::_down_in_frame(const Variant &input, int frame) {
 
 bool InputStorage::_pressed_in_frame(const Variant &input, int frame) {
     ERR_FAIL_COND_V(!(frame >= 0 && frame < storage_events.size()), false);
-    Ref<InputNode> node = storage_events[frame];
+    const InputNode&  node = storage_events[frame];
     Variant::Type type = input.get_type();
-    if (type == Variant::STRING && node->is_pressed((const String&)input)) {
+    if (type == Variant::STRING && node.is_pressed((const String&)input)) {
         return true;
-    }else if ((type == Variant::STRING_ARRAY || type == Variant::ARRAY) && node->is_pressed((const StringArray&)input)) {
+    }else if ((type == Variant::STRING_ARRAY || type == Variant::ARRAY) && node.is_pressed((const StringArray&)input)) {
         return true;
     }
     return false;
