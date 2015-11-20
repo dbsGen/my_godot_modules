@@ -112,7 +112,7 @@ void InputStorage::down_event(const String &event) {
 
 bool InputStorage::test_down(const StringArray &events, int in_frame) {
     int count = storage_events.size(), t = in_frame < count ? count - 1 - in_frame: 0, offset = 0, e_count = events.size();
-    for (int j = t; j < count; ++j) {
+    for (int j = count - 1; j >= t; --j) {
         const InputNode& node = storage_events[j];
         offset += node.queue_down(events, offset);
         if (e_count <= offset) {

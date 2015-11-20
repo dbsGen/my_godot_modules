@@ -65,7 +65,7 @@ private:
                 return aux;
             }
             else
-                mem[(_offset+p_index)%_limit];
+                return mem[(_offset+p_index)%_limit];
         }
 
         int size() const {
@@ -77,7 +77,7 @@ private:
             mem[off] = p_value;
             _size ++;
             if (_size > _limit) {
-                int m = _limit - _size;
+                int m = _size-_limit;
                 _size = _limit;
                 _offset = (_offset+m)%_limit;
             }
@@ -141,6 +141,7 @@ public:
     InputStorage() {
         storage_size = 30;
         storageNode=NULL;
+        _this_frame = NULL;
         storage_events.alloc(storage_size);
     }
     ~InputStorage() {}

@@ -2,6 +2,7 @@
 #include "behaviornode.h"
 #include "../../scene/scene_string_names.h"
 #include "../../core/math/math_2d.h"
+#include "../platform_game/behaviornodes/action.h"
 
 //void BehaviorNode::_notification(int p_notification) {
 //    case NOTIFICATION_READY: {
@@ -20,7 +21,13 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
         if (child && child != this) {
             if (!child->get_will_focus())
                 _focus_node_path = NodePath();
-            if ((int)child->call("step", target, env) == STATUS_RUNNING) {
+            Action *action = child->cast_to<Action>();
+            int ret = (int)child->call("step", target, env);
+            if (child->get_name() == String("a1_release")) print_line("Relese");
+            if (action && action->force_enter) {
+                print_line("Foce action " + itos(ret));
+            }
+            if (ret == STATUS_RUNNING) {
                 return STATUS_RUNNING;
             }else {
                 checked = child;

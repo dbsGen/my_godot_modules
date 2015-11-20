@@ -43,7 +43,13 @@ void Action::_notification(int p_notification) {
 }
 
 BehaviorNode::Status Action::_step(const Variant& target, Dictionary &env) {
+    if (force_enter) {
+        print_line("force enter1 " + String(get_name()));
+    }
     if (_time <= 0 && timeout && force_enter) {
+        if (force_enter) {
+            print_line("force enter2 " + String(get_name()));
+        }
         force_enter = false;
         Status childrenStatus =  _traversal_children(target, env);
         Status status = (Status)((int)call(StringName("behavior"),target, Variant(env)));
@@ -200,10 +206,14 @@ void Action::_reset(const Variant &target) {
 
 void Action::_timeout_behavior(const Variant& target, Dictionary& env) {
     cancel_animation();
+    if (get_name() == String("a1")) {
+        print_line("Timeout a1");
+    }
     if (next_action) {
         next_action->reset(target);
         next_action->force_enter = true;
         next_action->set_focus();
+        print_line("Timeout focus " + String(next_action->get_name()));
     }
 }
 

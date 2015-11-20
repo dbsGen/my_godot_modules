@@ -19,7 +19,6 @@ public:
         CANCEL_TYPE_NONE
     };
 private:
-    bool force_enter;
 
     Vector< Action* > cancel_list;
     Vector< CancelNode* > cancel_nodes;
@@ -56,6 +55,7 @@ protected:
     virtual void    _reset(const Variant& target);
     static void _bind_methods();
 public:
+    bool force_enter;
     void refresh_cancel_list();
 
     _FORCE_INLINE_ bool get_hit() {return _is_hit;}
