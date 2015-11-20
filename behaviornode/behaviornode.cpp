@@ -23,10 +23,6 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
                 _focus_node_path = NodePath();
             Action *action = child->cast_to<Action>();
             int ret = (int)child->call("step", target, env);
-            if (child->get_name() == String("a1_release")) print_line("Relese");
-            if (action && action->force_enter) {
-                print_line("Foce action " + itos(ret));
-            }
             if (ret == STATUS_RUNNING) {
                 return STATUS_RUNNING;
             }else {
