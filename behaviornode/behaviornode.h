@@ -33,8 +33,10 @@ protected:
     virtual void    _reset(const Variant& target);
     static void     _bind_methods();
 
+
 public:
     void set_focus();
+    void clear_focus();
 
     _FORCE_INLINE_ bool get_behavior_enable() {return _behavior_enable;}
     _FORCE_INLINE_ void set_behavior_enable(bool e) {_behavior_enable = e;}

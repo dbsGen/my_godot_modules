@@ -19,9 +19,10 @@ void TimerBNode::_bind_methods() {
 BehaviorNode::Status TimerBNode::_step(const Variant& target, Dictionary &env) {
     if (_time <= 0) {
 	    if (!timeout) {
+            timeout = true;
             _timeout_behavior(target, env);
             _script_timeout_behavior(target, env);
-            timeout=true;
+            cancel = true;
             return STATUS_FAILURE;
         }else {
             return BehaviorNode::_step(target, env);
@@ -52,6 +53,16 @@ void TimerBNode::_reset(const Variant &target) {
     BehaviorNode::_reset(target);
     _time=0;
     timeout = true;
+//    if (!timeout) {
+//        timeout = true;
+//        Dictionary dic;
+//        _timeout_behavior(target, dic);
+//        if (get_script_instance()) {
+//            Variant v = dic;
+//            const Variant* ptr[2]={&target, &v};
+//            get_script_instance()->call_multilevel(StringName("_timeout_behavior"),ptr,2);
+//        }
+//    }
 }
 
 void TimerBNode::recount_to(float t) {

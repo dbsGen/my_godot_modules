@@ -189,13 +189,7 @@ void Action::_reset(const Variant &target) {
             get_script_instance()->call_multilevel(StringName("_cancel_behavior"),ptr,1);
         }
     }else {
-        Dictionary dic;
-        _timeout_behavior(target, dic);
-        if (get_script_instance()) {
-            Variant v = dic;
-            const Variant* ptr[2]={&target, &v};
-            get_script_instance()->call_multilevel(StringName("_timeout_behavior"),ptr,2);
-        }
+        BehaviorNode::_reset(target);
     }
 }
 
@@ -243,6 +237,8 @@ void Action::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("set_next_action_path", "naxt_action_path"), &Action::set_next_action_path);
     ObjectTypeDB::bind_method(_MD("get_next_action_path"), &Action::get_next_action_path);
+
+    ObjectTypeDB::bind_method(_MD("get_next_action"), &Action::get_next_action);
 
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/max_move"), _SCS("set_max_move"), _SCS("get_max_move"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/drag"), _SCS("set_drag"), _SCS("get_drag"));

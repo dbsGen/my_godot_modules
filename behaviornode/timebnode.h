@@ -28,7 +28,7 @@ public:
     float get_delay() {return delay;}
 
     float get_time() {return _time;}
-    void time_out() {_time = 0; cancel = true;}
+    void time_out() {cancel = true;_time=0;}
 
     void recount();
     void recount_to(float t);

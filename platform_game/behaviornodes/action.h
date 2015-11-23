@@ -65,7 +65,7 @@ public:
     _FORCE_INLINE_ void set_max_move(float p_max_move) {if (p_max_move>=0)max_move=p_max_move;}
 
     _FORCE_INLINE_ float get_drag() {return drag;}
-    _FORCE_INLINE_ void set_drag(float p_drag) {if (p_drag >= 0 && p_drag < max_move)drag=p_drag;}
+    _FORCE_INLINE_ void set_drag(float p_drag) {if (p_drag >= 0)drag=p_drag;}
 
     _FORCE_INLINE_ float get_cancel_time() {return cancel_time;}
     _FORCE_INLINE_ void set_cancel_time(float p_cancel_time) {cancel_time=p_cancel_time;}
@@ -86,6 +86,8 @@ public:
 
     _FORCE_INLINE_ void set_next_action_path(NodePath path) {next_action_path=path;update_next_action();}
     _FORCE_INLINE_ NodePath get_next_action_path() {return next_action_path;}
+
+    _FORCE_INLINE_ Action *get_next_action() {return next_action;}
 
     Action() {
         checked_cancel_list= false;
