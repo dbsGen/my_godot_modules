@@ -188,8 +188,6 @@ void Action::_reset(const Variant &target) {
             const Variant* ptr[1]={&target};
             get_script_instance()->call_multilevel(StringName("_cancel_behavior"),ptr,1);
         }
-    }else {
-        BehaviorNode::_reset(target);
     }
 }
 

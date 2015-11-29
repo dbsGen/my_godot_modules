@@ -141,6 +141,7 @@ void Character::_notification(int p_notification) {
                 }
                 behavior_root->step(this, dic);
                 if (_stop_moving) {
+                    _stop_moving = false;
                     _move_duration = 0;
                     _move = _move_vec = Vector2();
                 }else {

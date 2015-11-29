@@ -16,43 +16,47 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
     int t = get_child_count();
     Status res = STATUS_FAILURE;
     BehaviorNode *checked = NULL;
-    if (_behavior_node_type == TYPE_CONDITION && _focus_node_path != String("") && has_node(_focus_node_path)) {
-        BehaviorNode *child = get_node(_focus_node_path)->cast_to<BehaviorNode>();
-        if (child && child != this) {
-            if (!child->get_will_focus())
-                _focus_node_path = NodePath();
-            NodePath old_path = _focus_node_path;
-            int ret = (int)child->call("step", target, env);
-            if (ret == STATUS_RUNNING) {
-                return STATUS_RUNNING;
-            }else {
-                checked = child;
-                if (old_path == _focus_node_path)
+    do {
+        if (_behavior_node_type == TYPE_CONDITION && _focus_node_path != String("") && has_node(_focus_node_path)) {
+            BehaviorNode *child = get_node(_focus_node_path)->cast_to<BehaviorNode>();
+            if (child && child != this) {
+                if (!child->get_will_focus())
                     _focus_node_path = NodePath();
-            }
-        }
-    }
-    for (int i = 0; i < t; ++i) {
-        BehaviorNode * child = get_child(i)->cast_to<BehaviorNode>();
-        if (child == checked) continue;
-        bool is_focus;
-        if (child) {
-            if ((int)child->call("step", target, env) == STATUS_RUNNING) {
-                res = STATUS_RUNNING;
-                is_focus = child->get_will_focus();
-                if (_behavior_node_type == TYPE_CONDITION) {
-                    if (is_focus) {
-                        _focus_node_path = get_path_to(child);
-                    }
-                    return res;
+                NodePath old_path = _focus_node_path;
+                int ret = (int)child->call("step", target, env);
+                if (ret == STATUS_RUNNING) {
+                    return STATUS_RUNNING;
+                }else {
+                    checked = child;
+                    if (old_path == _focus_node_path)
+                        _focus_node_path = NodePath();
+                    else
+                        continue;
                 }
             }
         }
-    }
-    if (_behavior_node_type == TYPE_CONDITION) {
-        _focus_node_path = NodePath();
-    }
-    return res;
+        for (int i = 0; i < t; ++i) {
+            BehaviorNode * child = get_child(i)->cast_to<BehaviorNode>();
+            if (child == checked) continue;
+            bool is_focus;
+            if (child) {
+                if ((int)child->call("step", target, env) == STATUS_RUNNING) {
+                    res = STATUS_RUNNING;
+                    is_focus = child->get_will_focus();
+                    if (_behavior_node_type == TYPE_CONDITION) {
+                        if (is_focus) {
+                            _focus_node_path = get_path_to(child);
+                        }
+                        return res;
+                    }
+                }
+            }
+        }
+        if (_behavior_node_type == TYPE_CONDITION) {
+            _focus_node_path = NodePath();
+        }
+        return res;
+    }while(true);
 }
 
 BehaviorNode::Status BehaviorNode::_step(const Variant& target, Dictionary &env) {
