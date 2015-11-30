@@ -30,8 +30,9 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
                     checked = child;
                     if (old_path == _focus_node_path)
                         _focus_node_path = NodePath();
-                    else
+                    else {
                         continue;
+                    }
                 }
             }
         }
@@ -82,6 +83,7 @@ void BehaviorNode::set_focus() {
     BehaviorNode *parent = get_parent()->cast_to<BehaviorNode>();
     if (parent) {
         parent->_focus_node_path = parent->get_path_to(this);
+        print_line("Focus to " + String(parent->_focus_node_path));
     }
 }
 

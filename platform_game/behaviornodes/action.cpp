@@ -81,7 +81,9 @@ void Action::_during_behavior(const Variant &target, Dictionary &env) {
     if (!checked_cancel_list) {
         refresh_cancel_list();
     }
-#define setforce(NODE)  NODE->set_focus();\
+#define setforce(NODE)  NODE->reset(target);\
+    NODE->set_focus();\
+    time_out();\
     reset_from_cancel = true;\
     reset(target);\
     reset_from_cancel = false;\
@@ -158,6 +160,7 @@ BehaviorNode::Status Action::_behavior(const Variant& target, Dictionary env) {
     if (animation_node) {
         AnimController *manager = animation_node->cast_to<AnimController>();
         if (manager) {
+            print_line("In " + String(get_name()) + " Set type:" + animation_type + ", name:"+animation_name);
             if (animation_type != "" && animation_name != "")
                 manager->set_status(animation_type, animation_name);
         }else {
