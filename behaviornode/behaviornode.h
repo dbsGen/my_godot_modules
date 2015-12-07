@@ -15,7 +15,8 @@ public:
     enum Status {
         STATUS_DEPEND_ON_CHILDREN,
         STATUS_RUNNING,
-        STATUS_FAILURE
+        STATUS_FAILURE,
+        STATUS_CONTINUE
     };
 private:
     NodePath        _focus_node_path;

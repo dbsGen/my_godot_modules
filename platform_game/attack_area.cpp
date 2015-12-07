@@ -14,7 +14,8 @@ bool AttackArea::attack(Character *from) {
         return false;
     }
     Array bodies = get_overlapping_bodies();
-    if (attack_enable && bodies.size() > 0) {
+    Array areas = get_overlapping_areas();
+    if (attack_enable && (bodies.size() > 0 || areas.size() > 0)) {
         bool ret = false;
         Vector2 force = hit_status->get_force();
         Vector2 p_force = Vector2(force.x * (((from->get_face_left() && force_invert)||(!from->get_face_left() && !force_invert)) ? 1:-1), force.y);
@@ -22,58 +23,130 @@ bool AttackArea::attack(Character *from) {
         for (int i = 0, t = bodies.size(); i < t; ++i) {
             Character *cha = ((Object*)(bodies[i]))->cast_to<Character>();
             if (cha) {
-                int count = 0;
-                float old_time = 0;
-                if (count_store.has((int)((long)cha))) {
-                    HitStatusInfo info = count_store[(int)((long)cha)];
-                    count = info.count;
-                    old_time = info.hit_time;
+                if (to_target(cha, from, force, p_force)) {
+                    ret = true;
                 }
+            }else {
+            }
+        }
 
-                if (hit_count == -1 || (count < hit_count && old_time < time_record + attack_span)) {
-                    Ref<HitStatus> hs = hit_status->duplicate(true)->cast_to<HitStatus>();
-                    if (face_relative) {
-                        bool right = cha->get_global_pos().x > from->get_global_pos().x;
-                        hs->set_force(Vector2( ((right && force_invert) || (!right && !force_invert) ? -1:1) * force.x, force.y));
-                        hs->set_velocity(hs->get_force());
-                        hs->set_stun_velocity(Vector2(hs->get_force().x, 0));
-                    }else{
-                        hs->set_force(p_force);
-                        hs->set_velocity(p_force);
-                        hs->set_stun_velocity(Vector2(p_force.x, 0));
-                    }
-                    if (cha->attack_by(hs, from)) {
-                        if (spark_scene != NULL) {
-                            Node2D* spark = spark_scene->instance()->cast_to<Node2D>();
-                            if (spark) {
-                                cha->get_parent()->add_child(spark);
-                                spark->set_global_pos(cha->get_global_pos() + Vector2(spark_range.x * (Math::randf()*2-1), spark_range.y * (Math::randf()*2-1)));
-                                spark->set_scale(Vector2(from->get_face_left()?-1:1, 1));
-                            }
-                        }
-
-                        _attack_to(hs, cha);
-                        if (get_script_instance()) {
-                            Variant v1 = hs;
-                            Variant v2 = cha->cast_to<Object>();
-                            const Variant* ptr[2]={&v1, &v2};
-                            get_script_instance()->call_multilevel("_attack_to", ptr, 2);
-                        }
-                        ret = true;
-                    }
-                    if (ret) {
-                        from->freeze(hs->get_self_freeze());
-                        HitStatusInfo info;
-                        info.count = count + 1;
-                        info.hit_time = time_record;
-                        count_store[(int)((long)cha)] = info;
-                    }
+        for (int j = 0, t2 = areas.size(); j < t2; ++j) {
+            HitArea *area = ((Object*)(areas[j]))->cast_to<HitArea>();
+            if (area) {
+                if (to_target(area, from, force, p_force)) {
+                    ret = true;
                 }
             }
         }
         return ret;
     }
     return false;
+}
+
+bool AttackArea::to_target(HitArea *area, Character *from, Vector2 force, Vector2 p_force) {
+    Character *cha = area->get_owner();
+    if (!cha) return false;
+    bool ret = false;
+    int count = 0;
+    float old_time = 0;
+    if (count_store.has((int)((long)area))) {
+        HitStatusInfo info = count_store[(int)((long)area)];
+        count = info.count;
+        old_time = info.hit_time;
+    }
+
+    if (((hit_count < 0 || count < hit_count) && old_time < time_record - attack_span)) {
+        Ref<HitStatus> hs = hit_status->duplicate(true)->cast_to<HitStatus>();
+        if (face_relative) {
+            bool right = cha->get_global_pos().x > from->get_global_pos().x;
+            hs->set_force(Vector2( ((right && force_invert) || (!right && !force_invert) ? -1:1) * force.x, force.y));
+            hs->set_velocity(hs->get_force());
+            hs->set_stun_velocity(Vector2(hs->get_force().x, 0));
+        }else{
+            hs->set_force(p_force);
+            hs->set_velocity(p_force);
+            hs->set_stun_velocity(Vector2(p_force.x, 0));
+        }
+        if (area->attack_by(hs, from)) {
+            if (spark_scene != NULL) {
+                Node2D* spark = spark_scene->instance()->cast_to<Node2D>();
+                if (spark) {
+                    cha->get_parent()->add_child(spark);
+                    spark->set_global_pos(cha->get_global_pos() + Vector2(spark_range.x * (Math::randf()*2-1), spark_range.y * (Math::randf()*2-1)));
+                    spark->set_scale(Vector2(from->get_face_left()?-1:1, 1));
+                }
+            }
+
+            _attack_to(hs, cha);
+            if (get_script_instance()) {
+                Variant v1 = hs;
+                Variant v2 = cha->cast_to<Object>();
+                const Variant* ptr[2]={&v1, &v2};
+                get_script_instance()->call_multilevel("_attack_to", ptr, 2);
+            }
+            ret = true;
+        }
+        if (ret) {
+            from->freeze(hs->get_self_freeze());
+            HitStatusInfo info;
+            info.count = count + 1;
+            info.hit_time = time_record;
+            count_store[(int)((long)area)] = info;
+        }
+    }
+    return ret;
+}
+
+bool AttackArea::to_target(Character *cha, Character *from, Vector2 force, Vector2 p_force) {
+    bool ret = false;
+    int count = 0;
+    float old_time = - attack_span;
+    if (count_store.has((int)((long)cha))) {
+        HitStatusInfo info = count_store[(int)((long)cha)];
+        count = info.count;
+        old_time = info.hit_time;
+    }
+
+    if ((hit_count < 0 || count < hit_count) && old_time < time_record - attack_span) {
+        Ref<HitStatus> hs = hit_status->duplicate(true)->cast_to<HitStatus>();
+        if (face_relative) {
+            bool right = cha->get_global_pos().x > from->get_global_pos().x;
+            hs->set_force(Vector2( ((right && force_invert) || (!right && !force_invert) ? -1:1) * force.x, force.y));
+            hs->set_velocity(hs->get_force());
+            hs->set_stun_velocity(Vector2(hs->get_force().x, 0));
+        }else{
+            hs->set_force(p_force);
+            hs->set_velocity(p_force);
+            hs->set_stun_velocity(Vector2(p_force.x, 0));
+        }
+        if (cha->attack_by(hs, from)) {
+            if (spark_scene != NULL) {
+                Node2D* spark = spark_scene->instance()->cast_to<Node2D>();
+                if (spark) {
+                    cha->get_parent()->add_child(spark);
+                    spark->set_global_pos(cha->get_global_pos() + Vector2(spark_range.x * (Math::randf()*2-1), spark_range.y * (Math::randf()*2-1)));
+                    spark->set_scale(Vector2(from->get_face_left()?-1:1, 1));
+                }
+            }
+
+            _attack_to(hs, cha);
+            if (get_script_instance()) {
+                Variant v1 = hs;
+                Variant v2 = cha->cast_to<Object>();
+                const Variant* ptr[2]={&v1, &v2};
+                get_script_instance()->call_multilevel("_attack_to", ptr, 2);
+            }
+            ret = true;
+        }
+        if (ret) {
+            from->freeze(hs->get_self_freeze());
+            HitStatusInfo info;
+            info.count = count + 1;
+            info.hit_time = time_record;
+            count_store[(int)((long)cha)] = info;
+        }
+    }
+    return ret;
 }
 
 void AttackArea::reset() {

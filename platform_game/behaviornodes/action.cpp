@@ -160,7 +160,6 @@ BehaviorNode::Status Action::_behavior(const Variant& target, Dictionary env) {
     if (animation_node) {
         AnimController *manager = animation_node->cast_to<AnimController>();
         if (manager) {
-            print_line("In " + String(get_name()) + " Set type:" + animation_type + ", name:"+animation_name);
             if (animation_type != "" && animation_name != "")
                 manager->set_status(animation_type, animation_name);
         }else {
@@ -191,12 +190,15 @@ void Action::_reset(const Variant &target) {
             const Variant* ptr[1]={&target};
             get_script_instance()->call_multilevel(StringName("_cancel_behavior"),ptr,1);
         }
+    }else {
+        cancel_animation();
     }
 }
 
 void Action::_timeout_behavior(const Variant& target, Dictionary& env) {
     cancel_animation();
     if (next_action) {
+        time_out();
         next_action->reset(target);
         next_action->force_enter = true;
         next_action->set_focus();

@@ -76,12 +76,16 @@ private:
     float health;
     float max_health;
 
+    bool has_hit_area;
+    friend class HitArea;
+
 protected:
     void _notification(int p_notification);
     static void _bind_methods();
     virtual Dictionary behavior_data();
     virtual bool _attack_by(Ref<HitStatus> p_hit_status, Object *from);
     virtual void _step(Dictionary env) {}
+    virtual void kill() {queue_delete();}
 public:
     _FORCE_INLINE_ NodePath get_behavior_tree_path() {return _behavior_tree_path;}
     void set_behavior_tree_path(NodePath path);
@@ -91,7 +95,7 @@ public:
     void clear_buff_unique(String buff_unique);
     Array get_buffs();
 
-    bool attack_by(Ref<HitStatus> p_hit_status, Character *from);
+    bool attack_by(Ref<HitStatus> p_hit_status, Character *from, bool from_hit_area = false);
 
     _FORCE_INLINE_ bool  get_on_floor() { return on_floor; }
 
@@ -121,6 +125,7 @@ public:
 
     _FORCE_INLINE_ NodePath get_visibility_path() {return _visibility_path;}
     void set_visibility_path(NodePath path);
+    _FORCE_INLINE_ VisibilityNotifier2D *get_visibility() {return _visibility_notifier;}
 
     _FORCE_INLINE_ void set_hit_status(Ref<HitStatus> hs){hit_status = hs;}
     _FORCE_INLINE_ Ref<HitStatus> get_hit_status() {return hit_status;}
@@ -183,6 +188,7 @@ public:
         colliding.bottom = false;
         colliding.normal = Vector2();
         _unlock_face = false;
+        has_hit_area = false;
     }
 };
 

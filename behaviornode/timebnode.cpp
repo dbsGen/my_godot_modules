@@ -22,8 +22,7 @@ BehaviorNode::Status TimerBNode::_step(const Variant& target, Dictionary &env) {
             timeout = true;
             _timeout_behavior(target, env);
             _script_timeout_behavior(target, env);
-            cancel = true;
-            return STATUS_FAILURE;
+            return cancel ? STATUS_CONTINUE : STATUS_FAILURE;
         }else {
             return BehaviorNode::_step(target, env);
         }
@@ -34,7 +33,7 @@ BehaviorNode::Status TimerBNode::_step(const Variant& target, Dictionary &env) {
         _script_during_behavior(target, env);
         if (cancel) {
             cancel = false;
-            return STATUS_FAILURE;
+            return STATUS_CONTINUE;
         }
         else {
             _traversal_children(target, env);

@@ -16,8 +16,11 @@ BehaviorNode::Status StatusBNode::_step(const Variant &target, Dictionary &env) 
         BehaviorNode *b_node = get_child(_selected)->cast_to<BehaviorNode>();
         Status childrenStatus = STATUS_FAILURE;
         if (b_node) {
+            if (_selected != _old_selected)
+                b_node->reset(target);
             childrenStatus =   b_node->step(target, env);
         }
+        _old_selected = _selected;
         Status status = (Status)((int)call(StringName("behavior"),target, Variant(env)));
         if (status == STATUS_DEPEND_ON_CHILDREN)
             return childrenStatus;

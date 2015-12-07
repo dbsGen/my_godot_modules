@@ -266,12 +266,16 @@ void Character::clear_buff_unique(String buff_unique) {
     }
 }
 
-bool Character::attack_by(Ref<HitStatus> p_hit_status, Character *from) {
-    bool ret = call("attack_by", p_hit_status, from->cast_to<Object>());
-    if (ret) {
-        hit_status = p_hit_status;
+bool Character::attack_by(Ref<HitStatus> p_hit_status, Character *from, bool from_hit_area) {
+    if (has_hit_area && !from_hit_area) {
+        return false;
+    }else {
+        bool ret = call("attack_by", p_hit_status, from->cast_to<Object>());
+        if (ret) {
+            hit_status = p_hit_status;
+        }
+        return ret;
     }
-    return ret;
 }
 
 bool Character::_attack_by(Ref<HitStatus> p_hit_status, Object *from) {
@@ -313,10 +317,11 @@ void Character::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("set_visibility_path", "visibility_path"), &Character::set_visibility_path);
     ObjectTypeDB::bind_method(_MD("get_visibility_path"), &Character::get_visibility_path);
+    ObjectTypeDB::bind_method(_MD("get_visibility:VisibilityNotifier2D"), &Character::get_visibility);
 
     ObjectTypeDB::bind_method(_MD("set_behavior_tree_path", "tree_path"), &Character::set_behavior_tree_path);
     ObjectTypeDB::bind_method(_MD("get_behavior_tree_path"), &Character::get_behavior_tree_path);
-    ObjectTypeDB::bind_method(_MD("behavior_data"), &Character::behavior_data);
+    ObjectTypeDB::bind_method(_MD("behavior_data:Dictionary"), &Character::behavior_data);
 
     ObjectTypeDB::bind_method(_MD("get_on_floor"), &Character::get_on_floor);
 
@@ -344,7 +349,7 @@ void Character::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("get_right_ray:RayCast2D"), &Character::get_right_ray);
 
     ObjectTypeDB::bind_method(_MD("set_hit_status", "hit_status"), &Character::set_hit_status);
-    ObjectTypeDB::bind_method(_MD("get_hit_status"), &Character::get_hit_status);
+    ObjectTypeDB::bind_method(_MD("get_hit_status:HitStatus"), &Character::get_hit_status);
 
     ObjectTypeDB::bind_method(_MD("set_can_buff", "can_buff"), &Character::set_can_buff);
     ObjectTypeDB::bind_method(_MD("get_can_buff"), &Character::get_can_buff);
@@ -386,6 +391,8 @@ void Character::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("_on_enter_screen"), &Character::_on_enter_screen);
     ObjectTypeDB::bind_method(_MD("_on_exit_screen"), &Character::_on_exit_screen);
 
+    ObjectTypeDB::bind_method(_MD("kill"), &Character::kill);
+
     ADD_SIGNAL(MethodInfo("health_recovery", PropertyInfo(Variant::REAL, "new_health")));
     ADD_SIGNAL(MethodInfo("health_down", PropertyInfo(Variant::REAL, "new_health")));
 
@@ -410,6 +417,7 @@ void Character::_bind_methods() {
 
     ADD_PROPERTY( PropertyInfo( Variant::VECTOR2, "move" ), _SCS("set_move"), _SCS("get_move") );
 
+    BIND_VMETHOD( MethodInfo("kill") );
     BIND_VMETHOD( MethodInfo("_step", PropertyInfo(Variant::DICTIONARY,"env")) );
     BIND_VMETHOD( MethodInfo("attack_by", PropertyInfo(Variant::OBJECT,"hit_status"), PropertyInfo(Variant::OBJECT,"from")) );
 }
