@@ -150,7 +150,7 @@ public:
 class InputStorageNode : public Node {
     OBJ_TYPE(InputStorageNode, Node);
 private:
-    List<String>    pressed;
+    Vector<String>    pressed;
     StringArray     events;
     void            _update_events();
 protected:

@@ -223,7 +223,8 @@ void InputStorageNode::_input(const InputEvent& p_event) {
                 if (p_event.is_pressed()) {
                     _storage->down_event(events[i]);
                     _storage->pressed_event(events[i]);
-                    pressed.push_back(events[i]);
+                    if (pressed.find(events[i]) < 0)
+                        pressed.push_back(events[i]);
                 }else {
                     pressed.erase(events[i]);
                 }
