@@ -49,7 +49,7 @@ Vector2 HitStatusProgress::process_hit(const Variant &target, Dictionary env) {
         Vector2 velocity;
 
         if (type <= HitStatus::HS_HIT_STUN) {
-            if (hit_type <= HitStatus::HS_HIT_STUN) {
+            if (hit_type <= HitStatus::HS_HIT_STUN && character->get_on_floor()) {
                 velocity = hit_status->get_stun_velocity();
                 ChangeType(HitStatus::HS_HIT_STUN);
             }else {

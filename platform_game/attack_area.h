@@ -11,8 +11,10 @@
 #include "hit_status/hit_status.h"
 #include "../../core/script_language.h"
 #include "../../scene/resources/packed_scene.h"
+#include "hit_area.h"
 
 class Character;
+class HitArea;
 
 struct HitStatusInfo {
     int count;
@@ -37,6 +39,9 @@ private:
     bool face_relative;
 
     Vector2 spark_range;
+
+    bool to_target(Character *cha, Character *from, Vector2 f1, Vector2 f2);
+    bool to_target(HitArea *area, Character *from, Vector2 f1, Vector2 f2);
 protected:
     static void _bind_methods();
     virtual void _attack_to(Ref<HitStatus> hit, Character* to) {}
@@ -85,6 +90,7 @@ public:
         force_invert = false;
         hit_count=1;
         attack_span=0.3;
+        time_record = 0;
         attack_owner = NULL;
         always_attack = false;
     }

@@ -11,6 +11,7 @@
 class StatusBNode : public BehaviorNode {
     OBJ_TYPE(StatusBNode, BehaviorNode);
 private:
+    int _old_selected;
     int _selected;
 protected:
 
@@ -20,7 +21,7 @@ public:
     _FORCE_INLINE_ void set_select(int select) {_selected = select;}
     _FORCE_INLINE_ int get_select() {return _selected;}
 
-    StatusBNode() {_selected = 0;}
+    StatusBNode() {_selected = 0;_old_selected=_selected;}
 };
 
 

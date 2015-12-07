@@ -10,7 +10,7 @@
 void KillZone::_on_body_enter(Object *body) {
     Character *cha = body->cast_to<Character>();
     if (cha) {
-        cha->queue_delete();
+        cha->call("kill");
     }
 }
 
