@@ -187,10 +187,10 @@ void AttackArea::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("get_attack_enable"), &AttackArea::get_attack_enable);
 
     ObjectTypeDB::bind_method(_MD("set_hit_status", "hit_status"), &AttackArea::set_hit_status);
-    ObjectTypeDB::bind_method(_MD("get_hit_status"), &AttackArea::get_hit_status);
+    ObjectTypeDB::bind_method(_MD("get_hit_status:HitStatus"), &AttackArea::get_hit_status);
 
     ObjectTypeDB::bind_method(_MD("set_spark_scene", "spark_scene"), &AttackArea::set_spark_scene);
-    ObjectTypeDB::bind_method(_MD("get_spark_scene"), &AttackArea::get_spark_scene);
+    ObjectTypeDB::bind_method(_MD("get_spark_scene:PackedScene"), &AttackArea::get_spark_scene);
 
     ObjectTypeDB::bind_method(_MD("set_hit_count", "hit_count"), &AttackArea::set_hit_count);
     ObjectTypeDB::bind_method(_MD("get_hit_count"), &AttackArea::get_hit_count);
@@ -206,6 +206,8 @@ void AttackArea::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("set_spark_range", "spark_range"), &AttackArea::set_spark_range);
     ObjectTypeDB::bind_method(_MD("get_spark_range"), &AttackArea::get_spark_range);
+
+    ObjectTypeDB::bind_method(_MD("attack", "character:Character"), &AttackArea::bind_attack);
 
     BIND_VMETHOD(MethodInfo("_attack_to", PropertyInfo(Variant::OBJECT, "hit", PROPERTY_HINT_RESOURCE_TYPE, "HitStatus"), PropertyInfo(Variant::OBJECT, "to") ));
 

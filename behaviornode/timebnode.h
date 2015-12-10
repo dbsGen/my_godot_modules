@@ -7,7 +7,7 @@ class TimerBNode : public BehaviorNode {
 OBJ_TYPE(TimerBNode, BehaviorNode);
 private:
     float delay;
-    bool cancel;
+    bool _cancel;
 protected:
     bool timeout;
     float _time;
@@ -17,6 +17,9 @@ protected:
 
     void _script_timeout_behavior(const Variant& target, Dictionary& env);
     virtual void _timeout_behavior(const Variant& target, Dictionary& env) {}
+
+    void _script_cancel_behavior(const Variant& target, Dictionary& env);
+    virtual void    _cancel_behavior(const Variant& target, Dictionary& env) {}
 
     void _script_during_behavior(const Variant& target, Dictionary& env);
     virtual void _during_behavior(const Variant& target, Dictionary& env) {}
@@ -28,7 +31,8 @@ public:
     float get_delay() {return delay;}
 
     float get_time() {return _time;}
-    void time_out() {cancel = true;_time=0;}
+    void time_out() {_time=0;}
+    void cancel(){_cancel=true;}
 
     void recount();
     void recount_to(float t);

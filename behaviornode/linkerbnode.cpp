@@ -4,16 +4,29 @@
 
 #include "linkerbnode.h"
 
-BehaviorNode::Status LinkerBNode::_step(const Variant& target, const Dictionary &env) {
-    if (link_target)
-        return link_target->step(target, env);
-    else
+BehaviorNode::Status LinkerBNode::_step(const Variant& target, Dictionary &env) {
+    if (get_behavior_enable() && link_target) {
+        int ret = link_target->step(target, env);
+        return (BehaviorNode::Status)ret;
+    }
+    else {
         return STATUS_FAILURE;
+    }
 }
 
 void LinkerBNode::set_link_path(NodePath path) {
     link_path = path;
     update_link_path();
+}
+
+bool LinkerBNode::_pre_behavior(const Variant &target, Dictionary env) {
+    if (link_target)
+        return link_target->call("pre_behavior", target, env);
+    return false;
+}
+
+void LinkerBNode::_reset(const Variant &target) {
+    link_target->reset(target);
 }
 
 void LinkerBNode::update_link_path() {

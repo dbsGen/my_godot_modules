@@ -10,27 +10,32 @@
 #include "../../../core/math/math_2d.h"
 
 void Action::refresh_cancel_list() {
-    cancel_list.clear();
-    for (int i = 0, t = get_child_count(); i < t; ++i) {
-        CancelNode* cancelNode = get_child(i)->cast_to<CancelNode>();
-        if (cancelNode && cancelNode->get_link_target()) {
-            if (cancelNode->get_link_target()->cast_to<Action>())
-                cancel_nodes.push_back(cancelNode);
-        }else {
-            LinkerBNode *linkerBNode = get_child(i)->cast_to<LinkerBNode>();
-            if (linkerBNode && linkerBNode->get_link_target()) {
-                Action *action = linkerBNode->get_link_target()->cast_to<Action>();
-                if (action) {
-                    cancel_list.push_back(action);
+    if (!get_tree()->is_editor_hint()) {
+        cancel_list.clear();
+        int t = get_child_count(), off = 0;
+        CancelNode* nodes[t];
+        for (int i = 0; i < t; ++i) {
+            CancelNode* cancelNode = get_child(i)->cast_to<CancelNode>();
+            if (cancelNode) {
+                nodes[off] = cancelNode;
+                off += 1;
+                if (cancelNode->get_link_target()) {
+                    Action *action = cancelNode->get_link_target()->cast_to<Action>();
+                    if (action) {
+                        CancelItem item;
+                        item.time = cancelNode->get_cancel_time();
+                        item.type = cancelNode->get_cancel_type();
+                        item.action = action;
+                        cancel_list.push_back(item);
+                    }
                 }
             }
         }
+        for (int j = 0; j < off; ++j) {
+            remove_child(nodes[j]);
+        }
+        checked_cancel_list = true;
     }
-    checked_cancel_list = true;
-}
-
-BehaviorNode::Status Action::_traversal_children(const Variant& target, Dictionary &env) {
-    return STATUS_RUNNING;
 }
 
 void Action::_notification(int p_notification) {
@@ -38,12 +43,16 @@ void Action::_notification(int p_notification) {
         case NOTIFICATION_ENTER_TREE: {
             update_animation_path();
             update_next_action();
+
             break;
         }
     }
 }
 
 BehaviorNode::Status Action::_step(const Variant& target, Dictionary &env) {
+    if (!checked_cancel_list) {
+        refresh_cancel_list();
+    }
     if (_time <= 0 && timeout && force_enter) {
         force_enter = false;
         Status childrenStatus =  _traversal_children(target, env);
@@ -78,55 +87,23 @@ void Action::_during_behavior(const Variant &target, Dictionary &env) {
     env["move"] = v2;
     old_move = v2.x;
 
-    if (!checked_cancel_list) {
-        refresh_cancel_list();
-    }
-#define setforce(NODE)  NODE->reset(target);\
+#define setforce(NODE)  {NODE->reset(target);\
     NODE->set_focus();\
-    time_out();\
-    reset_from_cancel = true;\
+    cancel();\
     reset(target);\
-    reset_from_cancel = false;\
-    return;
+    return;}
 
-    if (cancel_list.size() != 0) {
-        bool check_cancel = false;
-        switch (cancel_type) {
-            case CANCEL_TYPE_TIME: {
-                if (get_delay()-get_time() > cancel_time) check_cancel = true;
-                break;
-            };
-            case CANCEL_TYPE_HIT: {
-                if (_is_hit) check_cancel = true;
-                break;
-            };
-            default:
-                break;
-        }
-        if (check_cancel) {
-            for (int i = 0, t = cancel_list.size(); i < t; ++i) {
-                Action* action = cancel_list[i];
-                if ((bool)action->call("pre_behavior", target, env)) {
-                    setforce(action);
-                }
-            }
-        }
-    }
-    if (cancel_nodes.size() != 0){
-        for (int i = 0, t = cancel_nodes.size(); i < t; ++i) {
-            CancelNode *node = cancel_nodes[i];
-            switch (node->get_cancel_type()) {
-                case CancelNode::HIT: {
-                    if (_is_hit && node->get_link_target()->call("pre_behavior", target, env)) {
-                        setforce(node->get_link_target());
-                    }
-                } break;
-                case CancelNode::TIME: {
-                    if (get_delay()-get_time() > node->get_cancel_time() && node->get_link_target()->call("pre_behavior", target, env)) {
-                        setforce(node->get_link_target());
-                    }
-                } break;
-            }
+    for (int i = 0, t = cancel_list.size(); i < t; ++i) {
+        CancelItem& item = cancel_list[i];
+        switch (item.type) {
+            case CancelNode::HIT: {
+                if (_is_hit && item.action->call("pre_behavior", target, env))
+                    setforce(item.action);
+            } break;
+            case CancelNode::TIME: {
+                if (get_delay()-get_time() > item.time && item.action->call("pre_behavior", target, env))
+                    setforce(item.action);
+            } break;
         }
     }
 #undef setforce
@@ -184,28 +161,19 @@ void Action::cancel_animation() {
 
 void Action::_reset(const Variant &target) {
     TimerBNode::_reset(target);
-    if (reset_from_cancel) {
-        _cancel_behavior(target);
-        if (get_script_instance()) {
-            const Variant* ptr[1]={&target};
-            get_script_instance()->call_multilevel(StringName("_cancel_behavior"),ptr,1);
-        }
-    }else {
-        cancel_animation();
-    }
+    cancel_animation();
 }
 
 void Action::_timeout_behavior(const Variant& target, Dictionary& env) {
     cancel_animation();
     if (next_action) {
-        time_out();
         next_action->reset(target);
         next_action->force_enter = true;
         next_action->set_focus();
     }
 }
 
-void Action::_cancel_behavior(const Variant& target) {
+void Action::_cancel_behavior(const Variant& target, Dictionary& env) {
     cancel_animation();
 }
 
@@ -220,12 +188,6 @@ void Action::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("set_drag", "drag"), &Action::set_drag);
     ObjectTypeDB::bind_method(_MD("get_drag"), &Action::get_drag);
-
-    ObjectTypeDB::bind_method(_MD("set_cancel_time", "cancel_time"), &Action::set_cancel_time);
-    ObjectTypeDB::bind_method(_MD("get_cancel_time"), &Action::get_cancel_time);
-
-    ObjectTypeDB::bind_method(_MD("set_cancel_type", "cancel_type"), &Action::set_cancel_type);
-    ObjectTypeDB::bind_method(_MD("get_cancel_type"), &Action::get_cancel_type);
 
     ObjectTypeDB::bind_method(_MD("set_animation_path", "animation_path"), &Action::set_animation_path);
     ObjectTypeDB::bind_method(_MD("get_animation_path"), &Action::get_animation_path);
@@ -246,8 +208,6 @@ void Action::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/max_move"), _SCS("set_max_move"), _SCS("get_max_move"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/drag"), _SCS("set_drag"), _SCS("get_drag"));
 
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "action/cancel_time"), _SCS("set_cancel_time"), _SCS("get_cancel_time"));
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "action/cancel_type",PROPERTY_HINT_ENUM,"Time,Hit,None"), _SCS("set_cancel_type"), _SCS("get_cancel_type"));
     ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "action/animation_path"), _SCS("set_animation_path"), _SCS("get_animation_path"));
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "action/animation_type"), _SCS("set_animation_type"), _SCS("get_animation_type"));
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "action/animation_name"), _SCS("set_animation_name"), _SCS("get_animation_name"));
@@ -255,8 +215,4 @@ void Action::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "next_action_path"), _SCS("set_next_action_path"), _SCS("get_next_action_path"));
 
     BIND_VMETHOD( MethodInfo("_cancel_behavior", PropertyInfo(Variant::OBJECT,"target")) );
-
-    BIND_CONSTANT(CANCEL_TYPE_HIT);
-    BIND_CONSTANT(CANCEL_TYPE_TIME);
-    BIND_CONSTANT(CANCEL_TYPE_NONE);
 }

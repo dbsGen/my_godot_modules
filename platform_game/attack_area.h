@@ -12,6 +12,7 @@
 #include "../../core/script_language.h"
 #include "../../scene/resources/packed_scene.h"
 #include "hit_area.h"
+#include "character.h"
 
 class Character;
 class HitArea;
@@ -42,6 +43,7 @@ private:
 
     bool to_target(Character *cha, Character *from, Vector2 f1, Vector2 f2);
     bool to_target(HitArea *area, Character *from, Vector2 f1, Vector2 f2);
+    bool bind_attack(Object *character) {return attack(character->cast_to<Character>());};
 protected:
     static void _bind_methods();
     virtual void _attack_to(Ref<HitStatus> hit, Character* to) {}
