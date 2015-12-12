@@ -32,12 +32,8 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
                     checked = child;
                     if (old_path == _focus_node_path)
                         _focus_node_path = NodePath();
-<<<<<<< HEAD
-                    return STATUS_FAILURE;
-=======
                     else
                         continue;
->>>>>>> cd6e7d95ed6ee54141c7686ab760fd0d2294e768
                 }
             }
         }

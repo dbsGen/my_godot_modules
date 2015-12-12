@@ -161,19 +161,7 @@ void Action::cancel_animation() {
 
 void Action::_reset(const Variant &target) {
     TimerBNode::_reset(target);
-<<<<<<< HEAD
-    if (reset_from_cancel) {
-        _cancel_behavior(target);
-        if (get_script_instance()) {
-            const Variant* ptr[1]={&target};
-            get_script_instance()->call_multilevel(StringName("_cancel_behavior"),ptr,1);
-        }
-    }else {
-        cancel_animation();
-    }
-=======
     cancel_animation();
->>>>>>> cd6e7d95ed6ee54141c7686ab760fd0d2294e768
 }
 
 void Action::_timeout_behavior(const Variant& target, Dictionary& env) {
