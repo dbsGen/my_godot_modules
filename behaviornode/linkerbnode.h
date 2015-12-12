@@ -15,10 +15,16 @@ private:
     void update_link_path();
 protected:
     void _notification(int p_notification);
-    virtual Status  _step(const Variant& target, const Dictionary &env);;
+    virtual bool    _pre_behavior(const Variant& target, Dictionary env);
+    virtual Status  _step(const Variant& target, Dictionary &env);
+    virtual void    _reset(const Variant& target);
     static void _bind_methods();
 public:
-    _FORCE_INLINE_ BehaviorNode *get_link_target() { return link_target;}
+    _FORCE_INLINE_ BehaviorNode *get_link_target() {
+        if (!link_target)
+            update_link_path();
+        return link_target;
+    }
 
     void set_link_path(NodePath path);
     _FORCE_INLINE_ NodePath get_link_path() {return link_path;}

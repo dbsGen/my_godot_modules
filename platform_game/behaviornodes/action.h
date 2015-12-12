@@ -12,20 +12,19 @@
 
 class Action : public TimerBNode {
 OBJ_TYPE(Action, TimerBNode);
-public:
-    enum CancelType{
-        CANCEL_TYPE_TIME,
-        CANCEL_TYPE_HIT,
-        CANCEL_TYPE_NONE
-    };
 private:
+    struct CancelItem {
+        int type;
+        float time;
+        Action *action;
 
-    Vector< Action* > cancel_list;
-    Vector< CancelNode* > cancel_nodes;
+        CancelItem() {
+        }
+    };
+
+    Vector< CancelItem > cancel_list;
     bool checked_cancel_list;
     bool _is_hit;
-    float cancel_time;
-    CancelType cancel_type;
 
     float max_move;
     float drag;
@@ -49,9 +48,8 @@ protected:
     virtual Status  _step(const Variant& target, Dictionary &env);
     virtual void    _during_behavior(const Variant& target, Dictionary& env);
     virtual void    _timeout_behavior(const Variant& target, Dictionary& env);
-    virtual void    _cancel_behavior(const Variant& target);
+    virtual void    _cancel_behavior(const Variant& target, Dictionary& env);
     virtual Status  _behavior(const Variant& target, Dictionary env);
-    virtual Status  _traversal_children(const Variant& target, Dictionary& env);
     virtual void    _reset(const Variant& target);
     static void _bind_methods();
 public:
@@ -66,12 +64,6 @@ public:
 
     _FORCE_INLINE_ float get_drag() {return drag;}
     _FORCE_INLINE_ void set_drag(float p_drag) {if (p_drag >= 0)drag=p_drag;}
-
-    _FORCE_INLINE_ float get_cancel_time() {return cancel_time;}
-    _FORCE_INLINE_ void set_cancel_time(float p_cancel_time) {cancel_time=p_cancel_time;}
-
-    _FORCE_INLINE_ CancelType get_cancel_type() {return cancel_type;}
-    _FORCE_INLINE_ void set_cancel_type(CancelType p_cancel_type) {cancel_type=p_cancel_type;}
 
     _FORCE_INLINE_ NodePath get_animation_path() {return animation_path;}
     void set_animation_path(NodePath path);
@@ -93,15 +85,12 @@ public:
         checked_cancel_list= false;
         _is_hit= false;
         force_enter = false;
-        cancel_time=0.5;
         animation_node=NULL;
         max_move=2;drag=0.2;
         reset_from_cancel = false;
         next_action = NULL;
     }
 };
-
-VARIANT_ENUM_CAST(Action::CancelType);
 
 
 #endif //GODOT_MASTER_ACTION_H
