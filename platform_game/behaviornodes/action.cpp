@@ -13,7 +13,7 @@ void Action::refresh_cancel_list() {
     if (!get_tree()->is_editor_hint()) {
         cancel_list.clear();
         int t = get_child_count(), off = 0;
-        CancelNode* nodes[t];
+        CancelNode** nodes = (CancelNode**)memalloc(t*sizeof(CancelNode*));
         for (int i = 0; i < t; ++i) {
             CancelNode* cancelNode = get_child(i)->cast_to<CancelNode>();
             if (cancelNode) {
@@ -34,6 +34,7 @@ void Action::refresh_cancel_list() {
         for (int j = 0; j < off; ++j) {
             remove_child(nodes[j]);
         }
+        memfree(nodes);
         checked_cancel_list = true;
     }
 }

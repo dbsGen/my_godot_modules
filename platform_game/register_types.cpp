@@ -39,7 +39,6 @@
 #include "behaviornodes/attack_node.h"
 #include "behaviornodes/cancel_node.h"
 #include "camera/following_camera.h"
-#include "story_script.h"
 #include "kill_zone.h"
 #include "map/main_map.h"
 #include "map/scene_map.h"
@@ -59,8 +58,6 @@ void register_platform_game_types() {
     ObjectTypeDB::register_type<Action>();
     ObjectTypeDB::register_type<AttackNode>();
     ObjectTypeDB::register_type<FollowingCamera>();
-    ObjectTypeDB::register_type<StoryScript>();
-    ObjectTypeDB::register_type<StoryScriptNode>();
     ObjectTypeDB::register_type<KillZone>();
     ObjectTypeDB::register_type<MainMap>();
     ObjectTypeDB::register_type<SceneMap>();

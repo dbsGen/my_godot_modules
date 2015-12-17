@@ -14,8 +14,7 @@ bool AttackArea::attack(Character *from) {
         return false;
     }
     Array bodies = get_overlapping_bodies();
-    Array areas = get_overlapping_areas();
-    if (attack_enable && (bodies.size() > 0 || areas.size() > 0)) {
+    if (attack_enable && (bodies.size() > 0 || hit_areas.size() > 0)) {
         bool ret = false;
         Vector2 force = hit_status->get_force();
         Vector2 p_force = Vector2(force.x * (((from->get_face_left() && force_invert)||(!from->get_face_left() && !force_invert)) ? 1:-1), force.y);
@@ -30,8 +29,8 @@ bool AttackArea::attack(Character *from) {
             }
         }
 
-        for (int j = 0, t2 = areas.size(); j < t2; ++j) {
-            HitArea *area = ((Object*)(areas[j]))->cast_to<HitArea>();
+        for (int j = 0, t2 = hit_areas.size(); j < t2; ++j) {
+            HitArea *area = hit_areas[j];
             if (area) {
                 if (to_target(area, from, force, p_force)) {
                     ret = true;
@@ -156,6 +155,13 @@ void AttackArea::reset() {
 
 void AttackArea::_notification(int p_notification) {
     switch (p_notification) {
+        case NOTIFICATION_ENTER_TREE: {
+            hit_areas.clear();
+            if (!is_connected("area_enter", this, "_on_area_enter"))
+                connect("area_enter", this, "_on_area_enter");
+            if (!is_connected("area_exit", this, "_on_area_exit"))
+                connect("area_exit", this, "_on_area_exit");
+        } break;
         case NOTIFICATION_FIXED_PROCESS: {
             if (attack_enable) {
                 time_record += get_fixed_process_delta_time();
@@ -174,7 +180,17 @@ void AttackArea::_notification(int p_notification) {
                     attack(attack_owner);
                 }
             }
-        };
+            if (will_remove_areas.size() > 0) {
+                for (int i = 0, t = will_remove_areas.size(); i < t; ++i) {
+                    HitArea *area = will_remove_areas[i];
+                    int idx = hit_areas.find(area);
+                    if (idx >= 0) {
+                        hit_areas.remove(idx);
+                    }
+                }
+                will_remove_areas.clear();
+            }
+        } break;
     }
 }
 
@@ -206,6 +222,9 @@ void AttackArea::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("set_spark_range", "spark_range"), &AttackArea::set_spark_range);
     ObjectTypeDB::bind_method(_MD("get_spark_range"), &AttackArea::get_spark_range);
+
+    ObjectTypeDB::bind_method(_MD("_on_area_enter", "area"), &AttackArea::_on_area_enter);
+    ObjectTypeDB::bind_method(_MD("_on_area_exit", "area"), &AttackArea::_on_area_exit);
 
     ObjectTypeDB::bind_method(_MD("attack", "character:Character"), &AttackArea::bind_attack);
 

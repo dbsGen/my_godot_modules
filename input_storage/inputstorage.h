@@ -34,14 +34,12 @@ private:
 
         void alloc(int p_size) {
             if (mem) {
-                mem = (T*)memrealloc(mem, p_size* sizeof(T));
-                _size = 0;
-                _offset = 0;
-            }else {
-                mem = (T*)memalloc(p_size* sizeof(T));
+				memdelete_arr(mem);
             }
+			mem = memnew_arr(T, p_size);
+			_size = 0;
+			_offset = 0;
             _limit = p_size;
-            _size = MIN(_limit, _size);
         }
 
         const T &get(int index) const {
@@ -102,7 +100,7 @@ private:
         }
         ~Queue() {
             if (mem) {
-                memfree(mem);
+				memdelete_arr(mem);
             }
         }
     };

@@ -7,7 +7,7 @@
 BehaviorNode::Status StatusBNode::_step(const Variant &target, Dictionary &env) {
     if (!get_behavior_enable() || get_child_count() == 0)
         return STATUS_FAILURE;
-    if ((bool)call(StringName("pre_behavior"),target, Variant(env))) {
+    if ((bool)call(StringName("pre_behavior"),target, Variant(env)) && get_child_count() > 0) {
         if (_selected < 0) {
             _selected = 0;
         }else if (_selected >= get_child_count()) {

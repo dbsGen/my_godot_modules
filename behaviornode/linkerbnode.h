@@ -28,6 +28,7 @@ public:
 
     void set_link_path(NodePath path);
     _FORCE_INLINE_ NodePath get_link_path() {return link_path;}
+    _FORCE_INLINE_ LinkerBNode() {link_target=NULL;}
 };
 
 

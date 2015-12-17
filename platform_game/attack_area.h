@@ -41,6 +41,23 @@ private:
 
     Vector2 spark_range;
 
+    Vector<HitArea*> hit_areas;
+    Vector<HitArea*> will_remove_areas;
+
+    _FORCE_INLINE_ void _on_area_enter(Object *object) {
+        HitArea *area = object->cast_to<HitArea>();
+        if (area && hit_areas.find(area) < 0) {
+            hit_areas.push_back(area);
+        }
+    }
+
+    _FORCE_INLINE_ void _on_area_exit(Object *object) {
+        HitArea *area = object->cast_to<HitArea>();
+        if (area) {
+            will_remove_areas.push_back(area);
+        }
+    }
+
     bool to_target(Character *cha, Character *from, Vector2 f1, Vector2 f2);
     bool to_target(HitArea *area, Character *from, Vector2 f1, Vector2 f2);
     bool bind_attack(Object *character) {return attack(character->cast_to<Character>());};
