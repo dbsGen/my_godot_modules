@@ -5,6 +5,7 @@
 #include "parallax.h"
 #include "../../core/object_type_db.h"
 #include "../../scene/main/viewport.h"
+#include "../../core/math/math_funcs.h"
 
 
 void ParallaxBG::_notification(int p_what) {
@@ -32,7 +33,10 @@ void ParallaxBG::_camera_moved(const Matrix32 &p_transform) {
         return;
     if (set_camera) {
         const Vector2& off = p_transform.get_origin();
-        set_global_pos((camera_base_position-off)*(Vector2(1,1)-scroll/2)+original_position);
+        Vector2 v2 = (camera_base_position-off)*(Vector2(1,1)-scroll/2)+original_position;
+        v2.x = Math::ceil(v2.x);
+        v2.y = Math::ceil(v2.y);
+        set_global_pos(v2);
     }else{
         camera_base_position = p_transform.get_origin();
         set_camera = true;
