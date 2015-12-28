@@ -236,7 +236,7 @@ TweenAction *TweenAction::add_callback(const Variant &target, const StringName& 
 }
 
 bool TweenAction::step(float delta) {
-    if (status == TWEEN_STATUS_CANCEL) {
+    if (status == TWEEN_STATUS_CANCEL || target == NULL) {
         return true;
     }
     delta_time += delta;
@@ -245,6 +245,8 @@ bool TweenAction::step(float delta) {
     if (delta_time >= total_time+delay_time || status == TWEEN_STATUS_END) {
         pe = 1;
         br = true;
+    }else if (delta_time < delay_time) {
+        return false;
     }else {
         pe = (delta_time-delay_time)/total_time;
     }
@@ -282,18 +284,42 @@ bool TweenAction::step(float delta) {
     return br;
 }
 
+void TweenAction::set_target(Object *p_target) {
+    if (target && target->is_connected("exit_tree", this, "_on_target_exit")) {
+        target->disconnect("exit_tree", this, "_on_target_exit");
+    }
+    target = p_target;
+    if (target && !target->is_connected("exit_tree", this, "_on_target_exit"))  {
+        target->connect("exit_tree", this, "_on_target_exit");
+    }
+}
+
+void TweenAction::_on_target_exit() {
+    if (target && target->is_connected("exit_tree", this, "_on_target_exit")) {
+        target->disconnect("exit_tree", this, "_on_target_exit");
+    }
+    target = NULL;
+}
+
+TweenAction::~TweenAction() {
+    if (target && target->is_connected("exit_tree", this, "_on_target_exit")) {
+        target->disconnect("exit_tree", this, "_on_target_exit");
+    }
+}
+
 void TweenAction::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("add_method:TweenAction", "method_name", "from", "to"),&TweenAction::add_method);
     ObjectTypeDB::bind_method(_MD("add_property:TweenAction", "property_name", "from", "to"),&TweenAction::add_property);
     ObjectTypeDB::bind_method(_MD("add_callback:TweenAction", "target", "method_name", "step"),&TweenAction::add_callback);
     ObjectTypeDB::bind_method(_MD("cancel"),&TweenAction::cancel);
     ObjectTypeDB::bind_method(_MD("end"),&TweenAction::end);
-    ObjectTypeDB::bind_method(_MD("set_easing", "easing"),&TweenAction::set_easing);
+    ObjectTypeDB::bind_method(_MD("set_easing:TweenAction", "easing"),&TweenAction::set_easing);
     ObjectTypeDB::bind_method(_MD("get_easing"),&TweenAction::get_easing);
     ObjectTypeDB::bind_method(_MD("get_total_time"),&TweenAction::get_total_time);
     ObjectTypeDB::bind_method(_MD("get_delta_time"),&TweenAction::get_delta_time);
     ObjectTypeDB::bind_method(_MD("get_delay_time"),&TweenAction::get_delay_time);
-    ObjectTypeDB::bind_method(_MD("set_delay_time", "delay_time"),&TweenAction::set_delay_time);
+    ObjectTypeDB::bind_method(_MD("set_delay_time:TweenAction", "delay_time"),&TweenAction::set_delay_time);
+    ObjectTypeDB::bind_method(_MD("_on_target_exit"), &TweenAction::_on_target_exit);
 
     ADD_SIGNAL( MethodInfo("finished") );
     ADD_SIGNAL( MethodInfo("update", PropertyInfo(Variant::REAL, "progress")) );
@@ -330,7 +356,7 @@ Ref<TweenAction> NewTween::to(Object *target, float during) {
 
     Ref<TweenAction> action = memnew(TweenAction);
     action->total_time = during;
-    action->target = target;
+    action->set_target(target);
     tweenNode->actions.push_back(action);
     tweenNode->check_queue();
     return action;

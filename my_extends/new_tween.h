@@ -105,6 +105,8 @@ private:
     Vector< Ref<TweenProperty> > properties;
     friend class NewTween;
     friend class TweenNode;
+    void set_target(Object* target);
+    void _on_target_exit();
 protected:
     static void _bind_methods();
 public:
@@ -127,7 +129,9 @@ public:
         easing = NewTween::TWEEN_EASING_LINEAR;
         status = TWEEN_STATUS_NORMAL;
         delay_time = 0;
+        target = NULL;
     }
+    ~TweenAction();
 };
 
 VARIANT_ENUM_CAST(NewTween::Tween_Easing);
