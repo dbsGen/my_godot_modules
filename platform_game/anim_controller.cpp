@@ -70,17 +70,19 @@ void AnimController::resume() {
 
 void AnimController::freeze(float time) {
     _freeze_time = time;
-    status_cache.clear();
-    for (Map<StringName, Node*>::Element *E = anim_nodes.front(); E; E=E->next()) {
-        AnimationPlayer *player = E->get()->cast_to<AnimationPlayer>();
-        if (player->is_playing()) {
-            AnimationStatus status;
-            status.name = player->get_current_animation();
-            status.position = player->get_current_animation_pos();
-            status.player = player;
-            status_cache.push_back(status);
-            player->stop(false);
-            player->set_active(false);
+    if (_freeze_time <= 0) {
+        status_cache.clear();
+        for (Map<StringName, Node*>::Element *E = anim_nodes.front(); E; E=E->next()) {
+            AnimationPlayer *player = E->get()->cast_to<AnimationPlayer>();
+            if (player->is_playing()) {
+                AnimationStatus status;
+                status.name = player->get_current_animation();
+                status.position = player->get_current_animation_pos();
+                status.player = player;
+                status_cache.push_back(status);
+                player->stop(false);
+                player->set_active(false);
+            }
         }
     }
 }
@@ -96,17 +98,24 @@ void AnimController::set_status(String p_key, String p_name, float p_time) {
             remove_counts[p_key] = p_time;
         }
         _changed = true;
+        if (get_script_instance()) {
+            get_script_instance()->call(StringName("_add_status"), p_key, p_name);
+        }
     }
 }
 
 void AnimController::remove_status(String p_key) {
     if (current_anims.has(p_key)) {
-        remove_anim(p_key, current_anims[p_key]);
+        String name = current_anims[p_key];
+        remove_anim(p_key, name);
         if (remove_counts.has(p_key)) {
             remove_counts.erase(p_key);
         }
         current_anims.erase(p_key);
         _changed = true;
+        if (get_script_instance()) {
+            get_script_instance()->call(StringName("_remove_status"), p_key, name);
+        }
     }
 }
 
@@ -162,6 +171,9 @@ void AnimController::_bind_methods() {
 
     BIND_VMETHOD( MethodInfo("_status_changed", PropertyInfo(Variant::DICTIONARY, "added"), PropertyInfo(Variant::DICTIONARY, "removed")));
     BIND_VMETHOD( MethodInfo("_animation_finished", PropertyInfo(Variant::OBJECT, "anim")));
+
+    BIND_VMETHOD( MethodInfo("_add_status", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "name")));
+    BIND_VMETHOD( MethodInfo("_remove_status", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "name")));
 }
 AnimController::~AnimController() {
     for (Map<StringName, Node*>::Element *E = anim_nodes.front(); E; E=E->next()) {

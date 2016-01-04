@@ -27,12 +27,11 @@ void AttackNode::update_attack_area() {
 }
 
 void AttackNode::_during_behavior(const Variant &target, Dictionary &env) {
-    Action::_during_behavior(target, env);
     if (attack_area) {
         Character *from = ((Object*)target)->cast_to<Character>();
         if (from) {
             bool hit = attack_area->attack(from);
-            if (hit && !get_hit()) {
+            if (hit) {
                 set_hit(hit);
                 if (get_script_instance()) {
                     Variant var_env = Variant(env);
@@ -42,6 +41,7 @@ void AttackNode::_during_behavior(const Variant &target, Dictionary &env) {
             }
         }
     }
+    Action::_during_behavior(target, env);
 }
 
 void AttackNode::_timeout_behavior(const Variant& target, Dictionary& env) {
