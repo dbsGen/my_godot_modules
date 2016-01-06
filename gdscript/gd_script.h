@@ -410,6 +410,8 @@ public:
 	Error load_byte_code(const String& p_path);
 
 	Vector<uint8_t> get_as_byte_code() const;
+    
+    bool get_property_default_value(const StringName& p_property,Variant& r_value) const;
 
 	virtual ScriptLanguage *get_language() const;
 
