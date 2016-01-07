@@ -63,9 +63,16 @@ public:
     _FORCE_INLINE_ Trail2D() {
         trail_enable = false;
         span_frame = 0;
+        line_width = 1;
         set_fixed_process(true);
         set_process(true);
         trail_positions.alloc(30);
+//        for (int i = 0; i < 30; ++i) {
+//            TrailPoint tp;
+//            tp.position = Point2(i * 10, Math::sin(i*10)*10);
+//            tp.count = i;
+//            trail_positions.push(tp);
+//        }
     }
 };
 

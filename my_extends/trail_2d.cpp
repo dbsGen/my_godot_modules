@@ -29,26 +29,43 @@ void Trail2D::_update_position(bool minus) {
 }
 
 void Trail2D::_normal_points(int idx, int total, Vector2 &res1, Vector2 &res2) {
-    if (total <= 1) {
-        if (total == 1) {
-            res1 = res2 = trail_positions[idx].position;
+    bool has_before = false, has_front = false;
+    int count = trail_positions[idx].count, front_idx = count, back_idx = count;
+    Point2 pos_o = trail_positions[idx].position, pos_f = pos_o, pos_b = pos_o;
+    int offset = 0;
+    for (int i = idx + 1; i < total; ++i) {
+        const TrailPoint &tp = trail_positions[i];
+        if (tp.position != pos_o) {
+            pos_f = tp.position;
+            front_idx = tp.count;
+            has_front = true;
+            break;
         }
-        return;
     }
-    int count = trail_positions[idx].count;
-    if (idx == total - 1) {
-        Vector2 pos = trail_positions[idx].position - trail_positions[idx - 1].position;
-        Vector2 v1 = Vector2(-pos.y, pos.x).normalized();
-        Vector2 v2 = v1*(line_width*count/(total - 1))/2;
-        res1 = pos + v2;
-        res2 = pos - v2;
-    }else if (idx == 0) {
-        res1 = res2 = trail_positions[idx].position;
+    for (int j = idx - 1; j >= 0 ; --j) {
+        const TrailPoint &tp = trail_positions[j];
+        if (tp.position != pos_o) {
+            pos_b = tp.position;
+            back_idx = tp.count;
+            has_before = true;
+            break;
+        }
+    }
+
+    if (!has_before && !has_front) {
+        res1 = res2 = pos_o;
+    }else if (!has_front) {
+        Vector2 off = pos_o - pos_b;
+        Vector2 v1 = Vector2(-off.y, off.x).normalized();
+        Vector2 v2 = v1*(line_width*count/(total - 1)/2);
+        res1 = pos_o + v2;
+        res2 = pos_o - v2;
+    } else if (!has_before) {
+        res1 = res2 = pos_o;
     }else {
-        Vector2 pos_o = trail_positions[idx].position, pos_b = trail_positions[idx-1].position, pos_f = trail_positions[idx+1].position;
         Vector2 v3 = pos_f - pos_o;
         Vector2 v1 = (pos_b - pos_o + v3).normalized();
-        Vector2 v2 = v1*(line_width*count/(total - 1))/2;
+        Vector2 v2 = v1*(line_width*count/(total - 1)/2);
         Vector2 p1 = pos_o + v2, p2 = pos_o - v2;
 
         if((p1.x - pos_o.x)*v3.y-(p1.y - pos_o.y)*v3.x > 0) {
@@ -67,8 +84,8 @@ float determinant(Vector2 v1, Vector2 v2) {
 
 bool intersect(Point2 point_a1, Point2 point_a2, Point2 point_b1, Point2 point_b2, Point2 *result)
 {
-    double delta = determinant(point_a2-point_a1, point_b2-point_b1);
-    if ( delta<=(1e-6) && delta>=-(1e-6) )
+    double delta = determinant(point_a2-point_a1, point_b1-point_b2);
+    if ( delta == 0 )
     {
         return false;
     }
@@ -108,7 +125,7 @@ void Trail2D::_notification(int p_what) {
                         const Vector2& p1 = trail_positions[n].position, p2 = trail_positions[n+1].position;
                         if (p1 != p2) {
                             float p = trail_positions[n].count/(float)(total-1);
-                            draw_line(p1, p2, line_color->get_color_at_offset(p), p*line_width);
+                            draw_line(p1, p2, !line_color.is_null() ? line_color->get_color_at_offset(p):Color(1,1,1,p), p*line_width);
                         }
                     }else break;
                 }
@@ -119,15 +136,15 @@ void Trail2D::_notification(int p_what) {
                 for (int n = total-2; n >= 0; n--) {
                     if (trail_positions[n].count > 0) {
                         if (n == total-2) {
-                            _normal_points(n+1, total, last_points[1], last_points[0]);
-                            last_color = line_color->get_color_at_offset(1);
+                            _normal_points(n+1, total, last_points[0], last_points[1]);
+                            last_color = !line_color.is_null() ? line_color->get_color_at_offset(1):Color(1,1,1);
                         }
                         Vector2 ps[2];
                         _normal_points(n, total, ps[0], ps[1]);
                         Vector2 cross_point;
                         if ((trail_positions[n].position - trail_positions[n+1].position).length() < 1e-6) {
                         }else if (intersect(ps[0], ps[1], last_points[0], last_points[1], &cross_point)) {
-//                            Color color = line_color->get_color_at_offset(n/(float)(total-1));
+//                            Color color = !line_color.is_null() ? line_color->get_color_at_offset(n/(float)(total-1)):Color(1,1,1,n/(float)(total-1));
 //                            Vector<Vector2> points;
 //                            points.resize(3);
 //                            points[0] = ps[0];
@@ -149,22 +166,24 @@ void Trail2D::_notification(int p_what) {
 //                            last_points[0] = ps[1];
 //                            last_points[1] = ps[0];
 //                            draw_polygon(points, colors);
+                        }else if (intersect(ps[1], last_points[0], last_points[1], ps[0], &cross_point)) {
+
                         }else if (ps[0] == ps[1]) {
-                            Color color = line_color->get_color_at_offset(n/(float)(total-1));
-                            Vector<Vector2> points;
-                            points.resize(3);
-                            points[0] = ps[0];
-                            points[1] = last_points[1];
-                            points[2] = last_points[0];
-                            Vector<Color> colors;
-                            colors.resize(3);
-                            colors[0] = color;
-                            colors[1] = last_color;
-                            colors[2] = last_color;
-                            last_color = color;
-                            draw_polygon(points, colors);
-                            last_points[0] = ps[1];
-                            last_points[1] = ps[0];
+//                            Color color = !line_color.is_null() ? line_color->get_color_at_offset(n/(float)(total-1)):Color(1,1,1,n/(float)(total-1));
+//                            Vector<Vector2> points;
+//                            points.resize(3);
+//                            points[0] = ps[0];
+//                            points[1] = last_points[1];
+//                            points[2] = last_points[0];
+//                            Vector<Color> colors;
+//                            colors.resize(3);
+//                            colors[0] = color;
+//                            colors[1] = last_color;
+//                            colors[2] = last_color;
+//                            last_color = color;
+//                            draw_polygon(points, colors);
+//                            last_points[0] = ps[1];
+//                            last_points[1] = ps[0];
                         }else {
                             Vector<Vector2> points;
                             points.resize(4);
@@ -172,7 +191,7 @@ void Trail2D::_notification(int p_what) {
                             points[1] = ps[1];
                             points[2] = last_points[0];
                             points[3] = last_points[1];
-                            Color color = line_color->get_color_at_offset(n/(float)(total-1));
+                            Color color = !line_color.is_null() ? line_color->get_color_at_offset(n/(float)(total-1)):Color(1,1,1,n/(float)(total-1));
                             Vector<Color> colors;
                             colors.resize(4);
                             colors[0] = color;
