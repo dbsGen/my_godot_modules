@@ -9,13 +9,14 @@
 #include "../../core/typedefs.h"
 #include "../../core/math/math_2d.h"
 #include "../../core/object.h"
+#include "../../scene/2d/canvas_item.h"
 #include "../../scene/resources/color_ramp.h"
 #include "queue.hpp"
 
 using namespace MyTools;
 
-class Trail2D : public Node2D {
-    OBJ_TYPE(Trail2D, Node2D);
+class TrailPoint2D : public Node2D {
+    OBJ_TYPE(TrailPoint2D, Node2D);
 private:
     struct TrailPoint {
         Vector2 position;
@@ -40,11 +41,18 @@ private:
     void _update_position(bool minus = false);
     void _update_frame(bool minus = false);
 
+    NodePath target_path;
+    CanvasItem *trail_target;
+    void _update_trail_target();
+    void _on_exit_tree();
+
 protected:
     void _notification(int p_what);
     static void _bind_methods();
 
 public:
+    virtual Rect2 get_item_rect() const;
+
     _FORCE_INLINE_ bool get_trail_enable() {return trail_enable;}
     _FORCE_INLINE_ void set_trail_enable(bool p_enable) {trail_enable=p_enable;span_count=span_frame;}
 
@@ -55,24 +63,28 @@ public:
     _FORCE_INLINE_ void set_trail_count(float p_count) {trail_positions.alloc(p_count);}
 
     _FORCE_INLINE_ float get_line_width() {return line_width;}
-    _FORCE_INLINE_ void set_line_width(float p_width) {line_width=p_width;}
+    _FORCE_INLINE_ void set_line_width(float p_width) {line_width=p_width<0?0:(p_width>10?10:p_width);}
 
     _FORCE_INLINE_ Ref<ColorRamp> get_line_color() {return line_color;}
     _FORCE_INLINE_ void set_line_color(const Ref<ColorRamp>& p_color) {line_color=p_color;}
 
-    _FORCE_INLINE_ Trail2D() {
+    _FORCE_INLINE_ NodePath get_target_path() {return target_path;}
+    _FORCE_INLINE_ void set_target_path(const NodePath &p_path) {target_path=p_path;_update_trail_target();}
+
+    _FORCE_INLINE_ TrailPoint2D() {
         trail_enable = false;
         span_frame = 0;
         line_width = 1;
         set_fixed_process(true);
         set_process(true);
         trail_positions.alloc(30);
-//        for (int i = 0; i < 30; ++i) {
-//            TrailPoint tp;
-//            tp.position = Point2(i * 10, Math::sin(i*10)*10);
-//            tp.count = i;
-//            trail_positions.push(tp);
-//        }
+        trail_target = NULL;
+    }
+
+    _FORCE_INLINE_ ~TrailPoint2D() {
+        if (trail_target != NULL) {
+            trail_target->disconnect("exit_tree", this, "_on_exit_tree");
+        }
     }
 };
 
