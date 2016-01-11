@@ -45,7 +45,8 @@ void register_my_extends_types() {
     ObjectTypeDB::register_type<InputNode>();
     ObjectTypeDB::register_type<InputStorage>();
     ObjectTypeDB::register_type<InputStorageNode>();
-    ObjectTypeDB::register_type<Trail2D>();
+    ObjectTypeDB::register_type<TrailPoint2D>();
+    ObjectTypeDB::register_type<TrailLine2D>();
 }
 
 void unregister_my_extends_types() {
