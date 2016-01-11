@@ -6,11 +6,13 @@
 
 void TrailPoint2D::_update_frame(bool minus) {
     _update_position(minus);
-    if (trail_enable && (span_frame == 0 || (++span_count > span_frame))) {
-        span_count = 0;
-        TrailItem np = TrailItem();
-        np.count = trail_items.limit();
-        trail_items.push(np);
+    if (minus) {
+        if (trail_enable && (span_frame == 0 || (++span_count > span_frame))) {
+            span_count = 0;
+            TrailItem np = TrailItem();
+            np.count = trail_items.limit();
+            trail_items.push(np);
+        }
     }
 }
 
@@ -32,7 +34,6 @@ void TrailPoint2D::_normal_points(int idx, int total, Vector2 &res1, Vector2 &re
     bool has_before = false, has_front = false;
     int count = trail_items[idx].count, front_idx = count, back_idx = count;
     Point2 pos_o = trail_items[idx].position, pos_f = pos_o, pos_b = pos_o;
-    int offset = 0;
     for (int i = idx + 1; i < total; ++i) {
         const TrailItem &tp = trail_items[i];
         if (tp.position != pos_o) {
@@ -207,13 +208,15 @@ Rect2 TrailLine2D::get_item_rect() const {
 
 void TrailLine2D::_update_frame(bool minus) {
     _update_position(minus);
-    if (trail_enable && (span_frame == 0 || (++span_count > span_frame))) {
-        span_count = 0;
-        TrailItem np = TrailItem();
-        if (terminal)
-            np.position2 = terminal->get_pos();
-        np.count = trail_items.limit();
-        trail_items.push(np);
+    if (minus) {
+        if (trail_enable && (span_frame == 0 || (++span_count > span_frame))) {
+            span_count = 0;
+            TrailItem np = TrailItem();
+            if (terminal)
+                np.position2 = terminal->get_pos();
+            np.count = trail_items.limit();
+            trail_items.push(np);
+        }
     }
 }
 
@@ -231,8 +234,8 @@ void TrailLine2D::_update_position(bool minus) {
     }
 }
 
-Vector<Vector<Point2>> simplify(Vector<Point2> original) {
-    Vector<Vector<Point2>> new_vs;
+Vector< Vector<Point2> > simplify(Vector<Point2> original) {
+    Vector< Vector<Point2> > new_vs;
     int total = original.size();
 	if (total < 3) return new_vs;
     int i = 0;
@@ -262,6 +265,7 @@ Vector<Vector<Point2>> simplify(Vector<Point2> original) {
     if (total >= 3) {
         int off = 0;
         while (off < total) {
+            if (total <= 3) break;
             Point2 &p1 = n_path[off], p2 = n_path[(off+1)%total];
             int c_off = off + 1;
             while (c_off < total) {
@@ -274,10 +278,8 @@ Vector<Vector<Point2>> simplify(Vector<Point2> original) {
                     off = total;
                     break;
                 }else if (total == 3) {
-                    n_path.clear();
-                    total = 0;
                     break;
-                } if (check == 1 && c_off != off + 1 && (c_off != total - 1 || off != 0)) {
+                }else if (check == 1 && c_off != off + 1 && (c_off != total - 1 || off != 0)) {
                     Vector<Point2> vs;
                     vs.push_back(cp);
                     for (int j = off+1, t = (c_off+1>total?total:c_off+1); j < t; ++j) {
@@ -285,7 +287,7 @@ Vector<Vector<Point2>> simplify(Vector<Point2> original) {
                         n_path.remove(off+1);
                     }
                     total = n_path.size();
-                    Vector<Vector<Point2>> s_p = simplify(vs);
+                    Vector< Vector<Point2> > s_p = simplify(vs);
                     for (int k = 0, t = s_p.size(); k < t; ++k) {
                         new_vs.push_back(s_p[k]);
                     }
@@ -304,12 +306,14 @@ Vector<Vector<Point2>> simplify(Vector<Point2> original) {
                         vs.push_back(n_path[off+1]);
                         n_path.remove(off+1);
                     }
-                    Vector<Vector<Point2>> s_p = simplify(vs);
+                    Vector< Vector<Point2> > s_p = simplify(vs);
                     for (int k = 0, t = s_p.size(); k < t; ++k) {
                         new_vs.push_back(s_p[k]);
                     }
                     if (p1 == p4) {
                         n_path.remove(off+1);
+                    }else {
+                        p2 = p4;
                     }
                     total = n_path.size();
                 }
@@ -340,15 +344,21 @@ void TrailLine2D::_notification(int p_what) {
         } break;
         case NOTIFICATION_DRAW: {
             Vector<Point2> vs;
-            vs.resize(trail_items.size() * 2);
-            for (int i = 0, t = trail_items.size(); i < t; ++i) {
-                vs[i] = trail_items[i].position1;
-                vs[t*2-1-i] = trail_items[i].position2;
-            }
-            Vector<Vector<Point2>> pols = simplify(vs);
-            Color color = Color(1,1,1,0.3);
-            for (int j = 0, t = pols.size(); j < t; ++j) {
-                draw_colored_polygon(pols[j], color);
+            int total = trail_items.size();
+            if (total > 1) {
+                vs.resize(total * 2);
+                for (int i = total-1; i >= 0; --i) {
+                    const TrailItem &item = trail_items[i];
+                    if (item.count > 0) {
+                        vs[i] = item.position1;
+                        vs[total*2-1-i] = item.position2;
+                    }else break;
+                }
+                Vector< Vector<Point2> > pols = simplify(vs);
+                Color color = Color(1,1,1,0.3);
+                for (int j = 0, t = pols.size(); j < t; ++j) {
+                    draw_colored_polygon(pols[j], color);
+                }
             }
         } break;
     }
