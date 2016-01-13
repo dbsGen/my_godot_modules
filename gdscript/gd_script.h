@@ -248,14 +248,17 @@ public:
 class GDNativeFunctionObject : public GDFunctionObject {
 	OBJ_TYPE(GDNativeFunctionObject,GDFunctionObject);
 
+	friend class GDFunction;
 	friend class GDInstance;
+	ObjectID target_id;
 	StringName method_name;
 public:
-	_FORCE_INLINE_ virtual bool is_valid() const {return !!instance;}
+	_FORCE_INLINE_ virtual bool is_valid() const { return target_id != 0 && ObjectDB::get_instance(target_id); }
 	
 	_FORCE_INLINE_ virtual StringName get_name() const { return method_name; }
 	virtual Variant apply(const Variant** p_args,int p_argcount,Variant::CallError &r_error);
 	virtual Variant apply_with(Object *p_target, const Array p_args);
+	GDNativeFunctionObject() {target_id = 0;}
 };
 
 class GDLambdaFunctionObject : public GDFunctionObject {

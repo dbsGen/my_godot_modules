@@ -54,6 +54,7 @@ private:
     struct {
         bool left, right, top, bottom;
         Vector2 normal;
+        ObjectID target_id;
     } colliding;
     float   _move_duration;
     Vector2 _move_vec;
@@ -187,6 +188,7 @@ public:
         colliding.top = false;
         colliding.bottom = false;
         colliding.normal = Vector2();
+        colliding.target_id = 0;
         _unlock_face = false;
         has_hit_area = false;
     }

@@ -18,7 +18,6 @@ BehaviorNode::Status Gravity::_behavior(const Variant &target, Dictionary env) {
 
 void Gravity::_bind_methods() {
 
-
     ObjectTypeDB::bind_method(_MD("set_accelerated", "accelerated"), &Gravity::set_accelerated);
     ObjectTypeDB::bind_method(_MD("get_accelerated"), &Gravity::get_accelerated);
 

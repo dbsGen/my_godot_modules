@@ -164,6 +164,7 @@ void Character::_notification(int p_notification) {
                 colliding.top = false;
                 colliding.bottom = false;
                 colliding.normal = Vector2();
+                colliding.target_id = 0;
                 if (is_colliding()) {
                     Vector2 n = get_collision_normal();
                     colliding.normal = n;
@@ -183,6 +184,7 @@ void Character::_notification(int p_notification) {
                     }else if (alpha < -0.6) {
                         colliding.right = true;
                     }
+                    colliding.target_id = get_collider();
 
                     _move = n.slide(_move);
                     move(n.slide(inv));
@@ -225,11 +227,25 @@ void Character::_notification(int p_notification) {
 
 Dictionary Character::behavior_data() {
     Dictionary data(true);
-    data["colliding_top"] = colliding.top;
-    data["colliding_bottom"] = colliding.bottom;
-    data["colliding_right"] = colliding.right;
-    data["colliding_left"] = colliding.left;
-    data["colliding_normal"] = colliding.normal;
+    Object *object = NULL;
+    if (colliding.target_id != 0) {
+        object = ObjectDB::get_instance(colliding.target_id);
+    }
+    if (object) {
+        data["colliding_top"] = colliding.top;
+        data["colliding_bottom"] = colliding.bottom;
+        data["colliding_right"] = colliding.right;
+        data["colliding_left"] = colliding.left;
+        data["colliding_normal"] = colliding.normal;
+        data["colliding_object"] = object;
+    }else {
+        data["colliding_top"] = false;
+        data["colliding_bottom"] = false;
+        data["colliding_right"] = false;
+        data["colliding_left"] = false;
+        data["colliding_normal"] = Vector2();
+        data["colliding_object"] = NULL;
+    }
     data["timestep"] = get_fixed_process_delta_time();
     data["move"] = _move;
     return data;

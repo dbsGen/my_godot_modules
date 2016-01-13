@@ -216,7 +216,7 @@ static String _get_var_type(const Variant* p_type) {
 Variant GDFunction::call_method(Variant* p_self, const StringName& p_method, const Variant** p_args, int p_argcount, Variant::CallError& r_error) const {
 	if (p_self->get_type() == Variant::OBJECT) {
 		Object *target = *p_self;
-		if (target->get_script_instance()) {
+		if (target && target->get_script_instance()) {
 			GDInstance *instance = dynamic_cast<GDInstance*>(target->get_script_instance());
 			if (instance) return instance->call_member(p_method, p_args, p_argcount, r_error);
 		}
@@ -587,13 +587,16 @@ Variant GDFunction::call(GDInstance *p_instance, const Variant **p_args, int p_a
 
 					if (!valid) {
 						if (src->has_method(*index)) {
-							if (src->get_type() == Variant::OBJECT &&
-								!(src->operator Object *())->get_script_instance()) {
+							if (src->get_type() == Variant::OBJECT) {
 								Object *object = src->operator Object *();
-								GDInstance *instance = memnew(GDInstance);
-								object->set_script_instance(instance);
-								instance->owner = object;
-								continue;
+								if (object) {
+									Ref<GDNativeFunctionObject> fun = memnew(GDNativeFunctionObject);
+									fun->target_id = object->get_instance_ID();
+									fun->method_name = *index;
+									*dst = fun;
+									valid = true;
+									break;
+								}
 							}
 							err_text = "Invalid get index '" + index->operator String() + "' (on base: '" +
 									   _get_var_type(src) + "'). Did you mean '." + index->operator String() + "()' ?";
@@ -1612,7 +1615,7 @@ Variant GDNativeFunctionObject::apply(const Variant **p_args, int p_argcount, Va
 		return Variant();
 	}
 
-	return instance->owner->call(method_name, p_args, p_argcount, r_error);
+	return ObjectDB::get_instance(target_id)->call(method_name, p_args, p_argcount, r_error);
 }
 
 Variant GDNativeFunctionObject::apply_with(Object *p_target, const Array p_args) {
@@ -2577,13 +2580,6 @@ Ref<GDFunctionObject> GDInstance::get_function(StringName p_name) {
 			}
 		}
 		sptr = sptr->_base;
-	}
-	if (owner->has_method(p_name)) {
-		Ref<GDNativeFunctionObject> func = memnew(GDNativeFunctionObject);
-		func->instance = const_cast<GDInstance*>(this);
-		func->method_name = p_name;
-		functions.insert(p_name, Variant(func));
-		return functions[p_name];
 	}
 	return NULL;
 }

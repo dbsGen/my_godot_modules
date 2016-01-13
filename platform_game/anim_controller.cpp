@@ -127,6 +127,9 @@ void AnimController::remove_status_with(const String& p_key, const String& p_nam
         }
         current_anims.erase(p_key);
         _changed = true;
+        if (get_script_instance()) {
+            get_script_instance()->call(StringName("_remove_status"), p_key, p_name);
+        }
     }
 }
 
