@@ -47,6 +47,12 @@ private:
     void _update_trail_target();
     void _on_exit_tree();
 
+    Vector2 gravity;
+    float wave;
+    float wave_scale;
+    float wave_time_scale;
+    float time_during;
+
 protected:
     void _notification(int p_what);
     static void _bind_methods();
@@ -72,6 +78,16 @@ public:
     _FORCE_INLINE_ NodePath get_target_path() {return target_path;}
     _FORCE_INLINE_ void set_target_path(const NodePath &p_path) {target_path=p_path;_update_trail_target();}
 
+    _FORCE_INLINE_ Vector2 get_gravity() {return gravity;}
+    _FORCE_INLINE_ void set_gravity(Vector2 p_gravity) {gravity = p_gravity;}
+
+    _FORCE_INLINE_ float get_wave() {return wave;}
+    _FORCE_INLINE_ void set_wave(float p_wave) {wave = p_wave;}
+    _FORCE_INLINE_ float get_wave_scale() {return wave_scale;}
+    _FORCE_INLINE_ void set_wave_scale(float p_scale) {wave_scale = p_scale;}
+    _FORCE_INLINE_ float get_wave_time_scale() {return wave_time_scale;}
+    _FORCE_INLINE_ void set_wave_time_scale(float p_scale) {wave_time_scale = p_scale;}
+
     _FORCE_INLINE_ TrailPoint2D() {
         trail_enable = false;
         span_frame = 0;
@@ -80,6 +96,10 @@ public:
         set_process(true);
         trail_items.alloc(30);
         trail_target = NULL;
+        wave = 0;
+        time_during = 0;
+        wave_scale = 10;
+        wave_time_scale = 10;
     }
 
     _FORCE_INLINE_ ~TrailPoint2D() {

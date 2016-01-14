@@ -24,8 +24,10 @@ void TrailPoint2D::_update_position(bool minus) {
     for (int n = trail_items.size()-1; n >= 0; n--) {
         if (trail_items[n].count > 0) {
             trail_items[n].position -= offset;
-            if (minus)
+            if (minus) {
                 trail_items[n].count -= 1;
+                trail_items[n].position += gravity/trail_items.limit();
+            }
         }else break;
     }
 }
@@ -158,12 +160,24 @@ void TrailPoint2D::_notification(int p_what) {
         } break;
         case NOTIFICATION_DRAW: {
             int total = trail_items.size();
+            if (wave != 0) time_during += get_process_delta_time();
             for (int n = total-2; n >= 0; n--) {
                 if (trail_items[n].count > 0) {
-                    const Vector2& p1 = trail_items[n].position, p2 = trail_items[n+1].position;
-                    if (p1 != p2) {
-                        float p = trail_items[n].count/(float)(total-1);
-                        draw_line(p1, p2, !line_color.is_null() ? line_color->get_color_at_offset(p):Color(1,1,1,p), p*line_width);
+                    float per1 = 1-trail_items[n].count/(float)(total-1);
+                    float per2 = 1-trail_items[n+1].count/(float)(total-1);
+
+                    if (wave == 0) {
+                        const Vector2& p1 = trail_items[n].position,
+                                &p2 = trail_items[n+1].position;
+                        if (p1 != p2) {
+                            draw_line(p1, p2, !line_color.is_null() ? line_color->get_color_at_offset(per1):Color(1,1,1,1-per1), (1-per1)*line_width);
+                        }
+                    }else {
+                        const Vector2& p1 = trail_items[n].position+(Vector2(0,wave*Math::cos(per1*wave_scale-time_during*wave_time_scale)))*per1,
+                                &p2 = trail_items[n+1].position+(Vector2(0,wave*Math::cos(per2*wave_scale-time_during*wave_time_scale)))*per2;
+                        if (p1 != p2) {
+                            draw_line(p1, p2, !line_color.is_null() ? line_color->get_color_at_offset(per1):Color(1,1,1,1-per1), line_width);
+                        }
                     }
                 }else break;
             }
@@ -190,6 +204,18 @@ void TrailPoint2D::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("get_target_path"),&TrailPoint2D::get_target_path);
     ObjectTypeDB::bind_method(_MD("set_target_path", "target_path"),&TrailPoint2D::set_target_path);
 
+    ObjectTypeDB::bind_method(_MD("get_gravity"),&TrailPoint2D::get_gravity);
+    ObjectTypeDB::bind_method(_MD("set_gravity", "gravity"),&TrailPoint2D::set_gravity);
+
+    ObjectTypeDB::bind_method(_MD("get_wave"),&TrailPoint2D::get_wave);
+    ObjectTypeDB::bind_method(_MD("set_wave", "wave"),&TrailPoint2D::set_wave);
+
+    ObjectTypeDB::bind_method(_MD("get_wave_scale"),&TrailPoint2D::get_wave_scale);
+    ObjectTypeDB::bind_method(_MD("set_wave_scale", "wave_scale"),&TrailPoint2D::set_wave_scale);
+
+    ObjectTypeDB::bind_method(_MD("get_wave_time_scale"),&TrailPoint2D::get_wave_time_scale);
+    ObjectTypeDB::bind_method(_MD("set_wave_time_scale", "wave_time_scale"),&TrailPoint2D::set_wave_time_scale);
+
     ObjectTypeDB::bind_method(_MD("_on_exit_tree"), &TrailPoint2D::_on_exit_tree);
 
     ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "target_path"), _SCS("set_target_path"), _SCS("get_target_path"));
@@ -198,6 +224,11 @@ void TrailPoint2D::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::INT, "span_frame"), _SCS("set_span_frame"), _SCS("get_span_frame"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "line_width"), _SCS("set_line_width"), _SCS("get_line_width"));
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "line_color",PROPERTY_HINT_RESOURCE_TYPE,"ColorRamp"), _SCS("set_line_color"), _SCS("get_line_color"));
+
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "gravity"), _SCS("set_gravity"), _SCS("get_gravity"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "wave"), _SCS("set_wave"), _SCS("get_wave"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "wave_scale"), _SCS("set_wave_scale"), _SCS("get_wave_scale"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "wave_time_scale"), _SCS("set_wave_time_scale"), _SCS("get_wave_time_scale"));
 }
 
 
