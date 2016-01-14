@@ -50,6 +50,14 @@ void Action::_notification(int p_notification) {
     }
 }
 
+bool Action::_pre_behavior(const Variant &target, Dictionary env) {
+    if (_allow) {
+        return (bool)call("_check_action", target, env);
+    }else {
+        return false;
+    }
+}
+
 BehaviorNode::Status Action::_step(const Variant& target, Dictionary &env) {
     if (!checked_cancel_list) {
         refresh_cancel_list();
@@ -90,6 +98,7 @@ void Action::_during_behavior(const Variant &target, Dictionary &env) {
 
 #define setforce(NODE)  {NODE->reset(target);\
     NODE->set_focus();\
+    NODE->force_enter = true;\
     cancel();\
     reset(target);\
     return;}
@@ -98,12 +107,12 @@ void Action::_during_behavior(const Variant &target, Dictionary &env) {
         CancelItem& item = cancel_list[i];
         switch (item.type) {
             case CancelNode::HIT: {
-                if (_is_hit && item.action->call("pre_behavior", target, env)) {
+                if (_is_hit && (bool)item.action->call("_check_action", target, env)) {
                     setforce(item.action);
                 }
             } break;
             case CancelNode::TIME: {
-                if (get_delay()-get_time() > item.time && item.action->call("pre_behavior", target, env))
+                if (get_delay()-get_time() > item.time && (bool)item.action->call("_check_action", target, env))
                     setforce(item.action);
             } break;
         }
@@ -206,7 +215,15 @@ void Action::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_next_action_path", "naxt_action_path"), &Action::set_next_action_path);
     ObjectTypeDB::bind_method(_MD("get_next_action_path"), &Action::get_next_action_path);
 
+
+    ObjectTypeDB::bind_method(_MD("set_allow", "allow"), &Action::set_allow);
+    ObjectTypeDB::bind_method(_MD("get_allow"), &Action::get_allow);
+
     ObjectTypeDB::bind_method(_MD("get_next_action"), &Action::get_next_action);
+
+    ObjectTypeDB::bind_method(_MD("_check_action", "target", "env:Dictionary"), &Action::_check_action);
+
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "allow"), _SCS("set_allow"), _SCS("get_allow"));
 
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/max_move"), _SCS("set_max_move"), _SCS("get_max_move"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/drag"), _SCS("set_drag"), _SCS("get_drag"));
@@ -218,4 +235,5 @@ void Action::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "next_action_path"), _SCS("set_next_action_path"), _SCS("get_next_action_path"));
 
     BIND_VMETHOD( MethodInfo("_cancel_behavior", PropertyInfo(Variant::OBJECT,"target")) );
+    BIND_VMETHOD( MethodInfo("_check_action", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY, "env")) );
 }

@@ -43,14 +43,18 @@ private:
     void        update_next_action();
 
     void        cancel_animation();
+
+    bool    _allow;
 protected:
     void _notification(int p_notification);
+    virtual bool    _pre_behavior(const Variant& target, Dictionary env);
     virtual Status  _step(const Variant& target, Dictionary &env);
     virtual void    _during_behavior(const Variant& target, Dictionary& env);
     virtual void    _timeout_behavior(const Variant& target, Dictionary& env);
     virtual void    _cancel_behavior(const Variant& target, Dictionary& env);
     virtual Status  _behavior(const Variant& target, Dictionary env);
     virtual void    _reset(const Variant& target);
+    virtual bool    _check_action(const Variant& target, Dictionary env) { return false; }
     static void _bind_methods();
 public:
     bool force_enter;
@@ -79,6 +83,9 @@ public:
     _FORCE_INLINE_ void set_next_action_path(NodePath path) {next_action_path=path;update_next_action();}
     _FORCE_INLINE_ NodePath get_next_action_path() {return next_action_path;}
 
+    _FORCE_INLINE_ void set_allow(bool p_allow) {_allow=p_allow;}
+    _FORCE_INLINE_ bool get_allow() { return _allow;}
+
     _FORCE_INLINE_ Action *get_next_action() {return next_action;}
 
     Action() {
@@ -89,6 +96,7 @@ public:
         max_move=2;drag=0.2;
         reset_from_cancel = false;
         next_action = NULL;
+        _allow = true;
     }
 };
 

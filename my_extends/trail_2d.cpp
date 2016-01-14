@@ -170,7 +170,9 @@ void TrailPoint2D::_notification(int p_what) {
                         const Vector2& p1 = trail_items[n].position,
                                 &p2 = trail_items[n+1].position;
                         if (p1 != p2) {
-                            draw_line(p1, p2, !line_color.is_null() ? line_color->get_color_at_offset(per1):Color(1,1,1,1-per1), (1-per1)*line_width);
+                            float f = 1-per1;
+                            if (f > 1) f = 1;
+                            draw_line(p1, p2, !line_color.is_null() ? line_color->get_color_at_offset(per1):Color(1,1,1,1-per1), f*line_width);
                         }
                     }else {
                         const Vector2& p1 = trail_items[n].position+(Vector2(0,wave*Math::cos(per1*wave_scale-time_during*wave_time_scale)))*per1,

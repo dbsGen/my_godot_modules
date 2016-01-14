@@ -142,7 +142,9 @@ public:
     _FORCE_INLINE_ void lock_face() {can_turn = false;_unlock_face=false;}
     _FORCE_INLINE_ void unlock_face() {_unlock_face = true;}
 
-    _FORCE_INLINE_ void freeze(float time) {freeze_time = time;
+    _FORCE_INLINE_ void freeze(float time) {
+        if (time <= 0) return;
+        freeze_time = time;
         if (anim_controller) anim_controller->freeze(time);
     }
     _FORCE_INLINE_ float get_freeze_time() {return freeze_time;}

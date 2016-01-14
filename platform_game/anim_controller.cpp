@@ -69,8 +69,8 @@ void AnimController::resume() {
 }
 
 void AnimController::freeze(float time) {
-    _freeze_time = time;
-    if (_freeze_time <= 0) {
+    if (_freeze_time <= 0 && time > 0) {
+        _freeze_time = time;
         status_cache.clear();
         for (Map<StringName, Node*>::Element *E = anim_nodes.front(); E; E=E->next()) {
             AnimationPlayer *player = E->get()->cast_to<AnimationPlayer>();
@@ -84,6 +84,8 @@ void AnimController::freeze(float time) {
                 player->set_active(false);
             }
         }
+    }else {
+        _freeze_time = time;
     }
 }
 

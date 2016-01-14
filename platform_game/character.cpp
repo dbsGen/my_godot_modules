@@ -302,10 +302,10 @@ bool Character::_attack_by(Ref<HitStatus> p_hit_status, Object *from) {
     if (res) {
         set_hit_status(p_hit_status);
         behavior_root->reset(this);
-        freeze(p_hit_status->get_freeze_time());
+//        freeze(p_hit_status->get_freeze_time());
     }else {
         nh = health - p_hit_status->get_damage() * (1-guard_percent);
-        freeze(p_hit_status->get_freeze_time() * (1-guard_percent));
+//        freeze(p_hit_status->get_freeze_time() * (1-guard_percent));
     }
     if (p_hit_status->get_face_me()) {
         if (p_hit_status->get_force().x > 0) {
