@@ -24,7 +24,7 @@ BehaviorNode::Status TimerBNode::_step(const Variant& target, Dictionary &env) {
             timeout = true;
             _timeout_behavior(target, env);
             _script_timeout_behavior(target, env);
-            return _cancel ? STATUS_CONTINUE : STATUS_FAILURE;
+            return STATUS_FAILURE;//_cancel ? STATUS_CONTINUE : STATUS_FAILURE;
         }else {
             return BehaviorNode::_step(target, env);
         }

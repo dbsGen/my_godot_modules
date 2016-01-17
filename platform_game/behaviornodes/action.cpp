@@ -107,9 +107,8 @@ void Action::_during_behavior(const Variant &target, Dictionary &env) {
         CancelItem& item = cancel_list[i];
         switch (item.type) {
             case CancelNode::HIT: {
-                if (_is_hit && (bool)item.action->call("_check_action", target, env)) {
+                if (_is_hit && (bool)item.action->call("_check_action", target, env))
                     setforce(item.action);
-                }
             } break;
             case CancelNode::TIME: {
                 if (get_delay()-get_time() > item.time && (bool)item.action->call("_check_action", target, env))

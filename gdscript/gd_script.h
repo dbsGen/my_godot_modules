@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2016 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -74,6 +74,7 @@ public:
 		OPCODE_ITERATE_BEGIN,
 		OPCODE_ITERATE,
 		OPCODE_ASSERT,
+		OPCODE_BREAKPOINT,
 		OPCODE_LINE,
 		OPCODE_END
 	};
@@ -233,7 +234,7 @@ protected:
 
 public:
 	_FORCE_INLINE_ virtual bool is_valid() const {return instance && function;}
-	Object *get_owner() const;
+	virtual Object *get_owner() const;
 
 	_FORCE_INLINE_ virtual StringName get_name() const { return function->get_name(); }
 	virtual Variant applyv(const Array p_args);
@@ -253,6 +254,7 @@ class GDNativeFunctionObject : public GDFunctionObject {
 	ObjectID target_id;
 	StringName method_name;
 public:
+	virtual Object *get_owner() const {return (target_id == 0 ? NULL : ObjectDB::get_instance(target_id));}
 	_FORCE_INLINE_ virtual bool is_valid() const { return target_id != 0 && ObjectDB::get_instance(target_id); }
 	
 	_FORCE_INLINE_ virtual StringName get_name() const { return method_name; }
@@ -450,6 +452,7 @@ public:
 	virtual void get_property_list(List<PropertyInfo> *p_properties) const;
 	virtual Variant::Type get_property_type(const StringName& p_name,bool *r_is_valid=NULL) const;
 
+
 	virtual void get_method_list(List<MethodInfo> *p_list) const;
 	virtual bool has_method(const StringName& p_method) const;
 	virtual Variant call(const StringName& p_method,const Variant** p_args,int p_argcount,Variant::CallError &r_error);
@@ -604,6 +607,7 @@ public:
 	virtual Error complete_code(const String& p_code, const String& p_base_path, Object*p_owner,List<String>* r_options,String& r_call_hint);
 	virtual void auto_indent_code(String& p_code,int p_from_line,int p_to_line) const;
 	virtual void add_global_constant(const StringName& p_variable,const Variant& p_value);
+
 
 	/* DEBUGGER FUNCTIONS */
 

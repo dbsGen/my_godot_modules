@@ -20,6 +20,7 @@ protected:
     virtual void _during_behavior(const Variant& target, Dictionary& env);
     virtual void _timeout_behavior(const Variant& target, Dictionary& env);
     virtual void _on_attack(const Variant& target, Dictionary& env) {}
+    virtual void _reset(const Variant& target);
 public:
     void set_attack_area_path(NodePath path);
     _FORCE_INLINE_ NodePath get_attack_area_path() {return attack_area_path;}

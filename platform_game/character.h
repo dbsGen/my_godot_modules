@@ -145,7 +145,7 @@ public:
     _FORCE_INLINE_ void freeze(float time) {
         if (time <= 0) return;
         freeze_time = time;
-        if (anim_controller) anim_controller->freeze(time);
+        if (anim_controller) anim_controller->freeze();
     }
     _FORCE_INLINE_ float get_freeze_time() {return freeze_time;}
 
@@ -165,7 +165,7 @@ public:
     _FORCE_INLINE_ void set_can_attack(bool p_can_attack) {can_attack=p_can_attack;}
 
     _FORCE_INLINE_ float get_health() {return health;}
-    _FORCE_INLINE_ void set_health(float p_health) {health=health < max_health?health:max_health;}
+    _FORCE_INLINE_ void set_health(float p_health) {health=(p_health <= max_health?p_health:max_health);}
 
     _FORCE_INLINE_ float get_max_health() {return max_health;}
     _FORCE_INLINE_ void set_max_health(float p_max_health) {max_health=p_max_health; if (health>max_health) health=max_health;}

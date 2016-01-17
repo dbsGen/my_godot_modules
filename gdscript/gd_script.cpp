@@ -232,6 +232,7 @@ Variant GDFunction::call(GDInstance *p_instance, const Variant **p_args, int p_a
 
 		return Variant();
 	}
+
 	r_err.error=Variant::CallError::CALL_OK;
 
 	Variant self;
@@ -272,6 +273,7 @@ Variant GDFunction::call(GDInstance *p_instance, const Variant **p_args, int p_a
 
 				r_err.error=Variant::CallError::CALL_ERROR_TOO_MANY_ARGUMENTS;
 				r_err.argument=_argument_count;
+
 
 				return Variant();
 			} else if (p_argcount < _argument_count - _default_arg_count) {
@@ -788,7 +790,7 @@ Variant GDFunction::call(GDInstance *p_instance, const Variant **p_args, int p_a
 						GDFunctionObject *func_object = ((Object *) (*argptrs[1]))->cast_to<GDFunctionObject>();
 						if (func_object && func_object->is_valid()) {
 							Variant** argptr = (Variant **)memalloc(sizeof(Variant*)*(argc+1));
-							Variant target(func_object->instance->owner);
+							Variant target(func_object->get_owner());
 							Variant fn(func_object->get_name());
 
 							for(int i=0;i<argc;i++) {
@@ -1222,6 +1224,14 @@ Variant GDFunction::call(GDInstance *p_instance, const Variant **p_args, int p_a
 
 				ip+=2;
 			} continue;
+			case OPCODE_BREAKPOINT: {
+#ifdef DEBUG_ENABLED
+				if (ScriptDebugger::get_singleton()) {
+					GDScriptLanguage::get_singleton()->debug_break("Breakpoint Statement",true);
+				}
+#endif
+				ip+=1;
+			} continue;
 			case OPCODE_LINE: {
 				CHECK_SPACE(2);
 
@@ -1286,7 +1296,7 @@ Variant GDFunction::call(GDInstance *p_instance, const Variant **p_args, int p_a
 	if (!GDScriptLanguage::get_singleton()->debug_break(err_text,false)) {
             // debugger break did not happen
 
-            _err_print_error(err_func.utf8().get_data(),err_file.utf8().get_data(),err_line,err_text.utf8().get_data());
+	    _err_print_error(err_func.utf8().get_data(),err_file.utf8().get_data(),err_line,err_text.utf8().get_data(),ERR_HANDLER_SCRIPT);
         }
 
 
@@ -1726,14 +1736,13 @@ GDInstance* GDScript::_create_instance(const Variant** p_args,int p_argcount,Obj
 
 	instances.insert(instance->owner);
 
-	Variant::CallError err;
-	initializer->call(instance,p_args,p_argcount,err);
+	initializer->call(instance,p_args,p_argcount,r_error);
 
-	if (err.error!=Variant::CallError::CALL_OK) {
+	if (r_error.error!=Variant::CallError::CALL_OK) {
 		instance->script=Ref<GDScript>();
 		instance->owner->set_script_instance(NULL);
 		instances.erase(p_owner);
-		ERR_FAIL_COND_V(err.error!=Variant::CallError::CALL_OK, NULL); //error consrtucting
+		ERR_FAIL_COND_V(r_error.error!=Variant::CallError::CALL_OK, NULL); //error consrtucting
 	}
 
 	//@TODO make thread safe
@@ -2568,7 +2577,7 @@ Ref<GDFunctionObject> GDInstance::get_function(StringName p_name) {
 		if (E) {
 			return E->get();
 		} else {
-			const Map<StringName, GDFunction>::Element *E_ = script->member_functions.find(p_name);
+			const Map<StringName, GDFunction>::Element *E_ = sptr->member_functions.find(p_name);
 			if (E_) {
 				const GDFunction *gdfunc = &E_->get();
 				if (gdfunc->_lambda) return NULL;

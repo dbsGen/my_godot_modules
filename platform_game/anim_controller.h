@@ -32,11 +32,9 @@ private:
     Map<String, float > remove_counts;
     Dictionary removed_anims;
     Dictionary added_anims;
-    float _freeze_time;
+    bool _freezing;
 
     bool _changed;
-
-    void resume();
 
     _FORCE_INLINE_ void add_anim(String p_key, String p_name) {
         if (removed_anims.has(p_key) && removed_anims[p_key] == p_name) removed_anims.erase(p_key);
@@ -63,9 +61,10 @@ public:
     void remove_status(String p_key);
     void remove_status_with(const String& p_key, const String& p_name);
     void remove_all();
-    void freeze(float time);
+    void freeze();
+    void resume();
 
-    AnimController() {set_fixed_process(true);_changed= false;_freeze_time=0;}
+    AnimController() {set_fixed_process(true);_changed= false;_freezing=false;}
     ~AnimController();
 };
 

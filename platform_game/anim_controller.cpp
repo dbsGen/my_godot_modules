@@ -45,32 +45,28 @@ void AnimController::_notification(int p_notification) {
                 added_anims.clear();
                 removed_anims.clear();
             }
-            if (_freeze_time > 0) {
-                _freeze_time -= get_fixed_process_delta_time();
-                if (_freeze_time <= 0) {
-                    _freeze_time = 0;
-                    resume();
-                }
-            }
         };
     }
 }
 
 void AnimController::resume() {
-    for (List<AnimationStatus >::Element *E = status_cache.front(); E; E=E->next()) {
-        AnimationStatus status = E->get();
-        if (status.player) {
-            status.player->set_active(true);
-            status.player->play(status.name);
-            status.player->seek(status.position);
+    if (_freezing) {
+        _freezing = false;
+        for (List<AnimationStatus >::Element *E = status_cache.front(); E; E=E->next()) {
+            AnimationStatus status = E->get();
+            if (status.player) {
+                status.player->set_active(true);
+                status.player->play(status.name);
+                status.player->seek(status.position);
+            }
         }
+        status_cache.clear();
     }
-    status_cache.clear();
 }
 
-void AnimController::freeze(float time) {
-    if (_freeze_time <= 0 && time > 0) {
-        _freeze_time = time;
+void AnimController::freeze() {
+    if (!_freezing) {
+        _freezing = true;
         status_cache.clear();
         for (Map<StringName, Node*>::Element *E = anim_nodes.front(); E; E=E->next()) {
             AnimationPlayer *player = E->get()->cast_to<AnimationPlayer>();
@@ -84,8 +80,6 @@ void AnimController::freeze(float time) {
                 player->set_active(false);
             }
         }
-    }else {
-        _freeze_time = time;
     }
 }
 
