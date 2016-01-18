@@ -45,6 +45,7 @@
 #include "parallax.h"
 #include "anim_controller.h"
 #include "hit_area.h"
+#include "barrage.h"
 
 void register_platform_game_types() {
 	ObjectTypeDB::register_type<Character>();
@@ -64,6 +65,7 @@ void register_platform_game_types() {
     ObjectTypeDB::register_type<ParallaxBG>();
     ObjectTypeDB::register_type<AnimController>();
     ObjectTypeDB::register_type<HitArea>();
+    ObjectTypeDB::register_type<Barrage>();
 }
 
 void unregister_platform_game_types() {
