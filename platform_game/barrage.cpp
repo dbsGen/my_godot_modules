@@ -184,6 +184,7 @@ void Barrage::_process_and_draw_bullets(float delta_time) {
     if (!texture.is_null()) {
         RID ci=get_canvas_item();
         Size2 size = texture->get_size();
+        Rect2 vis = get_viewport_transform().xform_inv(get_viewport_rect());
         size = Size2(size.x / h_frames, size.y / v_frames);
         Matrix32 m = get_global_transform().affine_inverse();
         for (int i = 0, t = bullets.size(); i < t; ++i) {
@@ -193,7 +194,7 @@ void Barrage::_process_and_draw_bullets(float delta_time) {
 
                 if (gravity != Vector2()) bullet->speed += gravity;
                 bullet->position += bullet->speed*delta_time;
-                if (get_viewport_rect().has_point(bullet->position)) {
+                if (vis.has_point(bullet->position)) {
 
                     if (bullet->rotation) {
                         xform.set_rotation(bullet->rotation);
@@ -319,8 +320,6 @@ void Barrage::_bind_methods() {
 }
 //==================ShootBarrage==========================
 
-void ShootBarrage::shoot(Point2 target, int count, int frame) {
-}
 
 void ShootBarrage::_bind_methods() {
 
@@ -390,15 +389,39 @@ void RandomBarrage::_notification(int p_notification) {
     switch (p_notification) {
 
         case NOTIFICATION_FIXED_PROCESS: {
-            if (frame_count <= 0) {
+            if (shoot_count > 0) {
+                if (frame_count <= 0) {
+                    shoot_count -= 1;
+                    frame_count = frame_interval;
+                    for (int i = 0; i < bullet_once_count; ++i) {
+                        make_bullet();
+                    }
+                }else {
+                    frame_count-=1;
+                }
             }
         }
     }
 }
-void RandomBarrage::shoot(float angle) {
+
+float RandomBarrage::randf() {
+    return Math::randf()*2-1;
+}
+
+Bullet *RandomBarrage::make_bullet() {
+
+    float angle =Math::deg2rad(shoot_angle+angle_range*randf());
+    Bullet *bullet = create_bullet(Vector2(pos_range.x*randf(), pos_range.y*randf()), angle, Vector2(Math::cos(angle), Math::sin(angle))*(speed+speed_range*randf()), sprite_frame);
+    bullet->set_body_size(body_size);
+    bullet->set_scale(bullet_scale);
+    return bullet;
+}
+
+void RandomBarrage::shoot(float angle, int frame) {
     shoot_angle = angle;
     shoot_count = shoot_time;
     frame_count = 0;
+    sprite_frame = frame;
 }
 
 void RandomBarrage::_bind_methods() {
@@ -417,6 +440,7 @@ void RandomBarrage::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_frame_interval", "frame_interval"), &RandomBarrage::set_frame_interval);
     ObjectTypeDB::bind_method(_MD("get_frame_interval"), &RandomBarrage::get_frame_interval);
 
+    ObjectTypeDB::bind_method(_MD("shoot", "angle", "frame"), &RandomBarrage::shoot);
 
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "pos_range"), _SCS("set_pos_range"), _SCS("get_pos_range"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "angle_range"), _SCS("set_angle_range"), _SCS("get_angle_range"));

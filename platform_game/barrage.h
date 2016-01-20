@@ -139,7 +139,7 @@ public:
 };
 
 class ShootBarrage : public Barrage {
-OBJ_TYPE(ScatterBarrage, Barrage);
+OBJ_TYPE(ShootBarrage, Barrage);
 protected:
     float speed;
     float radius;
@@ -192,11 +192,15 @@ private:
     float speed_range;
     int shoot_time;
     int frame_interval;
+    int bullet_once_count;
+    int sprite_frame;
 
     float shoot_angle;
     int shoot_count;
     int frame_count;
 
+    Bullet *make_bullet();
+    float randf();
 protected:
     void _notification(int p_what);
     static void _bind_methods();
@@ -217,9 +221,12 @@ public:
     _FORCE_INLINE_ void set_frame_interval(int p_interval) {frame_interval=p_interval;}
     _FORCE_INLINE_ int get_frame_interval() {return frame_interval;}
 
-    void shoot(float angle);
+    _FORCE_INLINE_ void set_bullet_once_count(int p_count) {bullet_once_count=p_count;}
+    _FORCE_INLINE_ int get_bullet_once_count() {return bullet_once_count;}
 
-    _FORCE_INLINE_ RandomBarrage() {angle_range=0; speed_range=0; shoot_time=0;}
+    void shoot(float angle, int frame);
+
+    _FORCE_INLINE_ RandomBarrage() {angle_range=0; speed_range=0; shoot_time=0;bullet_once_count=2;}
 
 };
 

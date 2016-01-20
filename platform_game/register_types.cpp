@@ -68,6 +68,7 @@ void register_platform_game_types() {
     ObjectTypeDB::register_type<Barrage>();
     ObjectTypeDB::register_type<Bullet>();
     ObjectTypeDB::register_type<ScatterBarrage>();
+    ObjectTypeDB::register_type<RandomBarrage>();
 }
 
 void unregister_platform_game_types() {
