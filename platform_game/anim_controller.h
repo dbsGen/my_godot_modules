@@ -36,12 +36,12 @@ private:
 
     bool _changed;
 
-    _FORCE_INLINE_ void add_anim(String p_key, String p_name) {
+    _FORCE_INLINE_ void add_anim( const String &p_key, const String &p_name) {
         if (removed_anims.has(p_key) && removed_anims[p_key] == p_name) removed_anims.erase(p_key);
         added_anims[p_key] = p_name;
     }
 
-    _FORCE_INLINE_ void remove_anim(String p_key, String p_name) {
+    _FORCE_INLINE_ void remove_anim( const String &p_key, const String &p_name) {
         if (added_anims.has(p_key) && added_anims[p_key] == p_name) added_anims.erase(p_key);
         if (!removed_anims.has(p_key)) removed_anims[p_key] = p_name;
     }

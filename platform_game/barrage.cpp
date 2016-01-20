@@ -76,6 +76,7 @@ Bullet *Barrage::create_bullet(Point2 p_position, float p_rotation, Vector2 p_sp
         bullet = bullets[bullets.size()-1];
         bullet->id = index;
     }
+    bullet->index = max_index++;
     Matrix32 xform = get_global_transform();
     bullet->position = xform.xform(p_position);
     bullet->frame = p_frame;
@@ -98,18 +99,30 @@ Bullet *Barrage::create_bullet(Point2 p_position, float p_rotation, Vector2 p_sp
 
 void Barrage::hit(Bullet *bullet, int index, Node* target) {
     if (is_inside_tree()) {
+        Character *cha = get_character();
+        if (!hit_status.is_null() && target) {
+            Character *cha_tar = target->cast_to<Character>();
+            if (cha_tar) {
+                if (cha_tar->attack_by(hit_status->duplicate(), cha)) {
+                    if (!explosion_scene.is_null()) {
+                        Node *node = explosion_scene->instance();
+                        Node2D *node2d = node->cast_to<Node2D>();
+                        if (node2d) {
+                            cha->get_parent()->add_child(node2d);
+                            node2d->set_global_pos(bullet->position);
+                        }
+                    }
+                    kill(bullet, index);
+                }
+                return;
+            }
+        }
         if (!explosion_scene.is_null()) {
             Node *node = explosion_scene->instance();
             Node2D *node2d = node->cast_to<Node2D>();
             if (node2d) {
-                get_parent()->add_child(node2d);
+                cha->get_parent()->add_child(node2d);
                 node2d->set_global_pos(bullet->position);
-            }
-        }
-        if (!hit_status.is_null() && target) {
-            Character *cha = target->cast_to<Character>();
-            if (cha) {
-                cha->attack_by(hit_status, get_character());
             }
         }
         kill(bullet,index);
@@ -118,16 +131,28 @@ void Barrage::hit(Bullet *bullet, int index, Node* target) {
 
 void Barrage::hit(Bullet *bullet, int index, HitArea *target) {
     if (is_inside_tree()) {
-        if (!explosion_scene.is_null()) {
+        Character *cha = get_character();
+        if (!hit_status.is_null()) {
+            if (target->attack_by(hit_status->duplicate(), cha)) {
+                if (!explosion_scene.is_null()) {
+                    Node *node = explosion_scene->instance();
+                    Node2D *node2d = node->cast_to<Node2D>();
+                    if (node2d) {
+                        cha->get_parent()->add_child(node2d);
+                        node2d->set_global_pos(bullet->position);
+                    }
+                }
+                kill(bullet, index);
+            }
+            return;
+        }
+        if (!explosion_scene.is_null() && cha) {
             Node *node = explosion_scene->instance();
             Node2D *node2d = node->cast_to<Node2D>();
             if (node2d) {
-                get_parent()->add_child(node2d);
+                cha->get_parent()->add_child(node2d);
                 node2d->set_global_pos(bullet->position);
             }
-        }
-        if (!hit_status.is_null()) {
-            target->attack_by(hit_status, get_character());
         }
         kill(bullet,index);
     }
@@ -138,6 +163,12 @@ void Barrage::kill(Bullet *bullet, int index) {
     dead_cache.push_back(index);
     Physics2DServer::get_singleton()->area_set_layer_mask(bullet->checker, 0);
     Physics2DServer::get_singleton()->area_set_collision_mask(bullet->checker, 0);
+}
+
+void Barrage::clear() {
+    for (int i = 0, t = bullets.size(); i < t; ++i) {
+        kill(bullets[i], i);
+    }
 }
 
 void Barrage::_fixed_process_bullets(float delta_time) {
@@ -160,25 +191,30 @@ void Barrage::_process_and_draw_bullets(float delta_time) {
             if (bullet->live) {
                 Matrix32 xform;
 
+                if (gravity != Vector2()) bullet->speed += gravity;
                 bullet->position += bullet->speed*delta_time;
-                if (bullet->rotation) {
+                if (get_viewport_rect().has_point(bullet->position)) {
 
-                    xform.set_rotation(bullet->rotation);
-                    xform.translate(-size/2.0);
-                    xform.elements[2]+=bullet->position;
-                } else {
-                    xform.elements[2]=-size/2.0;
-                    xform.elements[2]+=bullet->position;
+                    if (bullet->rotation) {
+                        xform.set_rotation(bullet->rotation);
+                        xform.translate(-size/2.0);
+                        xform.elements[2]+=bullet->position;
+                    } else {
+                        xform.elements[2]=-size/2.0;
+                        xform.elements[2]+=bullet->position;
+                    }
+                    xform = m * xform;
+                    xform.scale_basis(Size2(bullet->scale,bullet->scale));
+                    VisualServer::get_singleton()->canvas_item_add_set_transform(ci,xform);
+
+                    Matrix32 matrix = Matrix32(0, bullet->position);
+                    float scale = bullet->body_size/DEFAULT_SIZE;
+                    matrix.scale_basis(Size2(scale, scale));
+                    Physics2DServer::get_singleton()->area_set_transform(bullet->checker, matrix);
+                    texture->draw_rect_region(ci, Rect2(Point2(),size), Rect2(Point2(size.x * (bullet->frame % h_frames), size.y * (bullet->frame / h_frames)), size), Color(1,1,1,1));
+                }else {
+                    kill(bullet, i);
                 }
-                xform = m * xform;
-                xform.scale_basis(Size2(bullet->scale,bullet->scale));
-                VisualServer::get_singleton()->canvas_item_add_set_transform(ci,xform);
-
-                Matrix32 matrix = Matrix32(0, bullet->position);
-                float scale = bullet->body_size/DEFAULT_SIZE;
-                matrix.scale_basis(Size2(scale, scale));
-                Physics2DServer::get_singleton()->area_set_transform(bullet->checker, matrix);
-                texture->draw_rect_region(ci, Rect2(Point2(),size), Rect2(Point2(size.x * (bullet->frame % h_frames), size.y * (bullet->frame / h_frames)), size), Color(1,1,1,1));
             }
         }
     }
@@ -229,6 +265,7 @@ Barrage::Barrage() {
     v_frames = 1;
     _layer_mask = 0;
     _collision_mask = 0;
+    max_index=0;
     shape_created = false;
     set_fixed_process(true);
     set_process(true);
@@ -264,29 +301,73 @@ void Barrage::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_explosion_scene", "explosion_scene"), &Barrage::set_explosion_scene);
     ObjectTypeDB::bind_method(_MD("get_explosion_scene"), &Barrage::get_explosion_scene);
 
+    ObjectTypeDB::bind_method(_MD("set_gravity", "gravity"), &Barrage::set_gravity);
+    ObjectTypeDB::bind_method(_MD("get_gravity"), &Barrage::get_gravity);
+
+    ObjectTypeDB::bind_method(_MD("clear"), &Barrage::clear);
+
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture", PROPERTY_HINT_RESOURCE_TYPE, "Texture"), _SCS("set_texture"), _SCS("get_texture"));
 
     ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "character_path"), _SCS("set_character_path"), _SCS("get_character_path"));
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "hit_status", PROPERTY_HINT_RESOURCE_TYPE, "HitStatus"), _SCS("set_hit_status"), _SCS("get_hit_status"));
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "explosion_scene", PROPERTY_HINT_RESOURCE_TYPE, "PackedScene"), _SCS("set_explosion_scene"), _SCS("get_explosion_scene"));
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "gravity"), _SCS("set_gravity"), _SCS("get_gravity"));
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "layers", PROPERTY_HINT_ALL_FLAGS), _SCS("set_layer_mask"), _SCS("get_layer_mask"));
     ADD_PROPERTY(PropertyInfo(Variant::INT, "masks", PROPERTY_HINT_ALL_FLAGS), _SCS("set_collision_mask"), _SCS("get_collision_mask"));
 
+}
+//==================ShootBarrage==========================
+
+void ShootBarrage::shoot(Point2 target, int count, int frame) {
+}
+
+void ShootBarrage::_bind_methods() {
+
+    ObjectTypeDB::bind_method(_MD("set_speed", "speed"), &ShootBarrage::set_speed);
+    ObjectTypeDB::bind_method(_MD("get_speed"), &ShootBarrage::get_speed);
+
+    ObjectTypeDB::bind_method(_MD("set_radius", "radius"), &ShootBarrage::set_radius);
+    ObjectTypeDB::bind_method(_MD("get_radius"), &ShootBarrage::get_radius);
+
+    ObjectTypeDB::bind_method(_MD("set_body_size", "body_size"), &ShootBarrage::set_body_size);
+    ObjectTypeDB::bind_method(_MD("get_body_size"), &ShootBarrage::get_body_size);
+
+    ObjectTypeDB::bind_method(_MD("set_bullet_scale", "bullet_scale"), &ShootBarrage::set_bullet_scale);
+    ObjectTypeDB::bind_method(_MD("get_bullet_scale"), &ShootBarrage::get_bullet_scale);
+
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "speed"), _SCS("set_speed"), _SCS("get_speed"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "radius"), _SCS("set_radius"), _SCS("get_radius"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "body_size"), _SCS("set_body_size"), _SCS("get_body_size"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "bullet_scale"), _SCS("set_bullet_scale"), _SCS("get_bullet_scale"));
 }
 
 //==================ScatterBarrage==========================
 
 void ScatterBarrage::shoot(Point2 target, int count, int frame) {
     Vector2 v2 = target - get_global_pos();
-    float in = Math::deg2rad(interval);
-    float start = Math::atan2(v2.y, v2.x) - in*(count/2.0);
-    for (int i = 0; i < count; ++i) {
-        float alpha = start + in*i;
-        Vector2 vn(Math::cos(alpha), Math::sin(alpha));
-        Bullet *bullet = create_bullet(vn*radius, alpha, vn*speed, frame, NULL);
-        bullet->set_body_size(body_size);
-        bullet->set_scale(bullet_scale);
+    float in = Math::deg2rad(angle_interval);
+    float angle = Math::atan2(v2.y, v2.x);
+    float start = angle - in*((count-1)/2.0);
+    if (distance_interval != 0) {
+        Vector2 step(Math::cos(angle+Math_PI/2)*distance_interval, Math::sin(angle+Math_PI/2)*distance_interval);
+        Vector2 start_pos = -step*((count-1)/2.0);
+
+        for (int i = 0; i < count; ++i) {
+            float alpha = start + in*i;
+            Vector2 vn(Math::cos(alpha), Math::sin(alpha));
+            Bullet *bullet = create_bullet(vn*radius + (start_pos+i*step), alpha, vn*speed, frame, NULL);
+            bullet->set_body_size(body_size);
+            bullet->set_scale(bullet_scale);
+        }
+    }else {
+        for (int i = 0; i < count; ++i) {
+            float alpha = start + in*i;
+            Vector2 vn(Math::cos(alpha), Math::sin(alpha));
+            Bullet *bullet = create_bullet(vn*radius, alpha, vn*speed, frame, NULL);
+            bullet->set_body_size(body_size);
+            bullet->set_scale(bullet_scale);
+        }
     }
 }
 
@@ -294,23 +375,52 @@ void ScatterBarrage::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_interval", "interval"), &ScatterBarrage::set_interval);
     ObjectTypeDB::bind_method(_MD("get_interval"), &ScatterBarrage::get_interval);
 
-    ObjectTypeDB::bind_method(_MD("set_speed", "speed"), &ScatterBarrage::set_speed);
-    ObjectTypeDB::bind_method(_MD("get_speed"), &ScatterBarrage::get_speed);
-
-    ObjectTypeDB::bind_method(_MD("set_radius", "radius"), &ScatterBarrage::set_radius);
-    ObjectTypeDB::bind_method(_MD("get_radius"), &ScatterBarrage::get_radius);
-
-    ObjectTypeDB::bind_method(_MD("set_body_size", "body_size"), &ScatterBarrage::set_body_size);
-    ObjectTypeDB::bind_method(_MD("get_body_size"), &ScatterBarrage::get_body_size);
-
-    ObjectTypeDB::bind_method(_MD("set_bullet_scale", "bullet_scale"), &ScatterBarrage::set_bullet_scale);
-    ObjectTypeDB::bind_method(_MD("get_bullet_scale"), &ScatterBarrage::get_bullet_scale);
+    ObjectTypeDB::bind_method(_MD("set_distance_interval", "interval"), &ScatterBarrage::set_distance_interval);
+    ObjectTypeDB::bind_method(_MD("get_distance_interval"), &ScatterBarrage::get_distance_interval);
 
     ObjectTypeDB::bind_method(_MD("shoot", "target", "count", "frame"), &ScatterBarrage::shoot);
 
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "interval"), _SCS("set_interval"), _SCS("get_interval"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "speed"), _SCS("set_speed"), _SCS("get_speed"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "radius"), _SCS("set_radius"), _SCS("get_radius"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "body_size"), _SCS("set_body_size"), _SCS("get_body_size"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "bullet_scale"), _SCS("set_bullet_scale"), _SCS("get_bullet_scale"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "distance_interval"), _SCS("set_distance_interval"), _SCS("get_distance_interval"));
+}
+
+//==================RandomBarrage==========================
+
+void RandomBarrage::_notification(int p_notification) {
+    switch (p_notification) {
+
+        case NOTIFICATION_FIXED_PROCESS: {
+            if (frame_count <= 0) {
+            }
+        }
+    }
+}
+void RandomBarrage::shoot(float angle) {
+    shoot_angle = angle;
+    shoot_count = shoot_time;
+    frame_count = 0;
+}
+
+void RandomBarrage::_bind_methods() {
+    ObjectTypeDB::bind_method(_MD("set_pos_range", "pos_range"), &RandomBarrage::set_pos_range);
+    ObjectTypeDB::bind_method(_MD("get_pos_range"), &RandomBarrage::get_pos_range);
+
+    ObjectTypeDB::bind_method(_MD("set_angle_range", "angle_range"), &RandomBarrage::set_angle_range);
+    ObjectTypeDB::bind_method(_MD("get_angle_range"), &RandomBarrage::get_angle_range);
+
+    ObjectTypeDB::bind_method(_MD("set_speed_range", "speed_range"), &RandomBarrage::set_speed_range);
+    ObjectTypeDB::bind_method(_MD("get_speed_range"), &RandomBarrage::get_speed_range);
+
+    ObjectTypeDB::bind_method(_MD("set_shoot_time", "shoot_time"), &RandomBarrage::set_shoot_time);
+    ObjectTypeDB::bind_method(_MD("get_shoot_time"), &RandomBarrage::get_shoot_time);
+
+    ObjectTypeDB::bind_method(_MD("set_frame_interval", "frame_interval"), &RandomBarrage::set_frame_interval);
+    ObjectTypeDB::bind_method(_MD("get_frame_interval"), &RandomBarrage::get_frame_interval);
+
+
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "pos_range"), _SCS("set_pos_range"), _SCS("get_pos_range"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "angle_range"), _SCS("set_angle_range"), _SCS("get_angle_range"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "speed_range"), _SCS("set_speed_range"), _SCS("get_speed_range"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "shoot_time"), _SCS("set_shoot_time"), _SCS("get_shoot_time"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "frame_interval"), _SCS("set_frame_interval"), _SCS("get_frame_interval"));
 }

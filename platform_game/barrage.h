@@ -14,9 +14,11 @@
 
 class Barrage;
 class HitArea;
+struct BulletComparator;
 
 class Bullet : public Object {
 OBJ_TYPE(Bullet, Object);
+    int index;
     int id;
     int frame;
     Vector2 speed;
@@ -29,6 +31,7 @@ OBJ_TYPE(Bullet, Object);
     float body_size;
     Barrage *owner;
     friend class Barrage;
+    friend struct BulletComparator;
 protected:
     static void _bind_methods();
 
@@ -60,6 +63,10 @@ public:
     _FORCE_INLINE_ Bullet(){id=0;live = true;scale=1;body_size=8;}
     _FORCE_INLINE_ ~Bullet(){}
 };
+struct BulletComparator {
+
+    inline bool operator()(const Bullet* a,const Bullet* b) const { return (a->index<b->index); }
+};
 
 class Barrage : public Node2D {
     OBJ_TYPE(Barrage, Node2D);
@@ -81,6 +88,7 @@ friend class Bullet;
     void hit(Bullet *bullet, int index, HitArea* target);
     void kill(Bullet *bullet, int index);
 
+    int max_index;
     int _layer_mask;
     int _collision_mask;
 
@@ -89,6 +97,8 @@ friend class Bullet;
     void _update_character();
     Ref<HitStatus> hit_status;
     Ref<PackedScene> explosion_scene;
+
+    Vector2 gravity;
 
 protected:
     void _notification(int p_what);
@@ -117,27 +127,27 @@ public:
     _FORCE_INLINE_ void set_explosion_scene(Ref<PackedScene> p_scene) {explosion_scene=p_scene;}
     _FORCE_INLINE_ Ref<PackedScene> get_explosion_scene() {return explosion_scene;}
 
+    _FORCE_INLINE_ void set_gravity(Vector2 p_gravity) {gravity = p_gravity;}
+    _FORCE_INLINE_ Vector2 get_gravity() {return gravity;}
+
+    _FORCE_INLINE_ void clear();
+
     Bullet *create_bullet(Point2 p_position, float p_rotation, Vector2 p_speed, int p_frame, const Variant &customer_data=Variant());
 
     Barrage();
     ~Barrage();
 };
 
-class ScatterBarrage : public Barrage {
-    OBJ_TYPE(ScatterBarrage, Barrage);
-private:
-    float interval;
+class ShootBarrage : public Barrage {
+OBJ_TYPE(ScatterBarrage, Barrage);
+protected:
     float speed;
     float radius;
     float body_size;
     float bullet_scale;
-
-protected:
     static void _bind_methods();
 
 public:
-    _FORCE_INLINE_ void set_interval(float p_interval) {interval=p_interval;}
-    _FORCE_INLINE_ float get_interval() {return interval;}
 
     _FORCE_INLINE_ void set_speed(float p_speed) {speed = p_speed;}
     _FORCE_INLINE_ float get_speed() {return speed;}
@@ -151,9 +161,66 @@ public:
     _FORCE_INLINE_ void set_bullet_scale(float p_bullet_scale) {bullet_scale=p_bullet_scale;}
     _FORCE_INLINE_ float get_bullet_scale() { return bullet_scale; }
 
+    _FORCE_INLINE_ ShootBarrage() {radius = 0;speed=60;bullet_scale=1;body_size=8;}
+};
+
+class ScatterBarrage : public ShootBarrage {
+    OBJ_TYPE(ScatterBarrage, ShootBarrage);
+private:
+    float angle_interval;
+    float distance_interval;
+
+protected:
+    static void _bind_methods();
+
+public:
+    _FORCE_INLINE_ void set_interval(float p_interval) {angle_interval=p_interval;}
+    _FORCE_INLINE_ float get_interval() {return angle_interval;}
+
+    _FORCE_INLINE_ void set_distance_interval(float p_interval) {distance_interval=p_interval;}
+    _FORCE_INLINE_ float get_distance_interval() {return distance_interval;}
     void shoot(Point2 target, int count, int frame = 0);
 
-    _FORCE_INLINE_ ScatterBarrage() {radius = 0;interval = 5;speed=60;bullet_scale=1;body_size=8;}
+    _FORCE_INLINE_ ScatterBarrage() {angle_interval = 5;distance_interval=0;}
+};
+
+class RandomBarrage : public ShootBarrage {
+    OBJ_TYPE(RandomBarrage, ShootBarrage);
+private:
+    Vector2 pos_range;
+    float angle_range;
+    float speed_range;
+    int shoot_time;
+    int frame_interval;
+
+    float shoot_angle;
+    int shoot_count;
+    int frame_count;
+
+protected:
+    void _notification(int p_what);
+    static void _bind_methods();
+
+public:
+    _FORCE_INLINE_ void set_pos_range(const Vector2 &p_range) {pos_range = p_range;}
+    _FORCE_INLINE_ Vector2 get_pos_range() {return pos_range;}
+
+    _FORCE_INLINE_ void set_angle_range(float p_range) {angle_range=p_range;}
+    _FORCE_INLINE_ float get_angle_range() {return angle_range;}
+
+    _FORCE_INLINE_ void set_speed_range(float p_range) {speed_range=p_range;}
+    _FORCE_INLINE_ float get_speed_range() {return speed_range;}
+
+    _FORCE_INLINE_ void set_shoot_time(int p_time) {shoot_time=p_time;}
+    _FORCE_INLINE_ float get_shoot_time() {return shoot_time;}
+
+    _FORCE_INLINE_ void set_frame_interval(int p_interval) {frame_interval=p_interval;}
+    _FORCE_INLINE_ int get_frame_interval() {return frame_interval;}
+
+    void shoot(float angle);
+
+    _FORCE_INLINE_ RandomBarrage() {angle_range=0; speed_range=0; shoot_time=0;}
+
 };
 
 #endif //GODOT_NEW_BARRAGE_H

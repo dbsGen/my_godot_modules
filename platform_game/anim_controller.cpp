@@ -130,9 +130,18 @@ void AnimController::remove_status_with(const String& p_key, const String& p_nam
 }
 
 void AnimController::remove_all() {
+    HashMap<String, String> cp = current_anims;
     if (current_anims.size() != 0) {
         current_anims.clear();
         _changed = true;
+    }
+    bool has_instance = get_script_instance() != NULL;
+    const String *k = NULL;
+    while ((k = cp.next(k))) {
+        const String &name = cp[*k];
+        remove_anim(*k, name);
+        if (has_instance)
+            get_script_instance()->call(StringName("_remove_status"), *k, cp[*k]);
     }
 }
 
