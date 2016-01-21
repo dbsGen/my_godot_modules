@@ -78,8 +78,8 @@ friend class Bullet;
     int h_frames;
     int v_frames;
 
-    bool  shape_created;
-    RID shape;
+    static bool  shape_created;
+    static RID shape;
 
     void _fixed_process_bullets(float delta_time);
     void _process_and_draw_bullets(float delta_time);

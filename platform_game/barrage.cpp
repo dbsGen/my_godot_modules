@@ -61,6 +61,9 @@ void Bullet::_area_inout(int p_status,const RID& p_area, int p_instance, int p_a
 
 #define DEFAULT_SIZE 8.0
 
+bool Barrage::shape_created = false;
+RID Barrage::shape;
+
 Bullet *Barrage::create_bullet(Point2 p_position, float p_rotation, Vector2 p_speed, int p_frame,  const Variant &customer_data) {
     if (!shape_created)
         return NULL;
@@ -181,10 +184,17 @@ void Barrage::clear() {
 }
 
 void Barrage::_fixed_process_bullets(float delta_time) {
+    ScriptInstance *instance = get_script_instance();
     for (int i = 0, t = bullets.size(); i < t; ++i) {
         Bullet *bullet = bullets[i];
         if (bullet->live) {
             _process_bullet(bullet, delta_time);
+            if (instance) {
+                Variant v1(bullet);
+                Variant v2(delta_time);
+                const Variant* ptr[2]={&v1, &v2};
+                get_script_instance()->call_multilevel(StringName("_process_bullet"),ptr,2);
+            }
         }
     }
 }
@@ -276,7 +286,6 @@ Barrage::Barrage() {
     _layer_mask = 0;
     _collision_mask = 0;
     max_index=0;
-    shape_created = false;
     set_fixed_process(true);
     set_process(true);
 }
@@ -326,6 +335,7 @@ void Barrage::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::INT, "layers", PROPERTY_HINT_ALL_FLAGS), _SCS("set_layer_mask"), _SCS("get_layer_mask"));
     ADD_PROPERTY(PropertyInfo(Variant::INT, "masks", PROPERTY_HINT_ALL_FLAGS), _SCS("set_collision_mask"), _SCS("get_collision_mask"));
 
+    BIND_VMETHOD(MethodInfo("_process_bullet", PropertyInfo(Variant::OBJECT, "bullet", PROPERTY_HINT_RESOURCE_TYPE, "Bullet"), PropertyInfo(Variant::REAL, "delta")));
 }
 //==================ShootBarrage==========================
 
