@@ -55,6 +55,11 @@ void Bullet::_area_inout(int p_status,const RID& p_area, int p_instance, int p_a
         HitArea *area = obj ? obj->cast_to<HitArea>() : NULL;
         if (area) {
             owner->hit(this, id, area);
+        }else {
+            GrazeArea *grz_area = obj ? obj->cast_to<GrazeArea>() : NULL;
+            if (grz_area) {
+                owner->graze(this, grz_area);
+            }
         }
     }
 }
@@ -98,6 +103,10 @@ Bullet *Barrage::create_bullet(Point2 p_position, float p_rotation, Vector2 p_sp
     Physics2DServer::get_singleton()->area_set_collision_mask(bullet->checker, _collision_mask);
     Physics2DServer::get_singleton()->area_set_monitorable(bullet->checker, true);
     return bullet;
+}
+
+void Barrage::graze(Bullet *bullet, GrazeArea* area) {
+    area->graze(bullet->checker);
 }
 
 void Barrage::hit(Bullet *bullet, int index, Node* target) {
@@ -193,7 +202,7 @@ void Barrage::_fixed_process_bullets(float delta_time) {
                 Variant v1(bullet);
                 Variant v2(delta_time);
                 const Variant* ptr[2]={&v1, &v2};
-                get_script_instance()->call_multilevel(StringName("_process_bullet"),ptr,2);
+                instance->call_multilevel(StringName("_process_bullet"),ptr,2);
             }
         }
     }

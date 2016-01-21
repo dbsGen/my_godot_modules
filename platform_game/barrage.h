@@ -11,6 +11,7 @@
 #include "../../core/reference.h"
 #include "../../core/math/math_2d.h"
 #include "hit_status/hit_status.h"
+#include "graze_area.h"
 
 class Barrage;
 class HitArea;
@@ -86,6 +87,7 @@ friend class Bullet;
 
     void hit(Bullet *bullet, int index, Node* target);
     void hit(Bullet *bullet, int index, HitArea* target);
+    void graze(Bullet *bullet, GrazeArea* area);
     void kill(Bullet *bullet, int index);
 
     int max_index;

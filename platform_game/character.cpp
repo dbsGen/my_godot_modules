@@ -115,6 +115,16 @@ void Character::set_face_left(bool p_face_left) {
     }
 }
 
+void Character::set_health(float p_health) {
+    float h =(p_health <= max_health?p_health:max_health);
+    if (h > health) {
+        emit_signal("health_recovery", h);
+    }else if (h < health){
+        emit_signal("health_down", h);
+    }
+    health = h;
+}
+
 void Character::_notification(int p_notification) {
     switch (p_notification) {
         case NOTIFICATION_ENTER_TREE: {

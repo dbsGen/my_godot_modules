@@ -223,6 +223,9 @@ void AttackArea::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_spark_range", "spark_range"), &AttackArea::set_spark_range);
     ObjectTypeDB::bind_method(_MD("get_spark_range"), &AttackArea::get_spark_range);
 
+    ObjectTypeDB::bind_method(_MD("set_can_graze", "can_graze"), &AttackArea::set_can_graze);
+    ObjectTypeDB::bind_method(_MD("get_can_graze"), &AttackArea::get_can_graze);
+
     ObjectTypeDB::bind_method(_MD("_on_area_enter", "area"), &AttackArea::_on_area_enter);
     ObjectTypeDB::bind_method(_MD("_on_area_exit", "area"), &AttackArea::_on_area_exit);
 
@@ -241,4 +244,5 @@ void AttackArea::_bind_methods() {
     ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/hit_status",PROPERTY_HINT_RESOURCE_TYPE,"HitStatus"), _SCS("set_hit_status"),_SCS("get_hit_status" ) );
     ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/spark_scene",PROPERTY_HINT_RESOURCE_TYPE,"PackedScene"), _SCS("set_spark_scene"),_SCS("get_spark_scene" ) );
     ADD_PROPERTY( PropertyInfo( Variant::VECTOR2, "attack/spark_range"), _SCS("set_spark_range"), _SCS("get_spark_range"));
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "can_graze"), _SCS("set_can_graze"), _SCS("get_can_graze"));
 }

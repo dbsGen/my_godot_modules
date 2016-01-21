@@ -13,6 +13,7 @@
 #include "../../scene/resources/packed_scene.h"
 #include "hit_area.h"
 #include "character.h"
+#include "graze_area.h"
 
 class Character;
 class HitArea;
@@ -25,6 +26,8 @@ struct HitStatusInfo {
 class AttackArea : public Area2D {
     OBJ_TYPE(AttackArea, Area2D);
 private:
+    bool can_graze;
+
     bool always_attack;
     Character *attack_owner;
 
@@ -48,6 +51,9 @@ private:
         HitArea *area = object->cast_to<HitArea>();
         if (area && hit_areas.find(area) < 0) {
             hit_areas.push_back(area);
+        }else if (can_graze){
+            GrazeArea *garea = object->cast_to<GrazeArea>();
+            if (garea) garea->graze(get_rid());
         }
     }
 
@@ -100,6 +106,9 @@ public:
     _FORCE_INLINE_ Vector2 get_spark_range() {return spark_range;}
     _FORCE_INLINE_ void set_spark_range(Vector2 p_spark_range) {spark_range = p_spark_range;}
 
+    _FORCE_INLINE_ void set_can_graze(bool p_graze) {can_graze=p_graze;}
+    _FORCE_INLINE_ bool get_can_graze() {return can_graze;}
+
     void reset();
 
     bool attack(Character *from);
@@ -112,6 +121,7 @@ public:
         time_record = 0;
         attack_owner = NULL;
         always_attack = false;
+        can_graze = false;
     }
 };
 

@@ -46,6 +46,7 @@
 #include "anim_controller.h"
 #include "hit_area.h"
 #include "barrage.h"
+#include "graze_area.h"
 
 void register_platform_game_types() {
 	ObjectTypeDB::register_type<Character>();
@@ -69,6 +70,7 @@ void register_platform_game_types() {
     ObjectTypeDB::register_type<Bullet>();
     ObjectTypeDB::register_type<ScatterBarrage>();
     ObjectTypeDB::register_type<RandomBarrage>();
+    ObjectTypeDB::register_type<GrazeArea>();
 }
 
 void unregister_platform_game_types() {
