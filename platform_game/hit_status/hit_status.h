@@ -19,7 +19,8 @@ public:
         HS_HIT_STUN,
         HS_PURSUIT,
         HS_LAUNCHER,
-        HS_OTG
+        HS_OTG,
+        HS_GUARD
     };
 
 private:

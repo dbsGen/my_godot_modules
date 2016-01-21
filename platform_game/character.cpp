@@ -288,7 +288,7 @@ bool Character::attack_by(Ref<HitStatus> p_hit_status, Character *from, bool fro
         return false;
     }else {
         bool ret = call("attack_by", p_hit_status, from->cast_to<Object>());
-        if (ret) {
+        if (ret && guard_point <= 0) {
             hit_status = p_hit_status;
         }
         return ret;
@@ -297,29 +297,30 @@ bool Character::attack_by(Ref<HitStatus> p_hit_status, Character *from, bool fro
 
 bool Character::_attack_by(Ref<HitStatus> p_hit_status, Object *from) {
     guard_point -= p_hit_status->get_power();
-    bool res = guard_point <= 0;
+    bool guard = guard_point > 0;
     float nh = health - p_hit_status->get_damage();
 
-    if (res) {
+    if (guard) {
+        nh = health - p_hit_status->get_damage() * (1-guard_percent);
+        p_hit_status->set_hit_type(HitStatus::HS_GUARD);
+//        freeze(p_hit_status->get_freeze_time() * (1-guard_percent));
+    }else {
         set_hit_status(p_hit_status);
         behavior_root->reset(this);
-//        freeze(p_hit_status->get_freeze_time());
-    }else {
-        nh = health - p_hit_status->get_damage() * (1-guard_percent);
-//        freeze(p_hit_status->get_freeze_time() * (1-guard_percent));
-    }
-    if (p_hit_status->get_face_me()) {
-        if (p_hit_status->get_force().x > 0) {
-            set_face_left(true);
-        }else if (p_hit_status->get_force().x < 0) {
-            set_face_left(false);
+        if (p_hit_status->get_face_me()) {
+            if (p_hit_status->get_force().x > 0) {
+                set_face_left(true);
+            }else if (p_hit_status->get_force().x < 0) {
+                set_face_left(false);
+            }
         }
+//        freeze(p_hit_status->get_freeze_time());
     }
     if (nh < health) {
         emit_signal("health_down", nh);
         health = nh;
     }
-    return res;
+    return true;
 }
 
 Array Character::get_buffs() {

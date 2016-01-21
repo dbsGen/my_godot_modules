@@ -133,7 +133,16 @@ void Barrage::hit(Bullet *bullet, int index, HitArea *target) {
     if (is_inside_tree()) {
         Character *cha = get_character();
         if (!hit_status.is_null()) {
-            if (target->attack_by(hit_status->duplicate(), cha)) {
+            Ref<HitStatus> hs = hit_status->duplicate(true)->cast_to<HitStatus>();
+            Vector2 force = hs->get_force();
+            if (bullet->speed.x > 0)
+                force.x =  Math::abs(force.x);
+            else if (bullet->speed.x < 0)
+                force.x = -Math::abs(force.x);
+            hs->set_force(force);
+            hs->set_velocity(force);
+            hs->set_stun_velocity(Vector2(force.x, 0));
+            if (target->attack_by(hs, cha)) {
                 if (!explosion_scene.is_null()) {
                     Node *node = explosion_scene->instance();
                     Node2D *node2d = node->cast_to<Node2D>();

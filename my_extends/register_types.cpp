@@ -33,6 +33,7 @@
 #include "new_tween.h"
 #include "inputstorage.h"
 #include "trail_2d.h"
+#include "phantom.h"
 
 void register_my_extends_types() {
     Globals::get_singleton()->add_singleton(Globals::Singleton("NewTimer", NewTimer::get_singleton()));
@@ -47,6 +48,7 @@ void register_my_extends_types() {
     ObjectTypeDB::register_type<InputStorageNode>();
     ObjectTypeDB::register_type<TrailPoint2D>();
     ObjectTypeDB::register_type<TrailLine2D>();
+    ObjectTypeDB::register_type<Phantom>();
 }
 
 void unregister_my_extends_types() {
