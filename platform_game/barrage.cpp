@@ -225,11 +225,9 @@ void Barrage::_process_and_draw_bullets(float delta_time) {
                 if (vis.has_point(bullet->position)) {
 
                     if (bullet->rotation) {
-                        xform.set_rotation(bullet->rotation);
-                        xform.translate(-size/2.0);
+                        xform.set_rotation(-bullet->rotation);
                         xform.elements[2]+=bullet->position;
                     } else {
-                        xform.elements[2]=-size/2.0;
                         xform.elements[2]+=bullet->position;
                     }
                     xform = m * xform;
@@ -240,7 +238,7 @@ void Barrage::_process_and_draw_bullets(float delta_time) {
                     float scale = bullet->body_size/DEFAULT_SIZE;
                     matrix.scale_basis(Size2(scale, scale));
                     Physics2DServer::get_singleton()->area_set_transform(bullet->checker, matrix);
-                    texture->draw_rect_region(ci, Rect2(Point2(),size), Rect2(Point2(size.x * (bullet->frame % h_frames), size.y * (bullet->frame / h_frames)), size), Color(1,1,1,1));
+                    texture->draw_rect_region(ci, Rect2(-size/2.0,size), Rect2(Point2(size.x * (bullet->frame % h_frames), size.y * (bullet->frame / h_frames)), size), Color(1,1,1,1));
                 }else {
                     kill(bullet, i);
                 }

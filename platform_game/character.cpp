@@ -229,7 +229,7 @@ void Character::_notification(int p_notification) {
             }
             if (freeze_time > 0) {
                 freeze_time -= fixed_process_time;
-                if (freeze_time <= 0) get_anim_controller()->resume();
+                if (freeze_time <= 0 && anim_controller) anim_controller->resume();
             }
             break;
         }
