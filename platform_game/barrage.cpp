@@ -438,7 +438,7 @@ float RandomBarrage::randf() {
 
 Bullet *RandomBarrage::make_bullet() {
 
-    float angle =Math::deg2rad(shoot_angle+angle_range*randf());
+    float angle = Math::deg2rad(shoot_angle+angle_range*randf());
     Bullet *bullet = create_bullet(Vector2(pos_range.x*randf(), pos_range.y*randf()), angle, Vector2(Math::cos(angle), Math::sin(angle))*(speed+speed_range*randf()), sprite_frame);
     bullet->set_body_size(body_size);
     bullet->set_scale(bullet_scale);

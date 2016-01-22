@@ -228,7 +228,7 @@ public:
 
     void shoot(float angle, int frame);
 
-    _FORCE_INLINE_ RandomBarrage() {angle_range=0; speed_range=0; shoot_time=0;bullet_once_count=2;}
+    _FORCE_INLINE_ RandomBarrage() {angle_range=0; speed_range=0; shoot_time=0;bullet_once_count=2;shoot_count=0;}
 
 };
 
