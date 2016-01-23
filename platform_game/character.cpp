@@ -219,6 +219,7 @@ void Character::_notification(int p_notification) {
                     }
                 }else if (guard_point < 0){
                     guard_point = reset_guard_point;
+                    emit_signal("guard_point_change", guard_point);
                 }
                 _step(dic);
                 if (get_script_instance()) {
@@ -306,7 +307,14 @@ bool Character::attack_by(Ref<HitStatus> p_hit_status, Character *from, bool fro
 }
 
 bool Character::_attack_by(Ref<HitStatus> p_hit_status, Object *from) {
-    guard_point -= p_hit_status->get_power();
+    if (guard_point>0) {
+        float gp = guard_point - p_hit_status->get_power();
+        emit_signal("guard_point_change", gp);
+        guard_point = gp;
+        if (guard_point <= 0) {
+            emit_signal("guard_break");
+        }
+    }
     bool guard = guard_point > 0;
     float nh = health - p_hit_status->get_damage();
 
@@ -423,6 +431,8 @@ void Character::_bind_methods() {
 
     ADD_SIGNAL(MethodInfo("health_recovery", PropertyInfo(Variant::REAL, "new_health")));
     ADD_SIGNAL(MethodInfo("health_down", PropertyInfo(Variant::REAL, "new_health")));
+    ADD_SIGNAL(MethodInfo("guard_point_change", PropertyInfo(Variant::REAL, "guard_point")));
+    ADD_SIGNAL(MethodInfo("guard_break"));
 
     ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/sprite" ), _SCS("set_sprite_path"),_SCS("get_sprite_path") );
     ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/behavior_tree" ), _SCS("set_behavior_tree_path"),_SCS("get_behavior_tree_path") );
