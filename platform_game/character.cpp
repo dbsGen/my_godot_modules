@@ -217,7 +217,7 @@ void Character::_notification(int p_notification) {
                     if (left_time <= 0) {
                         hit_status = Ref<HitStatus>(NULL);
                     }
-                }else if (guard_point < 0){
+                }else if (guard_point <= 0 && reset_guard_point > 0){
                     guard_point = reset_guard_point;
                     emit_signal("guard_point_change", guard_point);
                 }
