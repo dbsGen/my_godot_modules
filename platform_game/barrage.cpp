@@ -81,7 +81,7 @@ Bullet *Barrage::create_bullet(Point2 p_position, float p_rotation, Vector2 p_sp
         dead_cache.remove(idx);
     }else {
         bullets.push_back(memnew(Bullet));
-        bullet = bullets[bullets.size()-1];
+        bullet = bullets[index];
         bullet->id = index;
     }
     bullet->index = max_index++;
@@ -180,10 +180,12 @@ void Barrage::hit(Bullet *bullet, int index, HitArea *target) {
 }
 
 void Barrage::kill(Bullet *bullet, int index) {
-    bullet->live = false;
-    dead_cache.push_back(index);
-    Physics2DServer::get_singleton()->area_set_layer_mask(bullet->checker, 0);
-    Physics2DServer::get_singleton()->area_set_collision_mask(bullet->checker, 0);
+    if (bullet->live) {
+        bullet->live = false;
+        dead_cache.push_back(index);
+        Physics2DServer::get_singleton()->area_set_layer_mask(bullet->checker, 0);
+        Physics2DServer::get_singleton()->area_set_collision_mask(bullet->checker, 0);
+    }
 }
 
 void Barrage::clear() {
@@ -441,6 +443,11 @@ Bullet *RandomBarrage::make_bullet() {
     bullet->set_body_size(body_size);
     bullet->set_scale(bullet_scale);
     return bullet;
+}
+
+void RandomBarrage::clear() {
+    Barrage::clear();
+    shoot_count = 0;
 }
 
 void RandomBarrage::shoot(float angle, int frame) {

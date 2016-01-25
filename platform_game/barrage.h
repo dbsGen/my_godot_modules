@@ -132,7 +132,7 @@ public:
     _FORCE_INLINE_ void set_gravity(Vector2 p_gravity) {gravity = p_gravity;}
     _FORCE_INLINE_ Vector2 get_gravity() {return gravity;}
 
-    _FORCE_INLINE_ void clear();
+    virtual void clear();
 
     Bullet *create_bullet(Point2 p_position, float p_rotation, Vector2 p_speed, int p_frame, const Variant &customer_data=Variant());
 
@@ -225,6 +225,8 @@ public:
 
     _FORCE_INLINE_ void set_bullet_once_count(int p_count) {bullet_once_count=p_count;}
     _FORCE_INLINE_ int get_bullet_once_count() {return bullet_once_count;}
+
+    virtual void clear();
 
     void shoot(float angle, int frame);
 
