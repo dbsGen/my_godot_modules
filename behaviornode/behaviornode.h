@@ -32,12 +32,15 @@ protected:
     virtual Status  _behavior(const Variant& target, Dictionary env) {return STATUS_DEPEND_ON_CHILDREN;}
     virtual Status  _step(const Variant& target, Dictionary &env);
     virtual void    _reset(const Variant& target);
+    virtual void    _on_notify(const Variant& from, const StringName &key, const Variant& value){}
     static void     _bind_methods();
 
 
 public:
     void set_focus();
     void clear_focus();
+
+    void send_notify(const Variant& from, const StringName &key, const Variant& value);
 
     _FORCE_INLINE_ bool get_behavior_enable() {return _behavior_enable;}
     _FORCE_INLINE_ void set_behavior_enable(bool e) {_behavior_enable = e;}

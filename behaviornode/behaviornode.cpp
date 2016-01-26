@@ -61,6 +61,26 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
     }while(true);
 }
 
+void BehaviorNode::send_notify(const Variant& from, const StringName &key, const Variant& value) {
+    _on_notify(from, key, value);
+    if (get_script_instance()) {
+        Variant v_key(key);
+        const Variant* ptr[3]={&from, &v_key, &value};
+        get_script_instance()->call_multilevel(StringName("_on_notify"),ptr,3);
+    }
+
+    int count = get_child_count();
+    for (int i = 0; i < count; ++i) {
+        Node *node = get_child(i);
+        if (node) {
+            BehaviorNode *bn = node->cast_to<BehaviorNode>();
+            if (bn) {
+                bn->send_notify(from, key, value);
+            }
+        }
+    }
+}
+
 BehaviorNode::Status BehaviorNode::_step(const Variant& target, Dictionary &env) {
     if (!_behavior_enable)
         return STATUS_FAILURE;
@@ -120,6 +140,7 @@ void BehaviorNode::_reset(const Variant &target) {
 
 
 void BehaviorNode::_bind_methods() {
+    ObjectTypeDB::bind_method(_MD("send_notify", "from", "key:String", "value:Variant"),&BehaviorNode::send_notify, DEFVAL(NULL));
 
     ObjectTypeDB::bind_method(_MD("set_behavior_enable","enable"),&BehaviorNode::set_behavior_enable);
     ObjectTypeDB::bind_method(_MD("get_behavior_enable"),&BehaviorNode::get_behavior_enable);
@@ -146,6 +167,7 @@ void BehaviorNode::_bind_methods() {
     BIND_VMETHOD( MethodInfo("behavior", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY,"env")) );
     BIND_VMETHOD( MethodInfo("step", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY,"env")) );
     BIND_VMETHOD( MethodInfo("_reset", PropertyInfo(Variant::OBJECT,"target")) );
+    BIND_VMETHOD( MethodInfo("_on_notify", PropertyInfo(Variant::OBJECT,"from"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::OBJECT,"value")) );
     BIND_CONSTANT(TYPE_SEQUENCE);
     BIND_CONSTANT(TYPE_CONDITION);
     BIND_CONSTANT(STATUS_DEPEND_ON_CHILDREN);

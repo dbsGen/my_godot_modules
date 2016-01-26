@@ -90,6 +90,7 @@ protected:
 public:
     _FORCE_INLINE_ NodePath get_behavior_tree_path() {return _behavior_tree_path;}
     void set_behavior_tree_path(NodePath path);
+    _FORCE_INLINE_ BehaviorNode *get_behavior_tree() {return behavior_root;}
 
     void add_buff(Ref<Buff> &buff);
     void clear_buff_name(String buff_name);

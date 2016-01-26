@@ -312,7 +312,7 @@ bool Character::_attack_by(Ref<HitStatus> p_hit_status, Object *from) {
         emit_signal("guard_point_change", gp);
         guard_point = gp;
         if (guard_point <= 0) {
-            emit_signal("guard_break");
+            emit_signal("guard_break", p_hit_status);
         }
     }
     bool guard = guard_point > 0;
@@ -357,6 +357,7 @@ void Character::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("set_behavior_tree_path", "tree_path"), &Character::set_behavior_tree_path);
     ObjectTypeDB::bind_method(_MD("get_behavior_tree_path"), &Character::get_behavior_tree_path);
+    ObjectTypeDB::bind_method(_MD("get_behavior_tree:BehaviorNode"), &Character::get_behavior_tree);
     ObjectTypeDB::bind_method(_MD("behavior_data:Dictionary"), &Character::behavior_data);
 
     ObjectTypeDB::bind_method(_MD("get_on_floor"), &Character::get_on_floor);
@@ -432,7 +433,7 @@ void Character::_bind_methods() {
     ADD_SIGNAL(MethodInfo("health_recovery", PropertyInfo(Variant::REAL, "new_health")));
     ADD_SIGNAL(MethodInfo("health_down", PropertyInfo(Variant::REAL, "new_health")));
     ADD_SIGNAL(MethodInfo("guard_point_change", PropertyInfo(Variant::REAL, "guard_point")));
-    ADD_SIGNAL(MethodInfo("guard_break"));
+    ADD_SIGNAL(MethodInfo("guard_break", PropertyInfo(Variant::REAL, "hit_status", PROPERTY_HINT_RESOURCE_TYPE, "HitStatus")));
 
     ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/sprite" ), _SCS("set_sprite_path"),_SCS("get_sprite_path") );
     ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/behavior_tree" ), _SCS("set_behavior_tree_path"),_SCS("get_behavior_tree_path") );
