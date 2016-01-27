@@ -348,6 +348,27 @@ void Barrage::_bind_methods() {
 }
 //==================ShootBarrage==========================
 
+void ShootBarrage::_notification(int p_notification) {
+
+    switch (p_notification) {
+
+        case NOTIFICATION_FIXED_PROCESS: {
+            if (shoot_count > 0) {
+                if (frame_count <= 0) {
+                    shoot_count -= 1;
+                    frame_count = frame_interval;
+                    _shoot();
+                    ScriptInstance *instance = get_script_instance();
+                    if (instance) {
+                        instance->call_multilevel(StringName("_shoot"));
+                    }
+                }else {
+                    frame_count-=1;
+                }
+            }
+        }
+    }
+}
 
 void ShootBarrage::_bind_methods() {
 
@@ -363,39 +384,57 @@ void ShootBarrage::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_bullet_scale", "bullet_scale"), &ShootBarrage::set_bullet_scale);
     ObjectTypeDB::bind_method(_MD("get_bullet_scale"), &ShootBarrage::get_bullet_scale);
 
+    ObjectTypeDB::bind_method(_MD("set_shoot_time", "shoot_time"), &ShootBarrage::set_shoot_time);
+    ObjectTypeDB::bind_method(_MD("get_shoot_time"), &ShootBarrage::get_shoot_time);
+
+    ObjectTypeDB::bind_method(_MD("set_frame_interval", "frame_interval"), &ShootBarrage::set_frame_interval);
+    ObjectTypeDB::bind_method(_MD("get_frame_interval"), &ShootBarrage::get_frame_interval);
+
+    ObjectTypeDB::bind_method(_MD("start_shoot"), &ShootBarrage::start_shoot);
+
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "speed"), _SCS("set_speed"), _SCS("get_speed"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "radius"), _SCS("set_radius"), _SCS("get_radius"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "body_size"), _SCS("set_body_size"), _SCS("get_body_size"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "bullet_scale"), _SCS("set_bullet_scale"), _SCS("get_bullet_scale"));
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "shoot_time"), _SCS("set_shoot_time"), _SCS("get_shoot_time"));
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "frame_interval"), _SCS("set_frame_interval"), _SCS("get_frame_interval"));
+
+    BIND_VMETHOD(MethodInfo("_shoot"));
 }
 
 //==================ScatterBarrage==========================
 
-void ScatterBarrage::shoot(Point2 target, int count, int frame) {
+void ScatterBarrage::_shoot(){
+
     Vector2 v2 = target - get_global_pos();
     float in = Math::deg2rad(angle_interval);
     float angle = Math::atan2(v2.y, v2.x);
-    float start = angle - in*((count-1)/2.0);
+    float start = angle - in*((bullet_count-1)/2.0);
     if (distance_interval != 0) {
         Vector2 step(Math::cos(angle+Math_PI/2)*distance_interval, Math::sin(angle+Math_PI/2)*distance_interval);
-        Vector2 start_pos = -step*((count-1)/2.0);
+        Vector2 start_pos = -step*((bullet_count-1)/2.0);
 
-        for (int i = 0; i < count; ++i) {
+        for (int i = 0; i < bullet_count; ++i) {
             float alpha = start + in*i;
             Vector2 vn(Math::cos(alpha), Math::sin(alpha));
-            Bullet *bullet = create_bullet(vn*radius + (start_pos+i*step), alpha, vn*speed, frame, NULL);
+            Bullet *bullet = create_bullet(vn*radius + (start_pos+i*step), alpha, vn*speed, sprite_frame, NULL);
             bullet->set_body_size(body_size);
             bullet->set_scale(bullet_scale);
         }
     }else {
-        for (int i = 0; i < count; ++i) {
+        for (int i = 0; i < bullet_count; ++i) {
             float alpha = start + in*i;
             Vector2 vn(Math::cos(alpha), Math::sin(alpha));
-            Bullet *bullet = create_bullet(vn*radius, alpha, vn*speed, frame, NULL);
+            Bullet *bullet = create_bullet(vn*radius, alpha, vn*speed, sprite_frame, NULL);
             bullet->set_body_size(body_size);
             bullet->set_scale(bullet_scale);
         }
     }
+}
+
+void ScatterBarrage::shoot(int frame) {
+    sprite_frame = frame;
+    start_shoot();
 }
 
 void ScatterBarrage::_bind_methods() {
@@ -405,30 +444,24 @@ void ScatterBarrage::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_distance_interval", "interval"), &ScatterBarrage::set_distance_interval);
     ObjectTypeDB::bind_method(_MD("get_distance_interval"), &ScatterBarrage::get_distance_interval);
 
-    ObjectTypeDB::bind_method(_MD("shoot", "target", "count", "frame"), &ScatterBarrage::shoot);
+    ObjectTypeDB::bind_method(_MD("set_target", "target"), &ScatterBarrage::set_target);
+    ObjectTypeDB::bind_method(_MD("get_target"), &ScatterBarrage::get_target);
+
+    ObjectTypeDB::bind_method(_MD("set_bullet_count", "bullet_count"), &ScatterBarrage::set_bullet_count);
+    ObjectTypeDB::bind_method(_MD("get_bullet_count"), &ScatterBarrage::get_bullet_count);
+
+    ObjectTypeDB::bind_method(_MD("shoot", "frame"), &ScatterBarrage::shoot);
 
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "interval"), _SCS("set_interval"), _SCS("get_interval"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "distance_interval"), _SCS("set_distance_interval"), _SCS("get_distance_interval"));
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "bullet_count"), _SCS("set_bullet_count"), _SCS("get_bullet_count"));
 }
 
 //==================RandomBarrage==========================
 
-void RandomBarrage::_notification(int p_notification) {
-    switch (p_notification) {
-
-        case NOTIFICATION_FIXED_PROCESS: {
-            if (shoot_count > 0) {
-                if (frame_count <= 0) {
-                    shoot_count -= 1;
-                    frame_count = frame_interval;
-                    for (int i = 0; i < bullet_once_count; ++i) {
-                        make_bullet();
-                    }
-                }else {
-                    frame_count-=1;
-                }
-            }
-        }
+void RandomBarrage::_shoot() {
+    for (int i = 0; i < bullet_once_count; ++i) {
+        make_bullet();
     }
 }
 
@@ -445,16 +478,10 @@ Bullet *RandomBarrage::make_bullet() {
     return bullet;
 }
 
-void RandomBarrage::clear() {
-    Barrage::clear();
-    shoot_count = 0;
-}
-
 void RandomBarrage::shoot(float angle, int frame) {
     shoot_angle = angle;
-    shoot_count = shoot_time;
-    frame_count = 0;
     sprite_frame = frame;
+    start_shoot();
 }
 
 void RandomBarrage::_bind_methods() {
@@ -466,12 +493,6 @@ void RandomBarrage::_bind_methods() {
 
     ObjectTypeDB::bind_method(_MD("set_speed_range", "speed_range"), &RandomBarrage::set_speed_range);
     ObjectTypeDB::bind_method(_MD("get_speed_range"), &RandomBarrage::get_speed_range);
-
-    ObjectTypeDB::bind_method(_MD("set_shoot_time", "shoot_time"), &RandomBarrage::set_shoot_time);
-    ObjectTypeDB::bind_method(_MD("get_shoot_time"), &RandomBarrage::get_shoot_time);
-
-    ObjectTypeDB::bind_method(_MD("set_frame_interval", "frame_interval"), &RandomBarrage::set_frame_interval);
-    ObjectTypeDB::bind_method(_MD("get_frame_interval"), &RandomBarrage::get_frame_interval);
 
     ObjectTypeDB::bind_method(_MD("shoot", "angle", "frame"), &RandomBarrage::shoot);
 
