@@ -214,7 +214,9 @@ void Barrage::_process_and_draw_bullets(float delta_time) {
     if (!texture.is_null()) {
         RID ci=get_canvas_item();
         Size2 size = texture->get_size();
-        Rect2 vis = get_viewport_transform().xform_inv(get_viewport_rect());
+        const Matrix32 &mx = get_viewport_transform();
+        Rect2 vis = get_viewport_rect();
+        vis.pos = -Point2(mx[2][0]/mx[0][0], mx[2][1]/mx[1][1]);
         size = Size2(size.x / h_frames, size.y / v_frames);
         Matrix32 m = get_global_transform().affine_inverse();
         for (int i = 0, t = bullets.size(); i < t; ++i) {

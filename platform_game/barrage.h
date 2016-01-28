@@ -178,7 +178,7 @@ public:
     _FORCE_INLINE_ void set_frame_interval(int p_interval) {frame_interval=p_interval;}
     _FORCE_INLINE_ int get_frame_interval() {return frame_interval;}
 
-    _FORCE_INLINE_ virtual void clear() {shoot_time=0;Barrage::clear();}
+    _FORCE_INLINE_ virtual void clear() {shoot_count=0;Barrage::clear();}
 
     _FORCE_INLINE_ void start_shoot() {shoot_count=shoot_time;frame_count=0;}
 
