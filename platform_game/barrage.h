@@ -102,6 +102,9 @@ friend class Bullet;
 
     Vector2 gravity;
 
+    bool kill_out_screen;
+    float kill_range;
+
 protected:
     void _notification(int p_what);
     static void _bind_methods();
@@ -131,6 +134,12 @@ public:
 
     _FORCE_INLINE_ void set_gravity(Vector2 p_gravity) {gravity = p_gravity;}
     _FORCE_INLINE_ Vector2 get_gravity() {return gravity;}
+
+    _FORCE_INLINE_ void set_kill_out_screen(bool p_is_kill) {kill_out_screen = p_is_kill;}
+    _FORCE_INLINE_ bool get_kill_out_screen() {return kill_out_screen;}
+
+    _FORCE_INLINE_ void set_kill_range(float p_range) {kill_range = p_range;}
+    _FORCE_INLINE_ float get_kill_range() {return kill_range;}
 
     virtual void clear();
 

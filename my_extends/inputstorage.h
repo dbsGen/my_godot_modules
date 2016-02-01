@@ -43,6 +43,7 @@ public:
 
     void    start(StringArray events);
     void    close();
+    void    resume();
 
     void    frame_begin();
     void    pressed_event(const String& event);
@@ -72,6 +73,7 @@ private:
     Vector<String>    pressed;
     StringArray     events;
     void            _update_events();
+friend class InputStorage;
 protected:
     virtual void    _input(const InputEvent& p_event);
 

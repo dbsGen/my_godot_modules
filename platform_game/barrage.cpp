@@ -217,6 +217,7 @@ void Barrage::_process_and_draw_bullets(float delta_time) {
         const Matrix32 &mx = get_viewport_transform();
         Rect2 vis = get_viewport_rect();
         vis.pos = -Point2(mx[2][0]/mx[0][0], mx[2][1]/mx[1][1]);
+        vis = vis.grow(kill_range);
         size = Size2(size.x / h_frames, size.y / v_frames);
         Matrix32 m = get_global_transform().affine_inverse();
         for (int i = 0, t = bullets.size(); i < t; ++i) {
@@ -297,6 +298,8 @@ Barrage::Barrage() {
     _layer_mask = 0;
     _collision_mask = 0;
     max_index=0;
+    kill_range = 600;
+    kill_out_screen = true;
     set_fixed_process(true);
     set_process(true);
 }
@@ -334,6 +337,12 @@ void Barrage::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_gravity", "gravity"), &Barrage::set_gravity);
     ObjectTypeDB::bind_method(_MD("get_gravity"), &Barrage::get_gravity);
 
+    ObjectTypeDB::bind_method(_MD("set_kill_out_screen", "kill_out_screen"), &Barrage::set_kill_out_screen);
+    ObjectTypeDB::bind_method(_MD("get_kill_out_screen"), &Barrage::get_kill_out_screen);
+
+    ObjectTypeDB::bind_method(_MD("set_kill_range", "kill_range"), &Barrage::set_kill_range);
+    ObjectTypeDB::bind_method(_MD("get_kill_range"), &Barrage::get_kill_range);
+
     ObjectTypeDB::bind_method(_MD("clear"), &Barrage::clear);
 
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture", PROPERTY_HINT_RESOURCE_TYPE, "Texture"), _SCS("set_texture"), _SCS("get_texture"));
@@ -342,6 +351,9 @@ void Barrage::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "hit_status", PROPERTY_HINT_RESOURCE_TYPE, "HitStatus"), _SCS("set_hit_status"), _SCS("get_hit_status"));
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "explosion_scene", PROPERTY_HINT_RESOURCE_TYPE, "PackedScene"), _SCS("set_explosion_scene"), _SCS("get_explosion_scene"));
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "gravity"), _SCS("set_gravity"), _SCS("get_gravity"));
+
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "kill_out_screen"), _SCS("set_kill_out_screen"), _SCS("get_kill_out_screen"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "kill_range"), _SCS("set_kill_range"), _SCS("get_kill_range"));
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "layers", PROPERTY_HINT_ALL_FLAGS), _SCS("set_layer_mask"), _SCS("get_layer_mask"));
     ADD_PROPERTY(PropertyInfo(Variant::INT, "masks", PROPERTY_HINT_ALL_FLAGS), _SCS("set_collision_mask"), _SCS("get_collision_mask"));
@@ -496,8 +508,12 @@ void RandomBarrage::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("set_speed_range", "speed_range"), &RandomBarrage::set_speed_range);
     ObjectTypeDB::bind_method(_MD("get_speed_range"), &RandomBarrage::get_speed_range);
 
+    ObjectTypeDB::bind_method(_MD("set_bullet_once_count", "bullet_count"), &RandomBarrage::set_bullet_once_count);
+    ObjectTypeDB::bind_method(_MD("get_bullet_once_count"), &RandomBarrage::get_bullet_once_count);
+
     ObjectTypeDB::bind_method(_MD("shoot", "angle", "frame"), &RandomBarrage::shoot);
 
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "bullet_count"), _SCS("set_bullet_once_count"), _SCS("get_bullet_once_count"));
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "pos_range"), _SCS("set_pos_range"), _SCS("get_pos_range"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "angle_range"), _SCS("set_angle_range"), _SCS("get_angle_range"));
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "speed_range"), _SCS("set_speed_range"), _SCS("get_speed_range"));

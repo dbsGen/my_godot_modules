@@ -89,10 +89,19 @@ void InputStorage::start(StringArray events) {
     storageNode->set_events(events);
 }
 
+void InputStorage::resume() {
+    if  (storageNode != NULL) {
+        storageNode->set_process_input(true);
+        storageNode->set_fixed_process(true);
+    }
+}
+
 void InputStorage::close() {
     if  (storageNode != NULL) {
         storageNode->set_process_input(false);
         storageNode->set_fixed_process(false);
+        storageNode->pressed.clear();
+        storage_events.clear();
     }
 }
 
@@ -187,6 +196,7 @@ bool InputStorage::_pressed_in_frame(const Variant &input, int frame) {
 void InputStorage::_bind_methods() {
     ObjectTypeDB::bind_method(_MD("start", "events"), &InputStorage::start);
     ObjectTypeDB::bind_method(_MD("close"), &InputStorage::close);
+    ObjectTypeDB::bind_method(_MD("resume"), &InputStorage::resume);
     ObjectTypeDB::bind_method(_MD("frame_begin"), &InputStorage::frame_begin);
     ObjectTypeDB::bind_method(_MD("pressed_event", "event"), &InputStorage::pressed_event);
     ObjectTypeDB::bind_method(_MD("down_event", "event"), &InputStorage::down_event);

@@ -81,6 +81,10 @@ namespace MyTools {
             }
         }
 
+        void clear() {
+            _size = 0;
+        }
+
         Queue() {
             mem = NULL;
             _limit = 0;
