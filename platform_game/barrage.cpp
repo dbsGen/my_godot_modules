@@ -83,6 +83,7 @@ Bullet *Barrage::create_bullet(Point2 p_position, float p_rotation, Vector2 p_sp
         bullets.push_back(memnew(Bullet));
         bullet = bullets[index];
         bullet->id = index;
+        bullet->checker = Physics2DServer::get_singleton()->area_create();
     }
     bullet->index = max_index++;
     Matrix32 xform = get_global_transform();
@@ -93,7 +94,6 @@ Bullet *Barrage::create_bullet(Point2 p_position, float p_rotation, Vector2 p_sp
     bullet->data = customer_data;
     bullet->owner = this;
     bullet->live = true;
-    bullet->checker = Physics2DServer::get_singleton()->area_create();
     Physics2DServer::get_singleton()->area_set_space(bullet->checker, get_world_2d()->get_space());
     Physics2DServer::get_singleton()->area_add_shape(bullet->checker, shape);
     Physics2DServer::get_singleton()->area_set_transform(bullet->checker, Matrix32(0, bullet->position));
