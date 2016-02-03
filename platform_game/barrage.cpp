@@ -84,6 +84,8 @@ Bullet *Barrage::create_bullet(Point2 p_position, float p_rotation, Vector2 p_sp
         bullet = bullets[index];
         bullet->id = index;
         bullet->checker = Physics2DServer::get_singleton()->area_create();
+        Physics2DServer::get_singleton()->area_set_space(bullet->checker, get_world_2d()->get_space());
+        Physics2DServer::get_singleton()->area_add_shape(bullet->checker, shape);
     }
     bullet->index = max_index++;
     Matrix32 xform = get_global_transform();
@@ -94,8 +96,6 @@ Bullet *Barrage::create_bullet(Point2 p_position, float p_rotation, Vector2 p_sp
     bullet->data = customer_data;
     bullet->owner = this;
     bullet->live = true;
-    Physics2DServer::get_singleton()->area_set_space(bullet->checker, get_world_2d()->get_space());
-    Physics2DServer::get_singleton()->area_add_shape(bullet->checker, shape);
     Physics2DServer::get_singleton()->area_set_transform(bullet->checker, Matrix32(0, bullet->position));
     Physics2DServer::get_singleton()->area_set_monitor_callback(bullet->checker, bullet, "_body_inout");
     Physics2DServer::get_singleton()->area_set_area_monitor_callback(bullet->checker, bullet, "_area_inout");
@@ -196,57 +196,59 @@ void Barrage::clear() {
 
 void Barrage::_fixed_process_bullets(float delta_time) {
     ScriptInstance *instance = get_script_instance();
+    Vector2 g = gravity * delta_time;
+
+    const Matrix32 &mx = get_viewport_transform();
+    Rect2 vis = get_viewport_rect();
+    vis.pos = -Point2(mx[2][0]/mx[0][0], mx[2][1]/mx[1][1]);
+    vis = vis.grow(kill_range);
+
     for (int i = 0, t = bullets.size(); i < t; ++i) {
         Bullet *bullet = bullets[i];
         if (bullet->live) {
             _process_bullet(bullet, delta_time);
-            if (instance) {
-                Variant v1(bullet);
-                Variant v2(delta_time);
-                const Variant* ptr[2]={&v1, &v2};
-                instance->call_multilevel(StringName("_process_bullet"),ptr,2);
+            bullet->speed += g;
+            bullet->position += bullet->speed*delta_time;
+            if (vis.has_point(bullet->position)) {
+                Matrix32 matrix = Matrix32(0, bullet->position);
+                float scale = bullet->body_size/DEFAULT_SIZE;
+                matrix.scale_basis(Size2(scale, scale));
+                Physics2DServer::get_singleton()->area_set_transform(bullet->checker, matrix);
+            }else{
+                kill(bullet, i);
             }
+
+//            if (instance) {
+//                Variant v1(bullet);
+//                Variant v2(delta_time);
+//                const Variant* ptr[2]={&v1, &v2};
+//                instance->call_multilevel(StringName("_process_bullet"),ptr,2);
+//            }
         }
     }
 }
 
-void Barrage::_process_and_draw_bullets(float delta_time) {
+
+void Barrage::_process_draw_bullets() {
+    Size2 size = texture->get_size();
+    size = Size2(size.x / h_frames, size.y / v_frames);
+    Matrix32 m = get_global_transform().affine_inverse();
     if (!texture.is_null()) {
         RID ci=get_canvas_item();
-        Size2 size = texture->get_size();
-        const Matrix32 &mx = get_viewport_transform();
-        Rect2 vis = get_viewport_rect();
-        vis.pos = -Point2(mx[2][0]/mx[0][0], mx[2][1]/mx[1][1]);
-        vis = vis.grow(kill_range);
-        size = Size2(size.x / h_frames, size.y / v_frames);
-        Matrix32 m = get_global_transform().affine_inverse();
         for (int i = 0, t = bullets.size(); i < t; ++i) {
             Bullet *bullet = bullets[i];
             if (bullet->live) {
                 Matrix32 xform;
-
-                if (gravity != Vector2()) bullet->speed += gravity;
-                bullet->position += bullet->speed*delta_time;
-                if (vis.has_point(bullet->position)) {
-
-                    if (bullet->rotation) {
-                        xform.set_rotation(-bullet->rotation);
-                        xform.elements[2]+=bullet->position;
-                    } else {
-                        xform.elements[2]+=bullet->position;
-                    }
-                    xform = m * xform;
-                    xform.scale_basis(Size2(bullet->scale,bullet->scale));
-                    VisualServer::get_singleton()->canvas_item_add_set_transform(ci,xform);
-
-                    Matrix32 matrix = Matrix32(0, bullet->position);
-                    float scale = bullet->body_size/DEFAULT_SIZE;
-                    matrix.scale_basis(Size2(scale, scale));
-                    Physics2DServer::get_singleton()->area_set_transform(bullet->checker, matrix);
-                    texture->draw_rect_region(ci, Rect2(-size/2.0,size), Rect2(Point2(size.x * (bullet->frame % h_frames), size.y * (bullet->frame / h_frames)), size), Color(1,1,1,1));
-                }else {
-                    kill(bullet, i);
+                if (bullet->rotation) {
+                    xform.set_rotation(-bullet->rotation);
+                    xform.elements[2]+=bullet->position;
+                } else {
+                    xform.elements[2]+=bullet->position;
                 }
+                xform = m * xform;
+                xform.scale_basis(Size2(bullet->scale,bullet->scale));
+                VisualServer::get_singleton()->canvas_item_add_set_transform(ci,xform);
+                texture->draw_rect_region(ci, Rect2(-size/2.0,size), Rect2(Point2(size.x * (bullet->frame % h_frames), size.y * (bullet->frame / h_frames)), size), Color(1,1,1,1));
             }
         }
     }
@@ -287,7 +289,7 @@ void Barrage::_notification(int p_notification) {
             _fixed_process_bullets(get_fixed_process_delta_time());
         } break;
         case NOTIFICATION_DRAW: {
-            _process_and_draw_bullets(get_process_delta_time());
+            _process_draw_bullets();
         } break;
     }
 }

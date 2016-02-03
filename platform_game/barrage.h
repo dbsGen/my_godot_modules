@@ -83,7 +83,7 @@ friend class Bullet;
     static RID shape;
 
     void _fixed_process_bullets(float delta_time);
-    void _process_and_draw_bullets(float delta_time);
+    void _process_draw_bullets();
 
     void hit(Bullet *bullet, int index, Node* target);
     void hit(Bullet *bullet, int index, HitArea* target);
