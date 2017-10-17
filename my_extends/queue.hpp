@@ -22,8 +22,7 @@ namespace MyTools {
             if (mem) {
                 memdelete_arr(mem);
             }
-
-            mem = memnew_arr(T, p_size);
+            mem = p_size > 0 ? memnew_arr(T, p_size) : NULL;
             _size = 0;
             _offset = 0;
             _limit = p_size;

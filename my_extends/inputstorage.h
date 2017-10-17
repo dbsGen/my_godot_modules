@@ -15,15 +15,15 @@ public:
     void down_action(const String& action);
 
     bool is_pressed(const String& action) const;
-    bool is_pressed(const StringArray& actions) const;
+    bool is_pressed(const PoolStringArray& actions) const;
     bool is_down(const String& action) const;
-    bool is_down(const StringArray& actions) const;
-    int  queue_down(const StringArray& actions, int offset) const;
+    bool is_down(const PoolStringArray& actions) const;
+    int  queue_down(const PoolStringArray& actions, int offset) const;
 };
 
 class InputStorageNode;
 class InputStorage : public Reference {
-OBJ_TYPE(InputStorage, Reference);
+    GDCLASS(InputStorage, Reference);
 private:
 
     Queue< InputNode > storage_events;
@@ -33,7 +33,7 @@ friend class    InputStorageNode;
     bool    _pressed_in_frame(const Variant& events, int frame);
     bool    _down_in_frame(const Variant& events, int frame);
     void    _add_node(Object *node);
-    InputStorageNode    *storageNode;
+    InputStorageNode    *storage_node;
     static InputStorage *singleton;
 protected:
     static void     _bind_methods();
@@ -41,7 +41,7 @@ protected:
 public:
     static InputStorage *get_singleton();
 
-    void    start(StringArray events);
+    void    start(PoolStringArray events);
     void    close();
     void    resume();
 
@@ -56,11 +56,11 @@ public:
     int     down_frame(const Variant &event, int in_frame = 1);
     bool    is_pressed(const Variant &event, int in_frame = 1);
     bool    is_down(const Variant &event, int in_frame = 1);
-    bool    test_down(const StringArray &events, int in_frame = 10);
+    bool    test_down(const PoolStringArray &events, int in_frame = 10);
 
     InputStorage() {
         storage_size = 30;
-        storageNode=NULL;
+        storage_node=NULL;
         _this_frame = NULL;
         storage_events.alloc(storage_size);
     }
@@ -68,21 +68,21 @@ public:
 };
 
 class InputStorageNode : public Node {
-    OBJ_TYPE(InputStorageNode, Node);
+    GDCLASS(InputStorageNode, Node);
 private:
     Vector<String>    pressed;
-    StringArray     events;
+    PoolStringArray     events;
     void            _update_events();
 friend class InputStorage;
 protected:
-    virtual void    _input(const InputEvent& p_event);
+    virtual void    _input(const Ref<InputEvent>& p_event);
 
     void _notification(int p_what);
     static void     _bind_methods();
 public:
     Ref<InputStorage>   _storage;
-    StringArray     get_events() const {return events;}
-    void            set_events(StringArray e) {events = e;}
+    const PoolStringArray &get_events() const {return events;}
+    void            set_events(const PoolStringArray &e) {events = e;}
 
     int             get_storage_size() {return _storage->storage_size;}
     void            set_storage_size(int size) {_storage->storage_size=size;}

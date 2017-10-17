@@ -8,7 +8,7 @@
 #include "behaviornode.h"
 
 class LinkerBNode : public BehaviorNode {
-    OBJ_TYPE(LinkerBNode, BehaviorNode);
+    GDCLASS(LinkerBNode, BehaviorNode);
 private:
     BehaviorNode *link_target;
     NodePath    link_path;

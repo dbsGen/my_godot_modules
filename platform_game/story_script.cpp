@@ -18,14 +18,14 @@ void StoryScriptNode::over() {
 }
 
 void StoryScriptNode::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("run"), &StoryScriptNode::run);
-    ObjectTypeDB::bind_method(_MD("camera:Node"), &StoryScriptNode::camera);
-    ObjectTypeDB::bind_method(_MD("params:Dictionary"),&StoryScriptNode::params);
+    ClassDB::bind_method(D_METHOD("run"), &StoryScriptNode::run);
+    ClassDB::bind_method(D_METHOD("camera:Node"), &StoryScriptNode::camera);
+    ClassDB::bind_method(D_METHOD("params:Dictionary"),&StoryScriptNode::params);
 
-    ObjectTypeDB::bind_method(_MD("set_camera_path", "camera_path:NodePath"), &StoryScriptNode::set_camera_path);
-    ObjectTypeDB::bind_method(_MD("get_camera_path:NodePath"), &StoryScriptNode::get_camera_path);
+    ClassDB::bind_method(D_METHOD("set_camera_path", "camera_path:NodePath"), &StoryScriptNode::set_camera_path);
+    ClassDB::bind_method(D_METHOD("get_camera_path:NodePath"), &StoryScriptNode::get_camera_path);
 
-    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "camera_path"), _SCS("set_camera_path"), _SCS("get_camera_path"));
+    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "camera_path"), "set_camera_path", "get_camera_path");
 
     ADD_SIGNAL(MethodInfo("over"));
 }
@@ -61,9 +61,9 @@ void StoryScript::run() {
 }
 
 void StoryScript::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("camera:Node"),&StoryScript::camera);
-    ObjectTypeDB::bind_method(_MD("params:Dictionary"),&StoryScript::params);
-    ObjectTypeDB::bind_method(_MD("over"),&StoryScript::over);
+    ClassDB::bind_method(D_METHOD("camera:Node"),&StoryScript::camera);
+    ClassDB::bind_method(D_METHOD("params:Dictionary"),&StoryScript::params);
+    ClassDB::bind_method(D_METHOD("over"),&StoryScript::over);
 
     BIND_VMETHOD(MethodInfo("run"));
 

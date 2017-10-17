@@ -8,33 +8,30 @@
 #include "../anim_controller.h"
 #include "../../../core/math/math_defs.h"
 #include "../../../core/math/math_2d.h"
+#include <core/bind/core_bind.h>
+
+StringName Action::CHECK_NAME;
 
 void Action::refresh_cancel_list() {
-    if (!get_tree()->is_editor_hint()) {
+    if (!_Engine::get_singleton()->is_editor_hint()) {
         cancel_list.clear();
-        int t = get_child_count(), off = 0;
-        CancelNode** nodes = (CancelNode**)memalloc(t*sizeof(CancelNode*));
-        for (int i = 0; i < t; ++i) {
-            CancelNode* cancelNode = get_child(i)->cast_to<CancelNode>();
-            if (cancelNode) {
-                nodes[off] = cancelNode;
-                off += 1;
-                if (cancelNode->get_link_target()) {
-                    Action *action = cancelNode->get_link_target()->cast_to<Action>();
+        int t = get_child_count();
+        for (int i = t - 1; i >= 0; --i) {
+            CancelNode* cancel_node = Object::cast_to<CancelNode>(get_child(i));
+            if (cancel_node) {
+                if (cancel_node->get_link_target()) {
+                    Action *action = Object::cast_to<Action>(cancel_node->get_link_target());
                     if (action) {
                         CancelItem item;
-                        item.time = cancelNode->get_cancel_time();
-                        item.type = cancelNode->get_cancel_type();
+                        item.time = cancel_node->get_cancel_time();
+                        item.type = cancel_node->get_cancel_type();
                         item.action = action;
                         cancel_list.push_back(item);
                     }
                 }
+                remove_child(cancel_node);
             }
         }
-        for (int j = 0; j < off; ++j) {
-            remove_child(nodes[j]);
-        }
-        memfree(nodes);
         checked_cancel_list = true;
     }
 }
@@ -50,9 +47,15 @@ void Action::_notification(int p_notification) {
     }
 }
 
+
+void Action::force_focus() {
+    force_enter = true;
+    set_focus();
+}
+
 bool Action::_pre_behavior(const Variant &target, Dictionary env) {
     if (_allow) {
-        return (bool)call("_check_action", target, env);
+        return (bool)call(CHECK_NAME, target, env);
     }else {
         return false;
     }
@@ -107,11 +110,11 @@ void Action::_during_behavior(const Variant &target, Dictionary &env) {
         CancelItem& item = cancel_list[i];
         switch (item.type) {
             case CancelNode::HIT: {
-                if (_is_hit && (bool)item.action->call("_check_action", target, env))
+                if (_is_hit && (bool)item.action->call(CHECK_NAME, target, env))
                     setforce(item.action);
             } break;
             case CancelNode::TIME: {
-                if (get_delay()-get_time() > item.time && (bool)item.action->call("_check_action", target, env))
+                if (get_delay()-get_time() > item.time && (bool)item.action->call(CHECK_NAME, target, env))
                     setforce(item.action);
             } break;
         }
@@ -134,7 +137,7 @@ void Action::update_animation_path() {
 
 void Action::update_next_action() {
     if (is_inside_tree() && next_action_path != NodePath() && has_node(next_action_path)) {
-        next_action = get_node(next_action_path)->cast_to<Action>();
+        next_action = Object::cast_to<Action>(get_node(next_action_path));
     }else {
         next_action = NULL;
     }
@@ -145,12 +148,12 @@ BehaviorNode::Status Action::_behavior(const Variant& target, Dictionary env) {
     old_move = ((Vector2)env["move"]).x;
     _is_hit = false;
     if (animation_node) {
-        AnimController *manager = animation_node->cast_to<AnimController>();
+        AnimController *manager = Object::cast_to<AnimController>(animation_node);
         if (manager) {
             if (animation_type != "" && animation_name != "")
                 manager->set_status(animation_type, animation_name);
         }else {
-            AnimationPlayer *player = animation_node->cast_to<AnimationPlayer>();
+            AnimationPlayer *player = Object::cast_to<AnimationPlayer>(animation_node);
             if (player && animation_name != "")
                 player->play(animation_name);
         }
@@ -160,7 +163,7 @@ BehaviorNode::Status Action::_behavior(const Variant& target, Dictionary env) {
 
 void Action::cancel_animation() {
     if (animation_node) {
-        AnimController *manager = animation_node->cast_to<AnimController>();
+        AnimController *manager = Object::cast_to<AnimController>(animation_node);
         if (manager) {
             if (animation_type != "" && animation_name != "") {
                 manager->remove_status_with(animation_type, animation_name);
@@ -189,50 +192,52 @@ void Action::_cancel_behavior(const Variant& target, Dictionary& env) {
 }
 
 void Action::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("refresh_cancel_list"), &Action::refresh_cancel_list);
 
-    ObjectTypeDB::bind_method(_MD("set_hit", "hit"), &Action::set_hit);
-    ObjectTypeDB::bind_method(_MD("get_hit"), &Action::get_hit);
+    ClassDB::bind_method(D_METHOD("refresh_cancel_list"), &Action::refresh_cancel_list);
 
-    ObjectTypeDB::bind_method(_MD("set_max_move", "max_move"), &Action::set_max_move);
-    ObjectTypeDB::bind_method(_MD("get_max_move"), &Action::get_max_move);
+    ClassDB::bind_method(D_METHOD("force_focus"),&Action::force_focus);
 
-    ObjectTypeDB::bind_method(_MD("set_drag", "drag"), &Action::set_drag);
-    ObjectTypeDB::bind_method(_MD("get_drag"), &Action::get_drag);
+    ClassDB::bind_method(D_METHOD("set_hit", "hit"), &Action::set_hit);
+    ClassDB::bind_method(D_METHOD("get_hit"), &Action::get_hit);
 
-    ObjectTypeDB::bind_method(_MD("set_animation_path", "animation_path"), &Action::set_animation_path);
-    ObjectTypeDB::bind_method(_MD("get_animation_path"), &Action::get_animation_path);
+    ClassDB::bind_method(D_METHOD("set_max_move", "max_move"), &Action::set_max_move);
+    ClassDB::bind_method(D_METHOD("get_max_move"), &Action::get_max_move);
 
-    ObjectTypeDB::bind_method(_MD("get_animation_node"), &Action::get_animation_node);
+    ClassDB::bind_method(D_METHOD("set_drag", "drag"), &Action::set_drag);
+    ClassDB::bind_method(D_METHOD("get_drag"), &Action::get_drag);
 
-    ObjectTypeDB::bind_method(_MD("set_animation_type", "animation_type"), &Action::set_animation_type);
-    ObjectTypeDB::bind_method(_MD("get_animation_type"), &Action::get_animation_type);
+    ClassDB::bind_method(D_METHOD("set_animation_path", "animation_path"), &Action::set_animation_path);
+    ClassDB::bind_method(D_METHOD("get_animation_path"), &Action::get_animation_path);
 
-    ObjectTypeDB::bind_method(_MD("set_animation_name", "animation_name"), &Action::set_animation_name);
-    ObjectTypeDB::bind_method(_MD("get_animation_name"), &Action::get_animation_name);
+    ClassDB::bind_method(D_METHOD("get_animation_node"), &Action::get_animation_node);
 
-    ObjectTypeDB::bind_method(_MD("set_next_action_path", "naxt_action_path"), &Action::set_next_action_path);
-    ObjectTypeDB::bind_method(_MD("get_next_action_path"), &Action::get_next_action_path);
+    ClassDB::bind_method(D_METHOD("set_animation_type", "animation_type"), &Action::set_animation_type);
+    ClassDB::bind_method(D_METHOD("get_animation_type"), &Action::get_animation_type);
+
+    ClassDB::bind_method(D_METHOD("set_animation_name", "animation_name"), &Action::set_animation_name);
+    ClassDB::bind_method(D_METHOD("get_animation_name"), &Action::get_animation_name);
+
+    ClassDB::bind_method(D_METHOD("set_next_action_path", "naxt_action_path"), &Action::set_next_action_path);
+    ClassDB::bind_method(D_METHOD("get_next_action_path"), &Action::get_next_action_path);
 
 
-    ObjectTypeDB::bind_method(_MD("set_allow", "allow"), &Action::set_allow);
-    ObjectTypeDB::bind_method(_MD("get_allow"), &Action::get_allow);
+    ClassDB::bind_method(D_METHOD("set_allow", "allow"), &Action::set_allow);
+    ClassDB::bind_method(D_METHOD("get_allow"), &Action::get_allow);
 
-    ObjectTypeDB::bind_method(_MD("get_next_action"), &Action::get_next_action);
+    ClassDB::bind_method(D_METHOD("get_next_action"), &Action::get_next_action);
 
-    ObjectTypeDB::bind_method(_MD("_check_action", "target", "env:Dictionary"), &Action::_check_action);
+    ClassDB::bind_method(D_METHOD("_check_action", "target", "env:Dictionary"), &Action::_check_action);
 
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "allow"), _SCS("set_allow"), _SCS("get_allow"));
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "allow"), "set_allow", "get_allow");
 
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/max_move"), _SCS("set_max_move"), _SCS("get_max_move"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/drag"), _SCS("set_drag"), _SCS("get_drag"));
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/max_move"), "set_max_move", "get_max_move");
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "move/drag"), "set_drag", "get_drag");
 
-    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "action/animation_path"), _SCS("set_animation_path"), _SCS("get_animation_path"));
-    ADD_PROPERTY(PropertyInfo(Variant::STRING, "action/animation_type"), _SCS("set_animation_type"), _SCS("get_animation_type"));
-    ADD_PROPERTY(PropertyInfo(Variant::STRING, "action/animation_name"), _SCS("set_animation_name"), _SCS("get_animation_name"));
+    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "action/animation_path"), "set_animation_path", "get_animation_path");
+    ADD_PROPERTY(PropertyInfo(Variant::STRING, "action/animation_type"), "set_animation_type", "get_animation_type");
+    ADD_PROPERTY(PropertyInfo(Variant::STRING, "action/animation_name"), "set_animation_name", "get_animation_name");
 
-    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "next_action_path"), _SCS("set_next_action_path"), _SCS("get_next_action_path"));
+    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "next_action_path"), "set_next_action_path", "get_next_action_path");
 
-    BIND_VMETHOD( MethodInfo("_cancel_behavior", PropertyInfo(Variant::OBJECT,"target")) );
     BIND_VMETHOD( MethodInfo("_check_action", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY, "env")) );
 }

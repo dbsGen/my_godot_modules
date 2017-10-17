@@ -5,57 +5,67 @@
 #include "phantom.h"
 #include "../../servers/visual_server.h"
 
-void Phantom::_update_target() {
+void Phantom::_update_targets() {
     if  (is_inside_tree()) {
-        if (target_path != NodePath() && has_node(target_path))
-            target = get_node(target_path)->cast_to<Sprite>();
-        else target = NULL;
+        targets.clear();
+        for (int  i = 0, t = target_paths.size(); i < t; ++i) {
+            NodePath path = target_paths[i];
+            if (has_node(path)) {
+                Sprite *sprite = Object::cast_to<Sprite>(get_node(path));
+                if (sprite) {
+                    targets.push_back(sprite);
+                }
+            }
+        }
     }else {
-        target = NULL;
     }
 }
 
 void Phantom::make_item() {
-    Item item;
-    item.life = life_frame;
-    item.position = target->get_global_pos();
-    item.offset = target->get_offset();
-    Matrix32 m = target->get_global_transform();
-    item.scale = m.get_scale();
-    item.rotation = m.get_rotation();
-    if (m[0][0] * m[1][1] < 0) {
-        item.scale.x = -item.scale.x;
-        item.rotation = Math_PI*2-item.rotation;
+    DrawSprite sprite;
+    sprite.life = life_frame;
+    for (int i = 0, t = targets.size(); i < t; ++i) {
+        Sprite *target = Object::cast_to<Sprite>((Object*)targets[i]);
+        Item item;
+        item.position = target->get_global_position();
+        item.offset = target->get_offset();
+        Transform2D m = target->get_global_transform();
+        item.scale = m.get_scale();
+        item.rotation = m.get_rotation();
+        if (m[0][0] * m[1][1] < 0) {
+            item.scale.x = -item.scale.x;
+            item.rotation = Math_PI*2-item.rotation;
+        }
+        item.texture = target->get_texture();
+        if (target->is_region()) {
+            item.src_rect = target->get_region_rect();
+        }else {
+            Size2 size = item.texture->get_size();
+            size.width/=target->get_hframes();
+            size.height/=target->get_vframes();
+            float left = (target->get_frame()%target->get_hframes())*size.width;
+            float top = (target->get_frame()/target->get_hframes())*size.height;
+            item.src_rect = Rect2(left, top, size.width, size.height);
+        }
+        if (target->is_centered())
+            item.offset -= item.src_rect.size/2;
+        sprite.items.push_back(item);
     }
-    item.texture = target->get_texture();
-    if (target->is_region()) {
-        item.src_rect = target->get_region_rect();
-    }else {
-        Size2 size = item.texture->get_size();
-        size.width/=target->get_hframes();
-        size.height/=target->get_vframes();
-        float left = (target->get_frame()%target->get_hframes())*size.width;
-        float top = (target->get_frame()/target->get_hframes())*size.height;
-        item.src_rect = Rect2(left, top, size.width, size.height);
-    }
-    if (target->is_centered())
-        item.offset -= item.src_rect.size/2;
-
-    items.push(item);
+    sprites.push(sprite);
 }
 
 void Phantom::_update_size() {
-    items.alloc(life_frame/(frame_interval+1) + 1);
+    sprites.alloc(life_frame/(frame_interval+1) + 1);
 }
 
 void Phantom::_update_fixed_frame() {
-    for (int i = items.size() - 1; i >= 0; --i) {
-        Item &item = items[i];
-        if (item.life > 0) {
-            item.life -= 1;
+    for (int i = sprites.size() - 1; i >= 0; --i) {
+        DrawSprite &s = sprites[i];
+        if (s.life > 0) {
+            s.life -= 1;
         }else break;
     }
-    if (phantom_enable && target) {
+    if (phantom_enable) {
         if (frame_count <= 0) {
             frame_count = frame_interval;
             make_item();
@@ -66,40 +76,37 @@ void Phantom::_update_fixed_frame() {
 }
 
 void Phantom::_update_and_draw() {
+    int t = sprites.size(), count = 0;
+    if (t == 0) return;
     RID ci = get_canvas_item();
-    Matrix32 m = get_global_transform().affine_inverse();
-    int t = items.size(), count = 0;
-    Item **_tmp = (Item **)memalloc(sizeof(Phantom::Item*) * t);
+    Transform2D m = get_global_transform().affine_inverse();
 
     for (int i = t - 1; i >= 0; --i) {
-        Item &item = items[i];
-        if (item.life > 0) {
-            if (!item.texture.is_null()) {
-                _tmp[count++] = &item;
+        DrawSprite &sprite = sprites[i];
+        if (sprite.life > 0) {
+            for (int j = 0, _t = sprite.items.size(); j < _t; ++j) {
+                Item *item = &sprite.items[j];
+                Transform2D xform;
+                xform.set_rotation(item->rotation);
+                xform.elements[2]+=item->position;
+                xform = m*xform;
+                xform.scale_basis(item->scale);
+                VisualServer::get_singleton()->canvas_item_add_set_transform(ci, xform);
+                float p = sprite.life/(float)life_frame;
+                Color color(1,1,1,p);
+                if (!color_ramp.is_null())
+                    color = color_ramp->get_color_at_offset(1-p);
+                item->texture->draw_rect_region(ci, Rect2(item->offset,item->src_rect.size), item->src_rect, color);
             }
         }else
             break;
-    }
-    for (int j = count-1; j >= 0; --j) {
-        Item *item = _tmp[j];
-        Matrix32 xform;
-        xform.set_rotation(item->rotation);
-        xform.elements[2]+=item->position;
-        xform = m*xform;
-        xform.scale_basis(item->scale);
-        VisualServer::get_singleton()->canvas_item_add_set_transform(ci, xform);
-        float p = item->life/(float)life_frame;
-        Color color(1,1,1,p);
-        if (!color_ramp.is_null())
-            color = color_ramp->get_color_at_offset(1-p);
-        item->texture->draw_rect_region(ci, Rect2(item->offset,item->src_rect.size), item->src_rect, color);
     }
 }
 
 void Phantom::_notification(int p_notification) {
     switch (p_notification) {
         case NOTIFICATION_ENTER_TREE: {
-            _update_target();
+            _update_targets();
         } break;
         case NOTIFICATION_FIXED_PROCESS: {
             _update_fixed_frame();
@@ -114,27 +121,27 @@ void Phantom::_notification(int p_notification) {
 }
 
 void Phantom::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("set_target_path", "target_path"), &Phantom::set_target_path);
-    ObjectTypeDB::bind_method(_MD("get_target_path"), &Phantom::get_target_path);
-    ObjectTypeDB::bind_method(_MD("get_target:Sprite"), &Phantom::get_target);
+    ClassDB::bind_method(D_METHOD("set_target_paths", "target_paths"), &Phantom::set_target_paths);
+    ClassDB::bind_method(D_METHOD("get_target_paths"), &Phantom::get_target_paths);
+    ClassDB::bind_method(D_METHOD("get_targets"), &Phantom::get_targets);
 
-    ObjectTypeDB::bind_method(_MD("set_color_ramp", "color_ramp:ColorRamp"), &Phantom::set_color_ramp);
-    ObjectTypeDB::bind_method(_MD("get_color_ramp"), &Phantom::get_color_ramp);
+    ClassDB::bind_method(D_METHOD("set_gradient", "gradient:Gradient"), &Phantom::set_gradient);
+    ClassDB::bind_method(D_METHOD("get_gradient"), &Phantom::get_gradient);
 
-    ObjectTypeDB::bind_method(_MD("set_life_frame", "life_frame"), &Phantom::set_life_frame);
-    ObjectTypeDB::bind_method(_MD("get_life_frame"), &Phantom::get_life_frame);
+    ClassDB::bind_method(D_METHOD("set_life_frame", "life_frame"), &Phantom::set_life_frame);
+    ClassDB::bind_method(D_METHOD("get_life_frame"), &Phantom::get_life_frame);
 
-    ObjectTypeDB::bind_method(_MD("set_frame_interval", "frame_interval"), &Phantom::set_frame_interval);
-    ObjectTypeDB::bind_method(_MD("get_frame_interval"), &Phantom::get_frame_interval);
+    ClassDB::bind_method(D_METHOD("set_frame_interval", "frame_interval"), &Phantom::set_frame_interval);
+    ClassDB::bind_method(D_METHOD("get_frame_interval"), &Phantom::get_frame_interval);
 
-    ObjectTypeDB::bind_method(_MD("set_phantom_enable", "enable"), &Phantom::set_phantom_enable);
-    ObjectTypeDB::bind_method(_MD("get_phantom_enable"), &Phantom::get_phantom_enable);
+    ClassDB::bind_method(D_METHOD("set_phantom_enable", "enable"), &Phantom::set_phantom_enable);
+    ClassDB::bind_method(D_METHOD("get_phantom_enable"), &Phantom::get_phantom_enable);
 
-    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "target_path"), _SCS("set_target_path"), _SCS("get_target_path"));
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "color_ramp", PROPERTY_HINT_RESOURCE_TYPE, "ColorRamp"), _SCS("set_color_ramp"), _SCS("get_color_ramp"));
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "life_time"), _SCS("set_life_frame"), _SCS("get_life_frame"));
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "frame_interval"), _SCS("set_frame_interval"), _SCS("get_frame_interval"));
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "phantom_enable"), _SCS("set_phantom_enable"), _SCS("get_phantom_enable"));
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "target_paths"), "set_target_paths", "get_target_paths");
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "gradient", PROPERTY_HINT_RESOURCE_TYPE, "Gradient"), "set_gradient", "get_gradient");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "life_time"), "set_life_frame", "get_life_frame");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "frame_interval"), "set_frame_interval", "get_frame_interval");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "phantom_enable"), "set_phantom_enable", "get_phantom_enable");
 
 
 }

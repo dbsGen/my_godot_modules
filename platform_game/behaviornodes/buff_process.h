@@ -8,7 +8,7 @@
 #include "../../behaviornode/behaviornode.h"
 
 class BuffProcess : public BehaviorNode {
-    OBJ_TYPE(BuffProcess, BehaviorNode);
+    GDCLASS(BuffProcess, BehaviorNode);
 protected:
     virtual Status _behavior(const Variant& target, Dictionary env);
 

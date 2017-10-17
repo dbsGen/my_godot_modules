@@ -17,65 +17,89 @@ class Barrage;
 class HitArea;
 struct BulletComparator;
 
-class Bullet : public Object {
-OBJ_TYPE(Bullet, Object);
+class Bullet : public Reference {
+    GDCLASS(Bullet, Reference);
     int index;
     int id;
     int frame;
-    Vector2 speed;
+    float speed;
     float rotation;
+    float start_rotation;
+
     float scale;
     Point2 position;
+    Point2 start_position;
     bool live;
     Variant data;
     RID checker;
     float body_size;
     Barrage *owner;
+    Point2 target_position;
+
+    float total_time = 0;
+    bool target_set = false;
+    float accel = 0;
+    float rotation_accel = 0;
+
     friend class Barrage;
     friend struct BulletComparator;
 protected:
     static void _bind_methods();
+    
+    void _process(float delta_time);
 
     void _body_inout(int p_status,const RID& p_body, int p_instance, int p_body_shape,int p_area_shape);
     void _area_inout(int p_status,const RID& p_area, int p_instance, int p_area_shape,int p_self_shape);
 public:
 
     _FORCE_INLINE_ void set_frame(const int &p_frame) {frame=p_frame;}
-    _FORCE_INLINE_ int get_frame() {return frame;}
+    _FORCE_INLINE_ int get_frame() const {return frame;}
 
-    _FORCE_INLINE_ void set_speed(const Vector2 &p_speed) {speed = p_speed;}
-    _FORCE_INLINE_ Vector2 get_speed() {return speed;}
+    _FORCE_INLINE_ void set_speed(float p_speed) {speed = p_speed;}
+    _FORCE_INLINE_ float get_speed() const {return speed;}
 
-    _FORCE_INLINE_ void set_rotation(const float &p_rotation) {rotation = p_rotation;}
-    _FORCE_INLINE_ float get_rotation() {return rotation;}
+    _FORCE_INLINE_ void set_rotation(const float &p_rotation) {start_rotation = p_rotation;rotation=p_rotation;}
+    _FORCE_INLINE_ float get_rotation() const {return start_rotation;}
 
     _FORCE_INLINE_ void set_scale(const float &p_scale) {scale=p_scale;}
-    _FORCE_INLINE_ float get_scale() {return scale;}
+    _FORCE_INLINE_ float get_scale() const {return scale;}
 
-    _FORCE_INLINE_ void set_position(const Point2 &p_position) {position=p_position;}
-    _FORCE_INLINE_ Point2 get_position() {return position;}
+    _FORCE_INLINE_ void set_position(const Point2 &p_position) {start_position=p_position;}
+    _FORCE_INLINE_ const Point2 &get_position() const {return start_position;}
 
     _FORCE_INLINE_ void set_data(const Variant &p_data) {data=p_data;}
-    _FORCE_INLINE_ Variant get_data() {return data;}
+    _FORCE_INLINE_ const Variant &get_data() const {return data;}
 
     _FORCE_INLINE_ void set_body_size(float p_body_size) {body_size=p_body_size;}
-    _FORCE_INLINE_ float get_body_size() {return body_size;}
+    _FORCE_INLINE_ float get_body_size() const {return body_size;}
+
+    _FORCE_INLINE_ void set_target_set(bool p_target_set) {target_set = p_target_set;}
+    _FORCE_INLINE_ bool get_target_set() const { return target_set; }
+
+    _FORCE_INLINE_ void set_accel(float p_accel) {accel = p_accel;}
+    _FORCE_INLINE_ float get_accel() const { return accel; }
+
+    _FORCE_INLINE_ void set_rotation_accel(float p_ra) { rotation_accel = p_ra; }
+    _FORCE_INLINE_ float get_rotation_accel() const { return rotation_accel; }
+
+    _FORCE_INLINE_ void set_target_position(const Point2 &p_positon) { target_position = p_positon; }
+    _FORCE_INLINE_ const Point2 &get_target_position() const { return target_position; }
 
     _FORCE_INLINE_ Bullet(){id=0;live = true;scale=1;body_size=8;}
     _FORCE_INLINE_ ~Bullet(){}
 };
 struct BulletComparator {
 
-    inline bool operator()(const Bullet* a,const Bullet* b) const { return (a->index<b->index); }
+    inline bool operator()(const Ref<Bullet> &a,const Ref<Bullet> &b) const { return (a->index<b->index); }
 };
 
 class Barrage : public Node2D {
-    OBJ_TYPE(Barrage, Node2D);
+    GDCLASS(Barrage, Node2D);
 private:
 friend class Bullet;
     Ref<Texture> texture;
-    Vector<Bullet*> bullets;
-    DVector<int> dead_cache;
+    Vector<Ref<Bullet> > bullets;
+    PoolIntArray dead_cache;
     int h_frames;
     int v_frames;
 
@@ -85,10 +109,10 @@ friend class Bullet;
     void _fixed_process_bullets(float delta_time);
     void _process_draw_bullets();
 
-    void hit(Bullet *bullet, int index, Node* target);
-    void hit(Bullet *bullet, int index, HitArea* target);
-    void graze(Bullet *bullet, GrazeArea* area);
-    void kill(Bullet *bullet, int index);
+    void hit(const Ref<Bullet> &bullet, int index, Node* target);
+    void hit(const Ref<Bullet> &bullet, int index, HitArea* target);
+    void graze(const Ref<Bullet> &bullet, GrazeArea* area);
+    void kill(const Ref<Bullet> &bullet, int index);
 
     int max_index;
     int _layer_mask;
@@ -100,8 +124,6 @@ friend class Bullet;
     Ref<HitStatus> hit_status;
     Ref<PackedScene> explosion_scene;
 
-    Vector2 gravity;
-
     bool kill_out_screen;
     float kill_range;
 
@@ -109,7 +131,7 @@ protected:
     void _notification(int p_what);
     static void _bind_methods();
 
-    virtual void _process_bullet(Bullet *bullet, float delta_time) {}
+    virtual void _process_bullet(const Ref<Bullet> &bullet, float delta_time) {}
 
 public:
 
@@ -123,17 +145,14 @@ public:
     _FORCE_INLINE_ int get_collision_mask() {return _collision_mask;}
 
     _FORCE_INLINE_ void set_character_path(const NodePath &p_character_path) {character_path=p_character_path;_update_character();}
-    _FORCE_INLINE_ NodePath get_character_path() {return character_path;}
-    _FORCE_INLINE_ Character *get_character() {return character_id == 0 ? NULL : ObjectDB::get_instance(character_id)->cast_to<Character>();}
+    _FORCE_INLINE_ const NodePath &get_character_path() {return character_path;}
+    _FORCE_INLINE_ Character *get_character() {return character_id == 0 ? NULL : Object::cast_to<Character>(ObjectDB::get_instance(character_id));}
 
-    _FORCE_INLINE_ void set_hit_status(const Ref<HitStatus> p_hit_status) {hit_status = p_hit_status;}
+    _FORCE_INLINE_ void set_hit_status(const Ref<HitStatus> &p_hit_status) {hit_status = p_hit_status;}
     _FORCE_INLINE_ Ref<HitStatus> get_hit_status() {return hit_status;}
 
-    _FORCE_INLINE_ void set_explosion_scene(Ref<PackedScene> p_scene) {explosion_scene=p_scene;}
+    _FORCE_INLINE_ void set_explosion_scene(const Ref<PackedScene> &p_scene) {explosion_scene=p_scene;}
     _FORCE_INLINE_ Ref<PackedScene> get_explosion_scene() {return explosion_scene;}
-
-    _FORCE_INLINE_ void set_gravity(Vector2 p_gravity) {gravity = p_gravity;}
-    _FORCE_INLINE_ Vector2 get_gravity() {return gravity;}
 
     _FORCE_INLINE_ void set_kill_out_screen(bool p_is_kill) {kill_out_screen = p_is_kill;}
     _FORCE_INLINE_ bool get_kill_out_screen() {return kill_out_screen;}
@@ -143,24 +162,26 @@ public:
 
     virtual void clear();
 
-    Bullet *create_bullet(Point2 p_position, float p_rotation, Vector2 p_speed, int p_frame, const Variant &customer_data=Variant());
+    Bullet *Barrage::create_bullet(const Point2 &p_position);
 
     Barrage();
     ~Barrage();
 };
 
 class ShootBarrage : public Barrage {
-OBJ_TYPE(ShootBarrage, Barrage);
+    GDCLASS(ShootBarrage, Barrage);
 protected:
     float speed;
     float radius;
+    float accel = 0;
+    float rotation_accel = 0;
     float body_size;
     float bullet_scale;
 
     int shoot_time;
-    int frame_interval;
+    float frame_interval;
     int shoot_count;
-    int frame_count;
+    float frame_count;
 
     void _notification(int p_what);
     static void _bind_methods();
@@ -170,22 +191,28 @@ protected:
 public:
 
     _FORCE_INLINE_ void set_speed(float p_speed) {speed = p_speed;}
-    _FORCE_INLINE_ float get_speed() {return speed;}
+    _FORCE_INLINE_ float get_speed() const {return speed;}
 
     _FORCE_INLINE_ void set_radius(float p_radius) {radius=p_radius;}
-    _FORCE_INLINE_ float get_radius() {return radius;}
+    _FORCE_INLINE_ float get_radius() const {return radius;}
+
+    _FORCE_INLINE_ void set_accel(float p_accel) { accel = p_accel; }
+    _FORCE_INLINE_ float get_accel() const { return accel; }
+    
+    _FORCE_INLINE_ void set_rotation_accel(float p_accel) { rotation_accel = p_accel; }
+    _FORCE_INLINE_ float get_rotation_accel() const { return rotation_accel; }
 
     _FORCE_INLINE_ void set_body_size(float p_body_size) {body_size = p_body_size;}
-    _FORCE_INLINE_ float get_body_size() { return body_size;}
+    _FORCE_INLINE_ float get_body_size() const { return body_size;}
 
     _FORCE_INLINE_ void set_bullet_scale(float p_bullet_scale) {bullet_scale=p_bullet_scale;}
-    _FORCE_INLINE_ float get_bullet_scale() { return bullet_scale; }
+    _FORCE_INLINE_ float get_bullet_scale() const { return bullet_scale; }
 
     _FORCE_INLINE_ void set_shoot_time(int p_time) {shoot_time=p_time;}
-    _FORCE_INLINE_ float get_shoot_time() {return shoot_time;}
+    _FORCE_INLINE_ float get_shoot_time() const {return shoot_time;}
 
-    _FORCE_INLINE_ void set_frame_interval(int p_interval) {frame_interval=p_interval;}
-    _FORCE_INLINE_ int get_frame_interval() {return frame_interval;}
+    _FORCE_INLINE_ void set_frame_interval(float p_interval) {frame_interval=p_interval;}
+    _FORCE_INLINE_ float get_frame_interval() const {return frame_interval;}
 
     _FORCE_INLINE_ virtual void clear() {shoot_count=0;Barrage::clear();}
 
@@ -195,7 +222,7 @@ public:
 };
 
 class ScatterBarrage : public ShootBarrage {
-    OBJ_TYPE(ScatterBarrage, ShootBarrage);
+    GDCLASS(ScatterBarrage, ShootBarrage);
 private:
     float angle_interval;
     float distance_interval;
@@ -226,7 +253,7 @@ public:
 };
 
 class RandomBarrage : public ShootBarrage {
-    OBJ_TYPE(RandomBarrage, ShootBarrage);
+    GDCLASS(RandomBarrage, ShootBarrage);
 private:
     Vector2 pos_range;
     float angle_range;

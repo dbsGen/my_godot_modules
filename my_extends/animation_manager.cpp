@@ -59,24 +59,24 @@ Variant AnimationManager::get_anim(String p_key) {
 }
 
 void AnimationManager::add_child_notify(Node *p_child) {
-    if (p_child->is_type("AnimationPlayer")) {
+    if (p_child->is_class("AnimationPlayer")) {
         anim_nodes[p_child->get_name()] = p_child;
     }
 }
 
 void AnimationManager::remove_child_notify(Node *p_child) {
-    if (p_child->is_type("AnimationPlayer") && anim_nodes.has(p_child->get_name())) {
+    if (p_child->is_class("AnimationPlayer") && anim_nodes.has(p_child->get_name())) {
         anim_nodes.erase(p_child->get_name());
     }
 }
 
 void AnimationManager::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("run"),&AnimationManager::run);
-    ObjectTypeDB::bind_method(_MD("get_anim", "key"),&AnimationManager::get_anim);
-    ObjectTypeDB::bind_method(_MD("stop_all"),&AnimationManager::stop_all);
-    ObjectTypeDB::bind_method(_MD("stop_with_name", "key", "name"),&AnimationManager::stop_with_name);
-    ObjectTypeDB::bind_method(_MD("stop", "key"),&AnimationManager::stop);
-    ObjectTypeDB::bind_method(_MD("play", "key", "name"),&AnimationManager::play);
+    ClassDB::bind_method(D_METHOD("run"),&AnimationManager::run);
+    ClassDB::bind_method(D_METHOD("get_anim", "key"),&AnimationManager::get_anim);
+    ClassDB::bind_method(D_METHOD("stop_all"),&AnimationManager::stop_all);
+    ClassDB::bind_method(D_METHOD("stop_with_name", "key", "name"),&AnimationManager::stop_with_name);
+    ClassDB::bind_method(D_METHOD("stop", "key"),&AnimationManager::stop);
+    ClassDB::bind_method(D_METHOD("play", "key", "name"),&AnimationManager::play);
 
     BIND_VMETHOD( MethodInfo("_play") );
 }

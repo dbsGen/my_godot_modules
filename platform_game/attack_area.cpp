@@ -20,7 +20,7 @@ bool AttackArea::attack(Character *from) {
         Vector2 p_force = Vector2(force.x * (((from->get_face_left() && force_invert)||(!from->get_face_left() && !force_invert)) ? 1:-1), force.y);
 
         for (int i = 0, t = bodies.size(); i < t; ++i) {
-            Character *cha = ((Object*)(bodies[i]))->cast_to<Character>();
+            Character *cha = Object::cast_to<Character>((Object*)(bodies[i]));
             if (cha) {
                 if (to_target(cha, from, force, p_force)) {
                     ret = true;
@@ -43,7 +43,7 @@ bool AttackArea::attack(Character *from) {
 }
 
 bool AttackArea::to_target(HitArea *area, Character *from, Vector2 force, Vector2 p_force) {
-    Character *cha = area->get_owner();
+    Character *cha = area->get_character();
     if (!cha) return false;
     bool ret = false;
     int count = 0;
@@ -55,9 +55,9 @@ bool AttackArea::to_target(HitArea *area, Character *from, Vector2 force, Vector
     }
 
     if (((hit_count < 0 || count < hit_count) && old_time < time_record - attack_span)) {
-        Ref<HitStatus> hs = hit_status->duplicate(true)->cast_to<HitStatus>();
+        Ref<HitStatus> hs = hit_status->new_hit_status();
         if (face_relative) {
-            bool right = cha->get_global_pos().x > from->get_global_pos().x;
+            bool right = cha->get_global_position().x > from->get_global_position().x;
             hs->set_force(Vector2( ((right && force_invert) || (!right && !force_invert) ? -1:1) * force.x, force.y));
             hs->set_velocity(hs->get_force());
             hs->set_stun_velocity(Vector2(hs->get_force().x, 0));
@@ -68,10 +68,10 @@ bool AttackArea::to_target(HitArea *area, Character *from, Vector2 force, Vector
         }
         if (area->attack_by(hs, from)) {
             if (spark_scene != NULL) {
-                Node2D* spark = spark_scene->instance()->cast_to<Node2D>();
+                Node2D* spark = Object::cast_to<Node2D>(spark_scene->instance());
                 if (spark) {
                     cha->get_parent()->add_child(spark);
-                    spark->set_global_pos(cha->get_global_pos() + Vector2(spark_range.x * (Math::randf()*2-1), spark_range.y * (Math::randf()*2-1)));
+                    spark->set_global_position(cha->get_global_position() + Vector2(spark_range.x * (Math::randf()*2-1), spark_range.y * (Math::randf()*2-1)));
                     spark->set_scale(Vector2(from->get_face_left()?-1:1, 1));
                 }
             }
@@ -79,7 +79,7 @@ bool AttackArea::to_target(HitArea *area, Character *from, Vector2 force, Vector
             _attack_to(hs, cha);
             if (get_script_instance()) {
                 Variant v1 = hs;
-                Variant v2 = cha->cast_to<Object>();
+                Variant v2 = Object::cast_to<Object>(cha);
                 const Variant* ptr[2]={&v1, &v2};
                 get_script_instance()->call_multilevel("_attack_to", ptr, 2);
             }
@@ -107,9 +107,9 @@ bool AttackArea::to_target(Character *cha, Character *from, Vector2 force, Vecto
     }
 
     if ((hit_count < 0 || count < hit_count) && old_time < time_record - attack_span) {
-        Ref<HitStatus> hs = hit_status->duplicate(true)->cast_to<HitStatus>();
+        Ref<HitStatus> hs = hit_status->new_hit_status();
         if (face_relative) {
-            bool right = cha->get_global_pos().x > from->get_global_pos().x;
+            bool right = cha->get_global_position().x > from->get_global_position().x;
             hs->set_force(Vector2( ((right && force_invert) || (!right && !force_invert) ? -1:1) * force.x, force.y));
             hs->set_velocity(hs->get_force());
             hs->set_stun_velocity(Vector2(hs->get_force().x, 0));
@@ -120,10 +120,10 @@ bool AttackArea::to_target(Character *cha, Character *from, Vector2 force, Vecto
         }
         if (cha->attack_by(hs, from)) {
             if (spark_scene != NULL) {
-                Node2D* spark = spark_scene->instance()->cast_to<Node2D>();
+                Node2D* spark = Object::cast_to<Node2D>(spark_scene->instance());
                 if (spark) {
                     cha->get_parent()->add_child(spark);
-                    spark->set_global_pos(cha->get_global_pos() + Vector2(spark_range.x * (Math::randf()*2-1), spark_range.y * (Math::randf()*2-1)));
+                    spark->set_global_position(cha->get_global_position() + Vector2(spark_range.x * (Math::randf()*2-1), spark_range.y * (Math::randf()*2-1)));
                     spark->set_scale(Vector2(from->get_face_left()?-1:1, 1));
                 }
             }
@@ -131,7 +131,7 @@ bool AttackArea::to_target(Character *cha, Character *from, Vector2 force, Vecto
             _attack_to(hs, cha);
             if (get_script_instance()) {
                 Variant v1 = hs;
-                Variant v2 = cha->cast_to<Object>();
+                Variant v2 = Object::cast_to<Object>(cha);
                 const Variant* ptr[2]={&v1, &v2};
                 get_script_instance()->call_multilevel("_attack_to", ptr, 2);
             }
@@ -169,7 +169,7 @@ void AttackArea::_notification(int p_notification) {
                     if (attack_owner == NULL) {
                         Node *p = get_parent();
                         while (p) {
-                            if (Character *c = p->cast_to<Character>()) {
+                            if (Character *c = Object::cast_to<Character>(p)) {
                                 attack_owner = c;
                                 break;
                             }
@@ -196,53 +196,53 @@ void AttackArea::_notification(int p_notification) {
 
 void AttackArea::_bind_methods() {
 
-    ObjectTypeDB::bind_method(_MD("set_always_attack", "always_attack"), &AttackArea::set_always_attack);
-    ObjectTypeDB::bind_method(_MD("get_always_attack"), &AttackArea::get_always_attack);
+    ClassDB::bind_method(D_METHOD("set_always_attack", "always_attack"), &AttackArea::set_always_attack);
+    ClassDB::bind_method(D_METHOD("get_always_attack"), &AttackArea::get_always_attack);
 
-    ObjectTypeDB::bind_method(_MD("set_attack_enable", "attack_enable"), &AttackArea::set_attack_enable);
-    ObjectTypeDB::bind_method(_MD("get_attack_enable"), &AttackArea::get_attack_enable);
+    ClassDB::bind_method(D_METHOD("set_attack_enable", "attack_enable"), &AttackArea::set_attack_enable);
+    ClassDB::bind_method(D_METHOD("get_attack_enable"), &AttackArea::get_attack_enable);
 
-    ObjectTypeDB::bind_method(_MD("set_hit_status", "hit_status"), &AttackArea::set_hit_status);
-    ObjectTypeDB::bind_method(_MD("get_hit_status:HitStatus"), &AttackArea::get_hit_status);
+    ClassDB::bind_method(D_METHOD("set_hit_status", "hit_status"), &AttackArea::set_hit_status);
+    ClassDB::bind_method(D_METHOD("get_hit_status"), &AttackArea::get_hit_status);
 
-    ObjectTypeDB::bind_method(_MD("set_spark_scene", "spark_scene"), &AttackArea::set_spark_scene);
-    ObjectTypeDB::bind_method(_MD("get_spark_scene:PackedScene"), &AttackArea::get_spark_scene);
+    ClassDB::bind_method(D_METHOD("set_spark_scene", "spark_scene"), &AttackArea::set_spark_scene);
+    ClassDB::bind_method(D_METHOD("get_spark_scene"), &AttackArea::get_spark_scene);
 
-    ObjectTypeDB::bind_method(_MD("set_hit_count", "hit_count"), &AttackArea::set_hit_count);
-    ObjectTypeDB::bind_method(_MD("get_hit_count"), &AttackArea::get_hit_count);
+    ClassDB::bind_method(D_METHOD("set_hit_count", "hit_count"), &AttackArea::set_hit_count);
+    ClassDB::bind_method(D_METHOD("get_hit_count"), &AttackArea::get_hit_count);
 
-    ObjectTypeDB::bind_method(_MD("set_attack_span", "attack_span"), &AttackArea::set_attack_span);
-    ObjectTypeDB::bind_method(_MD("get_attack_span"), &AttackArea::get_attack_span);
+    ClassDB::bind_method(D_METHOD("set_attack_span", "attack_span"), &AttackArea::set_attack_span);
+    ClassDB::bind_method(D_METHOD("get_attack_span"), &AttackArea::get_attack_span);
 
-    ObjectTypeDB::bind_method(_MD("set_force_invert", "force_invert"), &AttackArea::set_force_invert);
-    ObjectTypeDB::bind_method(_MD("get_force_invert"), &AttackArea::get_force_invert);
+    ClassDB::bind_method(D_METHOD("set_force_invert", "force_invert"), &AttackArea::set_force_invert);
+    ClassDB::bind_method(D_METHOD("get_force_invert"), &AttackArea::get_force_invert);
 
-    ObjectTypeDB::bind_method(_MD("set_face_relative", "face_relative"), &AttackArea::set_face_relative);
-    ObjectTypeDB::bind_method(_MD("get_face_relative"), &AttackArea::get_face_relative);
+    ClassDB::bind_method(D_METHOD("set_face_relative", "face_relative"), &AttackArea::set_face_relative);
+    ClassDB::bind_method(D_METHOD("get_face_relative"), &AttackArea::get_face_relative);
 
-    ObjectTypeDB::bind_method(_MD("set_spark_range", "spark_range"), &AttackArea::set_spark_range);
-    ObjectTypeDB::bind_method(_MD("get_spark_range"), &AttackArea::get_spark_range);
+    ClassDB::bind_method(D_METHOD("set_spark_range", "spark_range"), &AttackArea::set_spark_range);
+    ClassDB::bind_method(D_METHOD("get_spark_range"), &AttackArea::get_spark_range);
 
-    ObjectTypeDB::bind_method(_MD("set_can_graze", "can_graze"), &AttackArea::set_can_graze);
-    ObjectTypeDB::bind_method(_MD("get_can_graze"), &AttackArea::get_can_graze);
+    ClassDB::bind_method(D_METHOD("set_can_graze", "can_graze"), &AttackArea::set_can_graze);
+    ClassDB::bind_method(D_METHOD("get_can_graze"), &AttackArea::get_can_graze);
 
-    ObjectTypeDB::bind_method(_MD("_on_area_enter", "area"), &AttackArea::_on_area_enter);
-    ObjectTypeDB::bind_method(_MD("_on_area_exit", "area"), &AttackArea::_on_area_exit);
+    ClassDB::bind_method(D_METHOD("_on_area_enter", "area"), &AttackArea::_on_area_enter);
+    ClassDB::bind_method(D_METHOD("_on_area_exit", "area"), &AttackArea::_on_area_exit);
 
-    ObjectTypeDB::bind_method(_MD("attack", "character:Character"), &AttackArea::bind_attack);
+    ClassDB::bind_method(D_METHOD("attack", "character:Character"), &AttackArea::bind_attack);
 
     BIND_VMETHOD(MethodInfo("_attack_to", PropertyInfo(Variant::OBJECT, "hit", PROPERTY_HINT_RESOURCE_TYPE, "HitStatus"), PropertyInfo(Variant::OBJECT, "to") ));
 
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "always_attack" ), _SCS("set_always_attack"),_SCS("get_always_attack" ) );
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "always_attack" ), "set_always_attack","get_always_attack");
 
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "attack/force_invert" ), _SCS("set_force_invert"),_SCS("get_force_invert" ) );
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "attack/force_invert" ), "set_force_invert","get_force_invert");
 
-    ADD_PROPERTY( PropertyInfo( Variant::INT, "attack/hit_count" ), _SCS("set_hit_count"),_SCS("get_hit_count" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::REAL, "attack/attack_span" ), _SCS("set_attack_span"),_SCS("get_attack_span" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "attack/attack_enable" ), _SCS("set_attack_enable"),_SCS("get_attack_enable" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "attack/face_relative" ), _SCS("set_face_relative"),_SCS("get_face_relative" ) );
-    ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/hit_status",PROPERTY_HINT_RESOURCE_TYPE,"HitStatus"), _SCS("set_hit_status"),_SCS("get_hit_status" ) );
-    ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/spark_scene",PROPERTY_HINT_RESOURCE_TYPE,"PackedScene"), _SCS("set_spark_scene"),_SCS("get_spark_scene" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::VECTOR2, "attack/spark_range"), _SCS("set_spark_range"), _SCS("get_spark_range"));
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "can_graze"), _SCS("set_can_graze"), _SCS("get_can_graze"));
+    ADD_PROPERTY( PropertyInfo( Variant::INT, "attack/hit_count" ), "set_hit_count","get_hit_count");
+    ADD_PROPERTY( PropertyInfo( Variant::REAL, "attack/attack_span" ), "set_attack_span","get_attack_span");
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "attack/attack_enable" ), "set_attack_enable","get_attack_enable");
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "attack/face_relative" ), "set_face_relative","get_face_relative");
+    ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/hit_status",PROPERTY_HINT_RESOURCE_TYPE,"HitStatus"), "set_hit_status","get_hit_status");
+    ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "attack/spark_scene",PROPERTY_HINT_RESOURCE_TYPE,"PackedScene"), "set_spark_scene","get_spark_scene");
+    ADD_PROPERTY( PropertyInfo( Variant::VECTOR2, "attack/spark_range"), "set_spark_range", "get_spark_range");
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "can_graze"), "set_can_graze", "get_can_graze");
 }

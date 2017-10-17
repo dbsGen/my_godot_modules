@@ -8,7 +8,7 @@
 #include "../../scene/2d/area_2d.h"
 
 class KillZone : public Area2D {
-    OBJ_TYPE(KillZone, Area2D);
+    GDCLASS(KillZone, Area2D);
 private:
     void _on_body_enter(Object *body);
 protected:

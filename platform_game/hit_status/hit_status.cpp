@@ -29,62 +29,83 @@ void HitStatus::step(Object *character, Dictionary env) {
     }
 }
 
+Ref<HitStatus> HitStatus::new_hit_status() {
+    Ref<HitStatus> n_hs = duplicate(true);
+    n_hs->original_id = get_original_id();
+    return n_hs;
+}
+
 void HitStatus::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("set_face_me", "face_me"), &HitStatus::set_face_me);
-    ObjectTypeDB::bind_method(_MD("get_face_me"), &HitStatus::get_face_me);
+    ClassDB::bind_method(D_METHOD("set_face_me", "face_me"), &HitStatus::set_face_me);
+    ClassDB::bind_method(D_METHOD("get_face_me"), &HitStatus::get_face_me);
 
-    ObjectTypeDB::bind_method(_MD("set_force", "force"), &HitStatus::set_force);
-    ObjectTypeDB::bind_method(_MD("get_force"), &HitStatus::get_force);
+    ClassDB::bind_method(D_METHOD("set_force", "force"), &HitStatus::set_force);
+    ClassDB::bind_method(D_METHOD("get_force"), &HitStatus::get_force);
 
-    ObjectTypeDB::bind_method(_MD("set_power", "power"), &HitStatus::set_power);
-    ObjectTypeDB::bind_method(_MD("get_power"), &HitStatus::get_power);
+    ClassDB::bind_method(D_METHOD("set_power", "power"), &HitStatus::set_power);
+    ClassDB::bind_method(D_METHOD("get_power"), &HitStatus::get_power);
 
-    ObjectTypeDB::bind_method(_MD("set_life_time", "life_time"), &HitStatus::set_life_time);
-    ObjectTypeDB::bind_method(_MD("get_life_time"), &HitStatus::get_life_time);
+    ClassDB::bind_method(D_METHOD("set_life_time", "life_time"), &HitStatus::set_life_time);
+    ClassDB::bind_method(D_METHOD("get_life_time"), &HitStatus::get_life_time);
 
-    ObjectTypeDB::bind_method(_MD("set_launcher_time", "launcher_time"), &HitStatus::set_launcher_time);
-    ObjectTypeDB::bind_method(_MD("get_launcher_time"), &HitStatus::get_launcher_time);
+    ClassDB::bind_method(D_METHOD("set_launcher_time", "launcher_time"), &HitStatus::set_launcher_time);
+    ClassDB::bind_method(D_METHOD("get_launcher_time"), &HitStatus::get_launcher_time);
 
-    ObjectTypeDB::bind_method(_MD("set_stun_time", "stun_time"), &HitStatus::set_stun_time);
-    ObjectTypeDB::bind_method(_MD("get_stun_time"), &HitStatus::get_stun_time);
+    ClassDB::bind_method(D_METHOD("set_stun_time", "stun_time"), &HitStatus::set_stun_time);
+    ClassDB::bind_method(D_METHOD("get_stun_time"), &HitStatus::get_stun_time);
 
-    ObjectTypeDB::bind_method(_MD("set_freeze_time", "freeze_time"), &HitStatus::set_freeze_time);
-    ObjectTypeDB::bind_method(_MD("get_freeze_time"), &HitStatus::get_freeze_time);
+    ClassDB::bind_method(D_METHOD("set_freeze_time", "freeze_time"), &HitStatus::set_freeze_time);
+    ClassDB::bind_method(D_METHOD("get_freeze_time"), &HitStatus::get_freeze_time);
 
-    ObjectTypeDB::bind_method(_MD("set_self_freeze", "self_freeze"), &HitStatus::set_self_freeze);
-    ObjectTypeDB::bind_method(_MD("get_self_freeze"), &HitStatus::get_self_freeze);
+    ClassDB::bind_method(D_METHOD("set_self_freeze", "self_freeze"), &HitStatus::set_self_freeze);
+    ClassDB::bind_method(D_METHOD("get_self_freeze"), &HitStatus::get_self_freeze);
 
-    ObjectTypeDB::bind_method(_MD("set_damage", "damage"), &HitStatus::set_damage);
-    ObjectTypeDB::bind_method(_MD("get_damage"), &HitStatus::get_damage);
+    ClassDB::bind_method(D_METHOD("set_damage", "damage"), &HitStatus::set_damage);
+    ClassDB::bind_method(D_METHOD("get_damage"), &HitStatus::get_damage);
 
-    ObjectTypeDB::bind_method(_MD("set_fall_acc", "fall_acc"), &HitStatus::set_fall_acc);
-    ObjectTypeDB::bind_method(_MD("get_fall_acc"), &HitStatus::get_fall_acc);
+    ClassDB::bind_method(D_METHOD("set_fall_acc", "fall_acc"), &HitStatus::set_fall_acc);
+    ClassDB::bind_method(D_METHOD("get_fall_acc"), &HitStatus::get_fall_acc);
 
-    ObjectTypeDB::bind_method(_MD("set_velocity", "velocity"), &HitStatus::set_velocity);
-    ObjectTypeDB::bind_method(_MD("get_velocity"), &HitStatus::get_velocity);
+    ClassDB::bind_method(D_METHOD("set_velocity", "velocity"), &HitStatus::set_velocity);
+    ClassDB::bind_method(D_METHOD("get_velocity"), &HitStatus::get_velocity);
 
-    ObjectTypeDB::bind_method(_MD("set_stun_velocity", "velocity"), &HitStatus::set_stun_velocity);
-    ObjectTypeDB::bind_method(_MD("get_stun_velocity"), &HitStatus::get_stun_velocity);
+    ClassDB::bind_method(D_METHOD("set_stun_velocity", "velocity"), &HitStatus::set_stun_velocity);
+    ClassDB::bind_method(D_METHOD("get_stun_velocity"), &HitStatus::get_stun_velocity);
 
-    ObjectTypeDB::bind_method(_MD("set_hit_type", "hit_type"), &HitStatus::set_hit_type);
-    ObjectTypeDB::bind_method(_MD("get_hit_type"), &HitStatus::get_hit_type);
+    ClassDB::bind_method(D_METHOD("set_hit_type", "hit_type"), &HitStatus::set_hit_type);
+    ClassDB::bind_method(D_METHOD("get_hit_type"), &HitStatus::get_hit_type);
+    
+    ClassDB::bind_method(D_METHOD("set_damage_reduction", "damage_reduction"), &HitStatus::set_damage_reduction);
+    ClassDB::bind_method(D_METHOD("get_damage_reduction"), &HitStatus::get_damage_reduction);
 
-    ObjectTypeDB::bind_method(_MD("step", "character", "env"), &HitStatus::step);
+    ClassDB::bind_method(D_METHOD("set_stun_reduction", "stun_reduction"), &HitStatus::set_stun_reduction);
+    ClassDB::bind_method(D_METHOD("get_stun_reduction"), &HitStatus::get_stun_reduction);
+    
+    ClassDB::bind_method(D_METHOD("set_hit_id", "hit_id"), &HitStatus::set_hit_id);
+    ClassDB::bind_method(D_METHOD("get_hit_id"), &HitStatus::get_hit_id);
+    
+    ClassDB::bind_method(D_METHOD("new_hit_status"), &HitStatus::new_hit_status);
+    ClassDB::bind_method(D_METHOD("get_original_id"), &HitStatus::get_original_id);
+
+    ClassDB::bind_method(D_METHOD("step", "character", "env"), &HitStatus::step);
 
     BIND_VMETHOD( MethodInfo("_start", PropertyInfo(Variant::OBJECT, "target"), PropertyInfo(Variant::DICTIONARY,"env")) );
     BIND_VMETHOD( MethodInfo("_step", PropertyInfo(Variant::OBJECT, "target"), PropertyInfo(Variant::DICTIONARY,"env")) );
 
-    ADD_PROPERTY( PropertyInfo(Variant::REAL, "time/stun"), _SCS("set_stun_time"), _SCS("get_stun_time" ) );
-    ADD_PROPERTY( PropertyInfo(Variant::REAL, "time/launcher"), _SCS("set_launcher_time"), _SCS("get_launcher_time" ) );
-    ADD_PROPERTY( PropertyInfo(Variant::REAL, "time/freeze"), _SCS("set_freeze_time"), _SCS("get_freeze_time" ) );
-    ADD_PROPERTY( PropertyInfo(Variant::REAL, "time/self_freeze"), _SCS("set_self_freeze"), _SCS("get_self_freeze" ) );
+    ADD_PROPERTY( PropertyInfo(Variant::REAL, "time/stun"), "set_stun_time", "get_stun_time");
+    ADD_PROPERTY( PropertyInfo(Variant::REAL, "time/launcher"), "set_launcher_time", "get_launcher_time");
+    ADD_PROPERTY( PropertyInfo(Variant::REAL, "time/freeze"), "set_freeze_time", "get_freeze_time");
+    ADD_PROPERTY( PropertyInfo(Variant::REAL, "time/self_freeze"), "set_self_freeze", "get_self_freeze");
 
-    ADD_PROPERTY( PropertyInfo(Variant::BOOL, "hit/face_me"), _SCS("set_face_me"), _SCS("get_face_me" ) );
-    ADD_PROPERTY( PropertyInfo(Variant::VECTOR2, "hit/force"), _SCS("set_force"), _SCS("get_force" ) );
-    ADD_PROPERTY( PropertyInfo(Variant::REAL, "hit/power"), _SCS("set_power"), _SCS("get_power" ) );
-    ADD_PROPERTY( PropertyInfo(Variant::REAL, "hit/damage"), _SCS("set_damage"), _SCS("get_damage" ) );
-    ADD_PROPERTY( PropertyInfo(Variant::REAL, "hit/fall_acc"), _SCS("set_fall_acc"), _SCS("get_fall_acc" ) );
-    ADD_PROPERTY( PropertyInfo(Variant::INT, "hit/hit_type", PROPERTY_HINT_ENUM, "NoHit,Stun,Pursuit,Launcher,OTG"), _SCS("set_hit_type"), _SCS("get_hit_type" ) );
+    ADD_PROPERTY( PropertyInfo(Variant::BOOL, "hit/face_me"), "set_face_me", "get_face_me");
+    ADD_PROPERTY( PropertyInfo(Variant::VECTOR2, "hit/force"), "set_force", "get_force");
+    ADD_PROPERTY( PropertyInfo(Variant::REAL, "hit/power"), "set_power", "get_power");
+    ADD_PROPERTY( PropertyInfo(Variant::REAL, "hit/damage"), "set_damage", "get_damage");
+    ADD_PROPERTY( PropertyInfo(Variant::REAL, "hit/fall_acc"), "set_fall_acc", "get_fall_acc");
+    ADD_PROPERTY( PropertyInfo(Variant::INT, "hit/hit_type", PROPERTY_HINT_ENUM, "NoHit,Stun,Pursuit,Launcher,OTG"), "set_hit_type", "get_hit_type");
+    ADD_PROPERTY( PropertyInfo(Variant::REAL, "hit/damage_reduction"), "set_damage_reduction", "get_damage_reduction");
+    ADD_PROPERTY( PropertyInfo(Variant::REAL, "hit/stun_reduction"), "set_stun_reduction", "get_stun_reduction");
+    ADD_PROPERTY( PropertyInfo(Variant::STRING, "hit/id"), "set_hit_id", "get_hit_id");
 
     BIND_CONSTANT(HS_NO_HIT);
     BIND_CONSTANT(HS_HIT_STUN);

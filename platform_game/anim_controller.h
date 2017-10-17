@@ -12,7 +12,7 @@
 class AnimationPlayer;
 
 class AnimController : public Node {
-    OBJ_TYPE(AnimController, Node);
+    GDCLASS(AnimController, Node);
 private:
 
     struct AnimationStatus {

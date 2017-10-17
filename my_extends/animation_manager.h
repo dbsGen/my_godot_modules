@@ -10,7 +10,7 @@
 #include "../../core/ustring.h"
 
 class AnimationManager : public Node {
-    OBJ_TYPE(AnimationManager, Node);
+    GDCLASS(AnimationManager, Node);
 private:
     Dictionary anim_nodes;
     HashMap<String, String> current_anims;

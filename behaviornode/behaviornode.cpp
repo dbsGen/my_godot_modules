@@ -2,7 +2,6 @@
 #include "behaviornode.h"
 #include "../../scene/scene_string_names.h"
 #include "../../core/math/math_2d.h"
-#include "../platform_game/behaviornodes/action.h"
 
 //void BehaviorNode::_notification(int p_notification) {
 //    case NOTIFICATION_READY: {
@@ -18,7 +17,7 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
     BehaviorNode *checked = NULL;
     do {
         if (_behavior_node_type == TYPE_CONDITION && _focus_node_path != String("") && has_node(_focus_node_path)) {
-            BehaviorNode *child = get_node(_focus_node_path)->cast_to<BehaviorNode>();
+            BehaviorNode *child = Object::cast_to<BehaviorNode>(get_node(_focus_node_path));
             if (child && child != this) {
                 if (!child->get_will_focus())
                     _focus_node_path = NodePath();
@@ -38,7 +37,7 @@ BehaviorNode::Status BehaviorNode::_traversal_children(const Variant& target, Di
             }
         }
         for (int i = 0; i < t; ++i) {
-            BehaviorNode * child = get_child(i)->cast_to<BehaviorNode>();
+            BehaviorNode * child = Object::cast_to<BehaviorNode>(get_child(i));
             if (child == checked) continue;
             bool is_focus;
             if (child) {
@@ -73,7 +72,7 @@ void BehaviorNode::send_notify(const Variant& from, const StringName &key, const
     for (int i = 0; i < count; ++i) {
         Node *node = get_child(i);
         if (node) {
-            BehaviorNode *bn = node->cast_to<BehaviorNode>();
+            BehaviorNode *bn = Object::cast_to<BehaviorNode>(node);
             if (bn) {
                 bn->send_notify(from, key, value);
             }
@@ -101,14 +100,14 @@ BehaviorNode::Status BehaviorNode::step(const Variant& target, Dictionary env) {
 }
 
 void BehaviorNode::set_focus() {
-    BehaviorNode *parent = get_parent()->cast_to<BehaviorNode>();
+    BehaviorNode *parent = Object::cast_to<BehaviorNode>(get_parent());
     if (parent) {
         parent->_focus_node_path = parent->get_path_to(this);
     }
 }
 
 void BehaviorNode::clear_focus() {
-    BehaviorNode *parent = get_parent()->cast_to<BehaviorNode>();
+    BehaviorNode *parent = Object::cast_to<BehaviorNode>(get_parent());
     if (parent && parent->_focus_node_path == parent->get_path_to(this)) {
         parent->_focus_node_path = NodePath();
     }
@@ -120,7 +119,7 @@ void BehaviorNode::reset(const Variant &target) {
 
     int t = get_child_count();
     for (int i = 0; i < t; ++i) {
-        BehaviorNode * child = get_child(i)->cast_to<BehaviorNode>();
+        BehaviorNode * child = Object::cast_to<BehaviorNode>(get_child(i));
         if (child) {
             child->reset(target);
         }
@@ -140,28 +139,28 @@ void BehaviorNode::_reset(const Variant &target) {
 
 
 void BehaviorNode::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("send_notify", "from", "key:String", "value:Variant"),&BehaviorNode::send_notify, DEFVAL(NULL));
+    ClassDB::bind_method(D_METHOD("send_notify", "from", "key:String", "value:Variant"),&BehaviorNode::send_notify, DEFVAL(NULL));
 
-    ObjectTypeDB::bind_method(_MD("set_behavior_enable","enable"),&BehaviorNode::set_behavior_enable);
-    ObjectTypeDB::bind_method(_MD("get_behavior_enable"),&BehaviorNode::get_behavior_enable);
+    ClassDB::bind_method(D_METHOD("set_behavior_enable","enable"),&BehaviorNode::set_behavior_enable);
+    ClassDB::bind_method(D_METHOD("get_behavior_enable"),&BehaviorNode::get_behavior_enable);
 
-    ObjectTypeDB::bind_method(_MD("set_behavior_node_type","behavior_node_type"),&BehaviorNode::set_behavior_node_type);
-    ObjectTypeDB::bind_method(_MD("get_behavior_node_type"),&BehaviorNode::get_behavior_node_type);
+    ClassDB::bind_method(D_METHOD("set_behavior_node_type","behavior_node_type"),&BehaviorNode::set_behavior_node_type);
+    ClassDB::bind_method(D_METHOD("get_behavior_node_type"),&BehaviorNode::get_behavior_node_type);
 
-    ObjectTypeDB::bind_method(_MD("set_will_focus","will_focus"),&BehaviorNode::set_will_focus);
-    ObjectTypeDB::bind_method(_MD("get_will_focus"),&BehaviorNode::get_will_focus);
+    ClassDB::bind_method(D_METHOD("set_will_focus","will_focus"),&BehaviorNode::set_will_focus);
+    ClassDB::bind_method(D_METHOD("get_will_focus"),&BehaviorNode::get_will_focus);
 
-    ObjectTypeDB::bind_method(_MD("pre_behavior:bool", "target", "env"),&BehaviorNode::_pre_behavior);
-    ObjectTypeDB::bind_method(_MD("behavior", "target", "env"), &BehaviorNode::_behavior);
+    ClassDB::bind_method(D_METHOD("pre_behavior:bool", "target", "env"),&BehaviorNode::_pre_behavior);
+    ClassDB::bind_method(D_METHOD("behavior", "target", "env"), &BehaviorNode::_behavior);
 
-    ObjectTypeDB::bind_method(_MD("set_focus"),&BehaviorNode::set_focus);
+    ClassDB::bind_method(D_METHOD("set_focus"),&BehaviorNode::set_focus);
 
-    ObjectTypeDB::bind_method(_MD("step"),&BehaviorNode::step);
-    ObjectTypeDB::bind_method(_MD("reset"),&BehaviorNode::reset);
+    ClassDB::bind_method(D_METHOD("step"),&BehaviorNode::step);
+    ClassDB::bind_method(D_METHOD("reset"),&BehaviorNode::reset);
 
-    ADD_PROPERTY( PropertyInfo( Variant::INT, "behavior/type",PROPERTY_HINT_ENUM,"Sequence,Condition" ), _SCS("set_behavior_node_type"),_SCS("get_behavior_node_type" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "behavior/enable" ), _SCS("set_behavior_enable"),_SCS("get_behavior_enable" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "behavior/focus" ), _SCS("set_will_focus"),_SCS("get_will_focus" ) );
+    ADD_PROPERTY( PropertyInfo( Variant::INT, "behavior/type",PROPERTY_HINT_ENUM,"Sequence,Condition" ), "set_behavior_node_type","get_behavior_node_type");
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "behavior/enable" ), "set_behavior_enable","get_behavior_enable");
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "behavior/focus" ), "set_will_focus","get_will_focus");
 
     BIND_VMETHOD( MethodInfo("pre_behavior", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY,"env")) );
     BIND_VMETHOD( MethodInfo("behavior", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY,"env")) );

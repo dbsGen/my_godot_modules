@@ -13,7 +13,7 @@ BehaviorNode::Status StatusBNode::_step(const Variant &target, Dictionary &env) 
         }else if (_selected >= get_child_count()) {
             _selected = get_child_count() - 1;
         }
-        BehaviorNode *b_node = get_child(_selected)->cast_to<BehaviorNode>();
+        BehaviorNode *b_node = Object::cast_to<BehaviorNode>(get_child(_selected));
         Status childrenStatus = STATUS_FAILURE;
         if (b_node) {
             if (_selected != _old_selected)
@@ -32,8 +32,8 @@ BehaviorNode::Status StatusBNode::_step(const Variant &target, Dictionary &env) 
 }
 
 void StatusBNode::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("set_select", "status"), &StatusBNode::set_select);
-    ObjectTypeDB::bind_method(_MD("get_select"), &StatusBNode::get_select);
+    ClassDB::bind_method(D_METHOD("set_select", "status"), &StatusBNode::set_select);
+    ClassDB::bind_method(D_METHOD("get_select"), &StatusBNode::get_select);
 
-    ADD_PROPERTY( PropertyInfo( Variant::REAL, "status/status" ), _SCS("set_select"),_SCS("get_select" ) );
+    ADD_PROPERTY( PropertyInfo( Variant::REAL, "status/status" ), "set_select","get_select");
 }

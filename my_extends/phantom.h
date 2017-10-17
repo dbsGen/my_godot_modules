@@ -16,7 +16,7 @@
 
 using namespace MyTools;
 class Phantom : public Node2D {
-    OBJ_TYPE(Phantom, Node2D);
+    GDCLASS(Phantom, Node2D);
 protected:
     struct Item {
         Vector2 position;
@@ -24,21 +24,24 @@ protected:
         Rect2 src_rect;
         Vector2 scale;
         float rotation;
-        int life;
         Vector2 offset;
     };
+    struct DrawSprite {
+        Vector<Item> items;
+        int life;
+    };
 private:
-    NodePath target_path;
-    Sprite  *target;
-    Queue<Item> items;
+    Array target_paths;
+    Array targets;
+    Queue<DrawSprite> sprites;
 
-    void _update_target();
+    void _update_targets();
 
     int life_frame;
     int frame_interval;
     void _update_size();
 
-    Ref<ColorRamp> color_ramp;
+    Ref<Gradient> color_ramp;
 
     void _update_fixed_frame();
     void _update_and_draw();
@@ -54,12 +57,12 @@ protected:
     void _notification(int p_what);
 
 public:
-    _FORCE_INLINE_ void set_target_path(const NodePath &p_path) {target_path=p_path;_update_target();}
-    _FORCE_INLINE_ NodePath get_target_path() {return target_path;}
-    _FORCE_INLINE_ Sprite *get_target() {return target;}
+    _FORCE_INLINE_ void set_target_paths(const Array &p_paths) {target_paths=p_paths;_update_targets();}
+    _FORCE_INLINE_ const Array &get_target_paths() {return target_paths;}
+    _FORCE_INLINE_ const Array &get_targets() {return targets;}
 
-    _FORCE_INLINE_ void set_color_ramp(const Ref<ColorRamp> &p_color_ramp) {color_ramp=p_color_ramp;}
-    _FORCE_INLINE_ Ref<ColorRamp> get_color_ramp() {return color_ramp;}
+    _FORCE_INLINE_ void set_gradient(const Ref<Gradient> &p_color_ramp) {color_ramp=p_color_ramp;}
+    _FORCE_INLINE_ Ref<Gradient> get_gradient() {return color_ramp;}
 
     _FORCE_INLINE_ void set_life_frame(int p_frame) {life_frame=p_frame;_update_size();}
     _FORCE_INLINE_ int get_life_frame() {return life_frame;}
@@ -71,9 +74,8 @@ public:
     _FORCE_INLINE_ bool get_phantom_enable() {return phantom_enable;}
 
     _FORCE_INLINE_ Phantom() {
-        target = NULL;
         frame_count = 0;
-        items.alloc(30);
+        sprites.alloc(30);
         frame_interval = 1;
         life_frame = 60;
         phantom_enable = false;

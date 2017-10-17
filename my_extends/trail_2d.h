@@ -17,7 +17,7 @@
 using namespace MyTools;
 
 class TrailPoint2D : public Node2D {
-    OBJ_TYPE(TrailPoint2D, Node2D);
+    GDCLASS(TrailPoint2D, Node2D);
 private:
     struct TrailItem {
         Vector2 position;
@@ -32,7 +32,7 @@ private:
     int span_frame;
     int span_count;
     float line_width;
-    Ref<ColorRamp> line_color;
+    Ref<Gradient> line_color;
 
     Vector2 old_position;
 
@@ -48,6 +48,7 @@ private:
     void _on_exit_tree();
 
     Vector2 gravity;
+    Vector2 final_gravity;
     float wave;
     float wave_scale;
     float wave_time_scale;
@@ -72,14 +73,14 @@ public:
     _FORCE_INLINE_ float get_line_width() {return line_width;}
     _FORCE_INLINE_ void set_line_width(float p_width) {line_width=p_width<0?0:(p_width>10?10:p_width);}
 
-    _FORCE_INLINE_ Ref<ColorRamp> get_line_color() {return line_color;}
-    _FORCE_INLINE_ void set_line_color(const Ref<ColorRamp>& p_color) {line_color=p_color;}
+    _FORCE_INLINE_ Ref<Gradient> get_line_color() {return line_color;}
+    _FORCE_INLINE_ void set_line_color(const Ref<Gradient>& p_color) {line_color=p_color;}
 
     _FORCE_INLINE_ NodePath get_target_path() {return target_path;}
     _FORCE_INLINE_ void set_target_path(const NodePath &p_path) {target_path=p_path;_update_trail_target();}
 
     _FORCE_INLINE_ Vector2 get_gravity() {return gravity;}
-    _FORCE_INLINE_ void set_gravity(Vector2 p_gravity) {gravity = p_gravity;}
+    _FORCE_INLINE_ void set_gravity(Vector2 p_gravity) {gravity = final_gravity = p_gravity;}
 
     _FORCE_INLINE_ float get_wave() {return wave;}
     _FORCE_INLINE_ void set_wave(float p_wave) {wave = p_wave;}
@@ -110,7 +111,7 @@ public:
 };
 
 class TrailLine2D : public Node2D {
-    OBJ_TYPE(TrailLine2D, Node2D);
+    GDCLASS(TrailLine2D, Node2D);
 private:
     struct TrailItem {
         Vector2 position1, position2;
@@ -131,7 +132,7 @@ private:
     bool trail_enable;
     int span_frame;
     int span_count;
-    Ref<ColorRamp> line_color;
+    Ref<Gradient> line_color;
 
     Queue<TrailItem> trail_items;
 
@@ -150,13 +151,13 @@ public:
 
     _FORCE_INLINE_ Vector2 get_terminal() {
         if (terminal)
-            return terminal->get_pos();
+            return terminal->get_position();
         else
             return terminal_position;
     }
     _FORCE_INLINE_ void set_terminal(const Vector2 &p_terminal) {
         if (terminal)
-            terminal->set_pos(p_terminal);
+            terminal->set_position(p_terminal);
         else
             terminal_position = p_terminal;
     }
@@ -170,8 +171,8 @@ public:
     _FORCE_INLINE_ float get_trail_count() {return trail_items.limit();}
     _FORCE_INLINE_ void set_trail_count(float p_count) {trail_items.alloc(p_count);}
 
-    _FORCE_INLINE_ Ref<ColorRamp> get_line_color() {return line_color;}
-    _FORCE_INLINE_ void set_line_color(const Ref<ColorRamp>& p_color) {line_color=p_color;}
+    _FORCE_INLINE_ Ref<Gradient> get_line_color() {return line_color;}
+    _FORCE_INLINE_ void set_line_color(const Ref<Gradient>& p_color) {line_color=p_color;}
 
     _FORCE_INLINE_ TrailLine2D (){
         trail_enable = false;

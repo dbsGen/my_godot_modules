@@ -24,7 +24,7 @@ struct HitStatusInfo {
 };
 
 class AttackArea : public Area2D {
-    OBJ_TYPE(AttackArea, Area2D);
+    GDCLASS(AttackArea, Area2D);
 private:
     bool can_graze;
 
@@ -47,18 +47,18 @@ private:
     Vector<HitArea*> hit_areas;
     Vector<HitArea*> will_remove_areas;
 
-    _FORCE_INLINE_ void _on_area_enter(Object *object) {
-        HitArea *area = object->cast_to<HitArea>();
+    void _on_area_enter(Object *object) {
+        HitArea *area = Object::cast_to<HitArea>(object);
         if (area && hit_areas.find(area) < 0) {
             hit_areas.push_back(area);
         }else if (can_graze){
-            GrazeArea *garea = object->cast_to<GrazeArea>();
+            GrazeArea *garea = Object::cast_to<GrazeArea>(object);
             if (garea) garea->graze(get_rid());
         }
     }
 
     _FORCE_INLINE_ void _on_area_exit(Object *object) {
-        HitArea *area = object->cast_to<HitArea>();
+        HitArea *area = Object::cast_to<HitArea>(object);
         if (area) {
             will_remove_areas.push_back(area);
         }
@@ -66,7 +66,7 @@ private:
 
     bool to_target(Character *cha, Character *from, Vector2 f1, Vector2 f2);
     bool to_target(HitArea *area, Character *from, Vector2 f1, Vector2 f2);
-    bool bind_attack(Object *character) {return attack(character->cast_to<Character>());};
+    bool bind_attack(Object *character) {return attack(Object::cast_to<Character>(character));};
 protected:
     static void _bind_methods();
     virtual void _attack_to(Ref<HitStatus> hit, Character* to) {}

@@ -10,10 +10,10 @@
 #include "../../core/math/math_2d.h"
 
 class GrazeArea : public Area2D {
-    OBJ_TYPE(GrazeArea, Area2D);
+    GDCLASS(GrazeArea, Area2D);
 private:
     bool graze_enable;
-    Vector<ID> grazed;
+    Vector<uint32_t> grazed;
 
 protected:
     static void _bind_methods();

@@ -6,7 +6,7 @@
 #include "../../scene/main/node.h"
 
 class BehaviorNode : public Node {
-    OBJ_TYPE(BehaviorNode, Node);
+    GDCLASS(BehaviorNode, Node);
 public:
     enum BNodeType {
         TYPE_SEQUENCE,

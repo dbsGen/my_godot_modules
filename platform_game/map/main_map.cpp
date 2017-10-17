@@ -40,10 +40,10 @@ void MainMap::at(int p_x, int p_y) {
 }
 
 Dictionary MainMap::get_data() {
-    Dictionary dic(true);
+    Dictionary dic;
     dic["width"] = width;
     dic["height"] = height;
-    Array arr(true);
+    Array arr;
     for (int i = 0; i < width * height; ++i) {
         arr.append(map_checked[i]);
     }
@@ -67,28 +67,28 @@ void MainMap::set_data(Dictionary data) {
 }
 
 void MainMap::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("get_width"), &MainMap::get_width);
-    ObjectTypeDB::bind_method(_MD("set_width", "width"), &MainMap::set_width);
+    ClassDB::bind_method(D_METHOD("get_width"), &MainMap::get_width);
+    ClassDB::bind_method(D_METHOD("set_width", "width"), &MainMap::set_width);
 
-    ObjectTypeDB::bind_method(_MD("get_height"), &MainMap::get_height);
-    ObjectTypeDB::bind_method(_MD("set_height", "height"), &MainMap::set_height);
+    ClassDB::bind_method(D_METHOD("get_height"), &MainMap::get_height);
+    ClassDB::bind_method(D_METHOD("set_height", "height"), &MainMap::set_height);
 
-    ObjectTypeDB::bind_method(_MD("get_texture"), &MainMap::get_texture);
-    ObjectTypeDB::bind_method(_MD("set_texture", "texture"), &MainMap::set_texture);
+    ClassDB::bind_method(D_METHOD("get_texture"), &MainMap::get_texture);
+    ClassDB::bind_method(D_METHOD("set_texture", "texture"), &MainMap::set_texture);
 
-    ObjectTypeDB::bind_method(_MD("get_data"), &MainMap::get_data);
-    ObjectTypeDB::bind_method(_MD("set_data", "data"), &MainMap::set_data);
+    ClassDB::bind_method(D_METHOD("get_data"), &MainMap::get_data);
+    ClassDB::bind_method(D_METHOD("set_data", "data"), &MainMap::set_data);
 
-    ObjectTypeDB::bind_method(_MD("checked_at", "x", "y"), &MainMap::checked_at);
-    ObjectTypeDB::bind_method(_MD("set_checked", "x", "y", "checked"), &MainMap::set_checked);
+    ClassDB::bind_method(D_METHOD("checked_at", "x", "y"), &MainMap::checked_at);
+    ClassDB::bind_method(D_METHOD("set_checked", "x", "y", "checked"), &MainMap::set_checked);
 
-    ObjectTypeDB::bind_method(_MD("at", "x", "y"), &MainMap::at);
-    ObjectTypeDB::bind_method(_MD("get_x"), &MainMap::get_x);
-    ObjectTypeDB::bind_method(_MD("get_y"), &MainMap::get_y);
+    ClassDB::bind_method(D_METHOD("at", "x", "y"), &MainMap::at);
+    ClassDB::bind_method(D_METHOD("get_x"), &MainMap::get_x);
+    ClassDB::bind_method(D_METHOD("get_y"), &MainMap::get_y);
 
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "width"), _SCS("set_width"), _SCS("get_width"));
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "height"), _SCS("set_height"), _SCS("get_height"));
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture", PROPERTY_HINT_RESOURCE_TYPE, "Texture"), _SCS("set_texture"), _SCS("get_texture"));
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "width"), "set_width", "get_width");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "height"), "set_height", "get_height");
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture", PROPERTY_HINT_RESOURCE_TYPE, "Texture"), "set_texture", "get_texture");
 
     ADD_SIGNAL(MethodInfo("turn_on", PropertyInfo(Variant::INT, "x"), PropertyInfo(Variant::INT, "y")));
     ADD_SIGNAL(MethodInfo("turn_off", PropertyInfo(Variant::INT, "x"), PropertyInfo(Variant::INT, "y")));

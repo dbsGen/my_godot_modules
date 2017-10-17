@@ -69,7 +69,7 @@ void AnimController::freeze() {
         _freezing = true;
         status_cache.clear();
         for (Map<StringName, Node*>::Element *E = anim_nodes.front(); E; E=E->next()) {
-            AnimationPlayer *player = E->get()->cast_to<AnimationPlayer>();
+            AnimationPlayer *player = Object::cast_to<AnimationPlayer>(E->get());
             if (player->is_playing()) {
                 AnimationStatus status;
                 status.name = player->get_current_animation();
@@ -154,7 +154,7 @@ Variant AnimController::get_status(String p_key) {
 }
 
 void AnimController::add_child_notify(Node *p_child) {
-    if (p_child->is_type("AnimationPlayer")) {
+    if (p_child->is_class("AnimationPlayer")) {
         anim_nodes[p_child->get_name()] = p_child;
         Vector<Variant> binds;
         binds.push_back(p_child);
@@ -163,19 +163,19 @@ void AnimController::add_child_notify(Node *p_child) {
 }
 
 void AnimController::remove_child_notify(Node *p_child) {
-    if (p_child->is_type("AnimationPlayer") && anim_nodes.has(p_child->get_name())) {
+    if (p_child->is_class("AnimationPlayer") && anim_nodes.has(p_child->get_name())) {
         anim_nodes.erase(p_child->get_name());
         p_child->disconnect(StringName("finished"), this, StringName("_animation_finished"));
     }
 }
 
 void AnimController::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("get_status", "key"),&AnimController::get_status);
-    ObjectTypeDB::bind_method(_MD("remove_all"),&AnimController::remove_all);
-    ObjectTypeDB::bind_method(_MD("remove_status_with", "key", "name"),&AnimController::remove_status_with);
-    ObjectTypeDB::bind_method(_MD("remove_status", "key"),&AnimController::remove_status);
-    ObjectTypeDB::bind_method(_MD("set_status", "key", "name", "time"),&AnimController::set_status, DEFVAL(0));
-    ObjectTypeDB::bind_method(_MD("_animation_finished", "anim"),&AnimController::_animation_finished);
+    ClassDB::bind_method(D_METHOD("get_status", "key"),&AnimController::get_status);
+    ClassDB::bind_method(D_METHOD("remove_all"),&AnimController::remove_all);
+    ClassDB::bind_method(D_METHOD("remove_status_with", "key", "name"),&AnimController::remove_status_with);
+    ClassDB::bind_method(D_METHOD("remove_status", "key"),&AnimController::remove_status);
+    ClassDB::bind_method(D_METHOD("set_status", "key", "name", "time"),&AnimController::set_status, DEFVAL(0));
+    ClassDB::bind_method(D_METHOD("_animation_finished", "anim"),&AnimController::_animation_finished);
 
     BIND_VMETHOD( MethodInfo("_status_changed", PropertyInfo(Variant::DICTIONARY, "added"), PropertyInfo(Variant::DICTIONARY, "removed")));
     BIND_VMETHOD( MethodInfo("_animation_finished", PropertyInfo(Variant::OBJECT, "anim")));

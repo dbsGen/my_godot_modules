@@ -12,7 +12,7 @@ class Character;
 class HitStatusProgress;
 
 class HitStatus : public Resource {
-    OBJ_TYPE(HitStatus, Resource);
+    GDCLASS(HitStatus, Resource);
 public:
     enum HSType {
         HS_NO_HIT,
@@ -40,6 +40,13 @@ private:
     HSType hit_type;
     float fall_acc;
     bool face_me;
+
+    float damage_reduction;
+    float stun_reduction;
+    String hit_id;
+
+    ObjectID original_id;
+
     friend class HitStatusProgress;
 
 protected:
@@ -86,7 +93,27 @@ public:
 
     _FORCE_INLINE_ void set_hit_type(HSType m_hit_type) { hit_type = m_hit_type; }
     _FORCE_INLINE_ HSType get_hit_type() { return hit_type; }
+
+    _FORCE_INLINE_ void set_damage_reduction(float p_damage_reduction) { damage_reduction = p_damage_reduction;}
+    _FORCE_INLINE_ float get_damage_reduction() const { return damage_reduction; }
+
+    _FORCE_INLINE_ void set_stun_reduction(float p_stun_reduction) { stun_reduction = p_stun_reduction;}
+    _FORCE_INLINE_ float get_stun_reduction() const { return stun_reduction; }
+
+    _FORCE_INLINE_ void set_hit_id(const String &p_hit_id) { hit_id = p_hit_id; }
+    _FORCE_INLINE_ const String &get_hit_id() const { return hit_id; }
+
     void step(Object *character, Dictionary env);
+
+    _FORCE_INLINE_ ObjectID get_original_id() const { 
+        if (original_id == 0) {
+            return get_instance_id();
+        }else {
+            return original_id;
+        }
+     }
+
+    Ref<HitStatus> new_hit_status();
 
     HitStatus() {
         _life_time = 2;
@@ -99,6 +126,9 @@ public:
         fall_acc=0.06;
         freeze_time=0.1;
         self_freeze=0.1;
+        damage_reduction = 1;
+        stun_reduction = 1;
+        original_id = 0; 
     }
 };
 

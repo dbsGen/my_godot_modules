@@ -17,7 +17,7 @@ void TrailPoint2D::_update_frame(bool minus) {
 }
 
 void TrailPoint2D::_update_position(bool minus) {
-    Vector2 new_pos = get_global_pos();
+    Vector2 new_pos = get_global_position();
     Vector2 offset = (new_pos - old_position)/get_global_transform().get_scale();
     old_position = new_pos;
 
@@ -26,7 +26,7 @@ void TrailPoint2D::_update_position(bool minus) {
             trail_items[n].position -= offset;
             if (minus) {
                 trail_items[n].count -= 1;
-                trail_items[n].position += gravity/trail_items.limit();
+                trail_items[n].position += final_gravity/trail_items.limit();
             }
         }else break;
     }
@@ -84,7 +84,7 @@ void TrailPoint2D::_normal_points(int idx, int total, Vector2 &res1, Vector2 &re
 void TrailPoint2D::_update_trail_target() {
     if (is_inside_tree()) {
         if (target_path != NodePath() && has_node(target_path)) {
-            CanvasItem *nt = get_node(target_path)->cast_to<CanvasItem>();
+            CanvasItem *nt = Object::cast_to<CanvasItem>(get_node(target_path));
             if (nt != trail_target) {
                 if (trail_target != NULL) {
                     trail_target->disconnect("exit_tree", this, "_on_exit_tree");
@@ -145,7 +145,7 @@ int intersect(Point2 point_a1, Point2 point_a2, Point2 point_b1, Point2 point_b2
 void TrailPoint2D::_notification(int p_what) {
     switch (p_what) {
         case NOTIFICATION_ENTER_TREE: {
-            old_position = get_global_pos();
+            old_position = get_global_position();
             _update_trail_target();
         } break;
         case NOTIFICATION_FIXED_PROCESS: {
@@ -153,7 +153,11 @@ void TrailPoint2D::_notification(int p_what) {
         } break;
         case NOTIFICATION_PROCESS: {
             if (trail_target != NULL) {
-                set_global_pos(trail_target->get_global_transform().get_origin());
+                Transform2D mat = trail_target->get_global_transform();
+                set_global_position(mat.get_origin());
+                Size2 scale = mat.get_scale();
+                final_gravity.x = gravity.x * scale.x;
+                final_gravity.y = gravity.y * scale.y;
             }
             _update_frame();
             update();
@@ -188,49 +192,49 @@ void TrailPoint2D::_notification(int p_what) {
 }
 
 void TrailPoint2D::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("get_trail_enable"), &TrailPoint2D::get_trail_enable);
-    ObjectTypeDB::bind_method(_MD("set_trail_enable", "trail_enable"), &TrailPoint2D::set_trail_enable);
+    ClassDB::bind_method(D_METHOD("get_trail_enable"), &TrailPoint2D::get_trail_enable);
+    ClassDB::bind_method(D_METHOD("set_trail_enable", "trail_enable"), &TrailPoint2D::set_trail_enable);
 
-    ObjectTypeDB::bind_method(_MD("get_trail_count"),&TrailPoint2D::get_trail_count);
-    ObjectTypeDB::bind_method(_MD("set_trail_count", "trail_count"),&TrailPoint2D::set_trail_count);
+    ClassDB::bind_method(D_METHOD("get_trail_count"),&TrailPoint2D::get_trail_count);
+    ClassDB::bind_method(D_METHOD("set_trail_count", "trail_count"),&TrailPoint2D::set_trail_count);
 
-    ObjectTypeDB::bind_method(_MD("get_span_frame"),&TrailPoint2D::get_span_frame);
-    ObjectTypeDB::bind_method(_MD("set_span_frame", "span_frame"),&TrailPoint2D::set_span_frame);
+    ClassDB::bind_method(D_METHOD("get_span_frame"),&TrailPoint2D::get_span_frame);
+    ClassDB::bind_method(D_METHOD("set_span_frame", "span_frame"),&TrailPoint2D::set_span_frame);
 
-    ObjectTypeDB::bind_method(_MD("get_line_width"),&TrailPoint2D::get_line_width);
-    ObjectTypeDB::bind_method(_MD("set_line_width", "line_width"),&TrailPoint2D::set_line_width);
+    ClassDB::bind_method(D_METHOD("get_line_width"),&TrailPoint2D::get_line_width);
+    ClassDB::bind_method(D_METHOD("set_line_width", "line_width"),&TrailPoint2D::set_line_width);
 
-    ObjectTypeDB::bind_method(_MD("get_line_color"),&TrailPoint2D::get_line_color);
-    ObjectTypeDB::bind_method(_MD("set_line_color", "line_color:ColorRamp"),&TrailPoint2D::set_line_color);
+    ClassDB::bind_method(D_METHOD("get_line_color"),&TrailPoint2D::get_line_color);
+    ClassDB::bind_method(D_METHOD("set_line_color", "line_color:ColorRamp"),&TrailPoint2D::set_line_color);
 
-    ObjectTypeDB::bind_method(_MD("get_target_path"),&TrailPoint2D::get_target_path);
-    ObjectTypeDB::bind_method(_MD("set_target_path", "target_path"),&TrailPoint2D::set_target_path);
+    ClassDB::bind_method(D_METHOD("get_target_path"),&TrailPoint2D::get_target_path);
+    ClassDB::bind_method(D_METHOD("set_target_path", "target_path"),&TrailPoint2D::set_target_path);
 
-    ObjectTypeDB::bind_method(_MD("get_gravity"),&TrailPoint2D::get_gravity);
-    ObjectTypeDB::bind_method(_MD("set_gravity", "gravity"),&TrailPoint2D::set_gravity);
+    ClassDB::bind_method(D_METHOD("get_gravity"),&TrailPoint2D::get_gravity);
+    ClassDB::bind_method(D_METHOD("set_gravity", "gravity"),&TrailPoint2D::set_gravity);
 
-    ObjectTypeDB::bind_method(_MD("get_wave"),&TrailPoint2D::get_wave);
-    ObjectTypeDB::bind_method(_MD("set_wave", "wave"),&TrailPoint2D::set_wave);
+    ClassDB::bind_method(D_METHOD("get_wave"),&TrailPoint2D::get_wave);
+    ClassDB::bind_method(D_METHOD("set_wave", "wave"),&TrailPoint2D::set_wave);
 
-    ObjectTypeDB::bind_method(_MD("get_wave_scale"),&TrailPoint2D::get_wave_scale);
-    ObjectTypeDB::bind_method(_MD("set_wave_scale", "wave_scale"),&TrailPoint2D::set_wave_scale);
+    ClassDB::bind_method(D_METHOD("get_wave_scale"),&TrailPoint2D::get_wave_scale);
+    ClassDB::bind_method(D_METHOD("set_wave_scale", "wave_scale"),&TrailPoint2D::set_wave_scale);
 
-    ObjectTypeDB::bind_method(_MD("get_wave_time_scale"),&TrailPoint2D::get_wave_time_scale);
-    ObjectTypeDB::bind_method(_MD("set_wave_time_scale", "wave_time_scale"),&TrailPoint2D::set_wave_time_scale);
+    ClassDB::bind_method(D_METHOD("get_wave_time_scale"),&TrailPoint2D::get_wave_time_scale);
+    ClassDB::bind_method(D_METHOD("set_wave_time_scale", "wave_time_scale"),&TrailPoint2D::set_wave_time_scale);
 
-    ObjectTypeDB::bind_method(_MD("_on_exit_tree"), &TrailPoint2D::_on_exit_tree);
+    ClassDB::bind_method(D_METHOD("_on_exit_tree"), &TrailPoint2D::_on_exit_tree);
 
-    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "target_path"), _SCS("set_target_path"), _SCS("get_target_path"));
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "trail_enable"), _SCS("set_trail_enable"), _SCS("get_trail_enable"));
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "trail_count"), _SCS("set_trail_count"), _SCS("get_trail_count"));
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "span_frame"), _SCS("set_span_frame"), _SCS("get_span_frame"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "line_width"), _SCS("set_line_width"), _SCS("get_line_width"));
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "line_color",PROPERTY_HINT_RESOURCE_TYPE,"ColorRamp"), _SCS("set_line_color"), _SCS("get_line_color"));
+    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "target_path"), "set_target_path", "get_target_path");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "trail_enable"), "set_trail_enable", "get_trail_enable");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "trail_count"), "set_trail_count", "get_trail_count");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "span_frame"), "set_span_frame", "get_span_frame");
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "line_width"), "set_line_width", "get_line_width");
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "line_color",PROPERTY_HINT_RESOURCE_TYPE,"ColorRamp"), "set_line_color", "get_line_color");
 
-    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "gravity"), _SCS("set_gravity"), _SCS("get_gravity"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "wave"), _SCS("set_wave"), _SCS("get_wave"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "wave_scale"), _SCS("set_wave_scale"), _SCS("get_wave_scale"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "wave_time_scale"), _SCS("set_wave_time_scale"), _SCS("get_wave_time_scale"));
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "gravity"), "set_gravity", "get_gravity");
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "wave"), "set_wave", "get_wave");
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "wave_scale"), "set_wave_scale", "get_wave_scale");
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "wave_time_scale"), "set_wave_time_scale", "get_wave_time_scale");
 }
 
 
@@ -246,7 +250,7 @@ void TrailLine2D::_update_frame(bool minus) {
             span_count = 0;
             TrailItem np = TrailItem();
             if (terminal)
-                np.position2 = terminal->get_pos();
+                np.position2 = terminal->get_position();
             np.count = trail_items.limit();
             trail_items.push(np);
         }
@@ -254,7 +258,7 @@ void TrailLine2D::_update_frame(bool minus) {
 }
 
 void TrailLine2D::_update_position(bool minus) {
-    Vector2 new_pos = get_global_pos();
+    Vector2 new_pos = get_global_position();
     Vector2 offset = (new_pos - old_position)/get_global_transform().get_scale();
     old_position = new_pos;
 
@@ -363,10 +367,10 @@ Vector< Vector<Point2> > simplify(Vector<Point2> original) {
 void TrailLine2D::_notification(int p_what) {
     switch (p_what) {
         case NOTIFICATION_ENTER_TREE: {
-            old_position = get_global_pos();
+            old_position = get_global_position();
             terminal = memnew(Position2D);
             add_child(terminal);
-            terminal->set_pos(terminal_position);
+            terminal->set_position(terminal_position);
         } break;
         case NOTIFICATION_FIXED_PROCESS: {
             _update_frame(true);
@@ -398,27 +402,27 @@ void TrailLine2D::_notification(int p_what) {
 }
 
 void TrailLine2D::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("get_trail_enable"), &TrailLine2D::get_trail_enable);
-    ObjectTypeDB::bind_method(_MD("set_trail_enable", "trail_enable"), &TrailLine2D::set_trail_enable);
+    ClassDB::bind_method(D_METHOD("get_trail_enable"), &TrailLine2D::get_trail_enable);
+    ClassDB::bind_method(D_METHOD("set_trail_enable", "trail_enable"), &TrailLine2D::set_trail_enable);
 
-    ObjectTypeDB::bind_method(_MD("get_trail_count"),&TrailLine2D::get_trail_count);
-    ObjectTypeDB::bind_method(_MD("set_trail_count", "trail_count"),&TrailLine2D::set_trail_count);
+    ClassDB::bind_method(D_METHOD("get_trail_count"),&TrailLine2D::get_trail_count);
+    ClassDB::bind_method(D_METHOD("set_trail_count", "trail_count"),&TrailLine2D::set_trail_count);
 
-    ObjectTypeDB::bind_method(_MD("get_span_frame"),&TrailLine2D::get_span_frame);
-    ObjectTypeDB::bind_method(_MD("set_span_frame", "span_frame"),&TrailLine2D::set_span_frame);
+    ClassDB::bind_method(D_METHOD("get_span_frame"),&TrailLine2D::get_span_frame);
+    ClassDB::bind_method(D_METHOD("set_span_frame", "span_frame"),&TrailLine2D::set_span_frame);
 
-    ObjectTypeDB::bind_method(_MD("get_terminal"),&TrailLine2D::get_terminal);
-    ObjectTypeDB::bind_method(_MD("set_terminal", "terminal"),&TrailLine2D::set_terminal);
+    ClassDB::bind_method(D_METHOD("get_terminal"),&TrailLine2D::get_terminal);
+    ClassDB::bind_method(D_METHOD("set_terminal", "terminal"),&TrailLine2D::set_terminal);
 
-    ObjectTypeDB::bind_method(_MD("get_line_color"),&TrailLine2D::get_line_color);
-    ObjectTypeDB::bind_method(_MD("set_line_color", "line_color:ColorRamp"),&TrailLine2D::set_line_color);
+    ClassDB::bind_method(D_METHOD("get_line_color"),&TrailLine2D::get_line_color);
+    ClassDB::bind_method(D_METHOD("set_line_color", "line_color:ColorRamp"),&TrailLine2D::set_line_color);
 
 //    ObjectTypeDB::bind_method(_MD("_on_exit_tree"), &TrailPoint2D::_on_exit_tree);
 
 //    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "target_path"), _SCS("set_target_path"), _SCS("get_target_path"));
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "trail_enable"), _SCS("set_trail_enable"), _SCS("get_trail_enable"));
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "trail_count"), _SCS("set_trail_count"), _SCS("get_trail_count"));
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "span_frame"), _SCS("set_span_frame"), _SCS("get_span_frame"));
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "terminal"), _SCS("set_terminal"), _SCS("get_line_color"));
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "line_color",PROPERTY_HINT_RESOURCE_TYPE,"ColorRamp"), _SCS("set_line_color"), _SCS("get_line_color"));
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "trail_enable"), "set_trail_enable", "get_trail_enable");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "trail_count"), "set_trail_count", "get_trail_count");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "span_frame"), "set_span_frame", "get_span_frame");
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "terminal"), "set_terminal", "get_line_color");
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "line_color",PROPERTY_HINT_RESOURCE_TYPE,"ColorRamp"), "set_line_color", "get_line_color");
 }

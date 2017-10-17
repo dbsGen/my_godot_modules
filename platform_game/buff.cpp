@@ -23,16 +23,16 @@ void Buff::step(Object *character, Dictionary env) {
 }
 
 void Buff::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("set_skip", "skip"), &Buff::set_skip);
-    ObjectTypeDB::bind_method(_MD("get_skip"), &Buff::get_skip);
-    ObjectTypeDB::bind_method(_MD("set_life_time", "life_time"), &Buff::set_life_time);
-    ObjectTypeDB::bind_method(_MD("get_life_time"), &Buff::get_life_time);
-    ObjectTypeDB::bind_method(_MD("set_unique", "unique"), &Buff::set_unique);
-    ObjectTypeDB::bind_method(_MD("get_unique"), &Buff::get_unique);
-    ObjectTypeDB::bind_method(_MD("set_buff_name", "buff_name"), &Buff::set_buff_name);
-    ObjectTypeDB::bind_method(_MD("get_buff_name"), &Buff::get_buff_name);
+    ClassDB::bind_method(D_METHOD("set_skip", "skip"), &Buff::set_skip);
+    ClassDB::bind_method(D_METHOD("get_skip"), &Buff::get_skip);
+    ClassDB::bind_method(D_METHOD("set_life_time", "life_time"), &Buff::set_life_time);
+    ClassDB::bind_method(D_METHOD("get_life_time"), &Buff::get_life_time);
+    ClassDB::bind_method(D_METHOD("set_unique", "unique"), &Buff::set_unique);
+    ClassDB::bind_method(D_METHOD("get_unique"), &Buff::get_unique);
+    ClassDB::bind_method(D_METHOD("set_buff_name", "buff_name"), &Buff::set_buff_name);
+    ClassDB::bind_method(D_METHOD("get_buff_name"), &Buff::get_buff_name);
 
-    ObjectTypeDB::bind_method(_MD("step", "character", "env"), &Buff::step);
+    ClassDB::bind_method(D_METHOD("step", "character", "env"), &Buff::step);
 
     BIND_VMETHOD( MethodInfo("_step", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY,"env")) );
 }

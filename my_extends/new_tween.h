@@ -12,7 +12,7 @@
 class TweenAction;
 
 class TweenNode: public Node {
-OBJ_TYPE(TweenNode, Node);
+    GDCLASS(TweenNode, Node);
 private:
     Vector< Ref<TweenAction> > actions;
     void check_queue();
@@ -22,7 +22,7 @@ protected:
 };
 
 class TweenProperty : public Reference {
-OBJ_TYPE(TweenProperty, Reference);
+    GDCLASS(TweenProperty, Reference);
 private:
     friend class TweenAction;
     StringName property_name;
@@ -39,9 +39,9 @@ private:
 };
 
 class NewTween: public Reference {
-OBJ_TYPE(NewTween, Reference);
+    GDCLASS(NewTween, Reference);
 private:
-    TweenNode   *tweenNode;
+    TweenNode   *tween_node;
 protected:
     static void _bind_methods();
 public:
@@ -82,11 +82,12 @@ public:
     Ref<TweenAction> to(Object *target, float during);
     void cancel(Object *target);
 
-    NewTween() {tweenNode = NULL;}
+    NewTween() {tween_node = NULL;}
+    ~NewTween();
 };
 
 class TweenAction : public Reference {
-OBJ_TYPE(TweenAction, Reference);
+    GDCLASS(TweenAction, Reference);
 private:
     typedef enum {
         TWEEN_STATUS_NORMAL,
@@ -129,6 +130,8 @@ public:
         easing = NewTween::TWEEN_EASING_LINEAR;
         status = TWEEN_STATUS_NORMAL;
         delay_time = 0;
+        total_time = 0;
+        delta_time = 0;
         target = NULL;
     }
     ~TweenAction();

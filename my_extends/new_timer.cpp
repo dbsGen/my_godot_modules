@@ -4,7 +4,6 @@
 
 #include "new_timer.h"
 #include "../../core/bind/core_bind.h"
-#include "../../scene/main/scene_main_loop.h"
 #include "../../core/os/main_loop.h"
 #include "../../scene/main/viewport.h"
 #include "../../core/os/os.h"
@@ -30,7 +29,7 @@ void TimerObject::cancel() {
 }
 
 void TimerObject::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("cancel"),&TimerObject::cancel);
+    ClassDB::bind_method(D_METHOD("cancel"),&TimerObject::cancel);
     ADD_SIGNAL( MethodInfo("timeout") );
 }
 
@@ -62,20 +61,26 @@ void TimerNode::_notification(int p_notification) {
     }
 }
 
+NewTimer::~NewTimer() {
+    if (timer_node) {
+        memdelete(timer_node);
+    }
+}
+
 Ref<TimerObject> NewTimer::wait(float p_time) {
     const String timer_key = "new_timer";
     MainLoop *main_loop = OS::get_singleton()->get_main_loop();
-    SceneTree *tree = main_loop->cast_to<SceneTree>();
+    SceneTree *tree = Object::cast_to<SceneTree>(main_loop);
     ERR_FAIL_COND_V(tree == NULL, NULL);
 
     Viewport *viewport = tree->get_root();
     ERR_FAIL_COND_V(viewport == NULL, NULL);
-    if (timerNode==NULL) {
-        timerNode = memnew(TimerNode);
-        timerNode->set_name(timer_key);
+    if (timer_node==NULL) {
+        timer_node = memnew(TimerNode);
+        timer_node->set_name(timer_key);
 
         Vector<Variant> vector;
-        vector.push_back(Variant(timerNode));
+        vector.push_back(Variant(timer_node));
 
         tree->connect(StringName("idle_frame"), this, StringName("_add_node"), vector, 0);
 
@@ -83,39 +88,39 @@ Ref<TimerObject> NewTimer::wait(float p_time) {
 
     Ref<TimerObject> obj = memnew(TimerObject);
     obj->time = p_time;
-    timerNode->timer_objs.push_back(obj);
-    timerNode->check_queue();
+    timer_node->timer_objs.push_back(obj);
+    timer_node->check_queue();
     return obj;
 }
 
 Ref<TimerObject> NewTimer::wait_trigger(float p_time, Object *p_target, String p_method) {
     const String timer_key = "new_timer";
     MainLoop *main_loop = OS::get_singleton()->get_main_loop();
-    SceneTree *tree = main_loop->cast_to<SceneTree>();
+    SceneTree *tree = Object::cast_to<SceneTree>(main_loop);
     ERR_FAIL_COND_V(tree == NULL, NULL);
 
     Viewport *viewport = tree->get_root();
     ERR_FAIL_COND_V(viewport == NULL, NULL);
-    TimerNode *timerNode;
-    if (timerNode == NULL) {
-        timerNode = memnew(TimerNode);
-        timerNode->set_name(timer_key);
+    TimerNode *timer_node;
+    if (timer_node == NULL) {
+        timer_node = memnew(TimerNode);
+        timer_node->set_name(timer_key);
 
         Vector<Variant> vector;
-        vector.push_back(Variant(timerNode));
+        vector.push_back(Variant(timer_node));
 
         tree->connect("idle_frame", this, "_add_node", vector, 0);
 
     }else {
-        timerNode = viewport->get_node(timer_key)->cast_to<TimerNode>();
+        timer_node = Object::cast_to<TimerNode>(viewport->get_node(timer_key));
     }
 
     Ref<TimerObject> obj = memnew(TimerObject);
     obj->time = p_time;
     obj->target = p_target;
     obj->method = p_method;
-    timerNode->timer_objs.push_back(obj);
-    timerNode->check_queue();
+    timer_node->timer_objs.push_back(obj);
+    timer_node->check_queue();
     return obj;
 }
 
@@ -129,15 +134,15 @@ NewTimer *NewTimer::get_singleton() {
 
 void NewTimer::_add_node(Object *node) {
     MainLoop *main_loop = OS::get_singleton()->get_main_loop();
-    SceneTree *tree = main_loop->cast_to<SceneTree>();
+    SceneTree *tree = Object::cast_to<SceneTree>(main_loop);
     ERR_FAIL_COND(tree == NULL);
 
     tree->disconnect("idle_frame", this, "_add_node");
-    tree->get_root()->add_child(node->cast_to<TimerNode>());
+    tree->get_root()->add_child(Object::cast_to<TimerNode>(node));
 }
 
 void NewTimer::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("wait_trigger:TimerObject", "time", "target", "method"),&NewTimer::wait_trigger);
-    ObjectTypeDB::bind_method(_MD("wait:TimerObject", "time"),&NewTimer::wait);
-    ObjectTypeDB::bind_method(_MD("_add_node", "node"),&NewTimer::_add_node);
+    ClassDB::bind_method(D_METHOD("wait_trigger:TimerObject", "time", "target", "method"),&NewTimer::wait_trigger);
+    ClassDB::bind_method(D_METHOD("wait:TimerObject", "time"),&NewTimer::wait);
+    ClassDB::bind_method(D_METHOD("_add_node", "node"),&NewTimer::_add_node);
 }

@@ -27,7 +27,6 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 #include "register_types.h"
-#include "object_type_db.h"
 #include "character.h"
 #include "attack_area.h"
 #include "buff.h"
@@ -49,30 +48,44 @@
 #include "graze_area.h"
 
 void register_platform_game_types() {
-	ObjectTypeDB::register_type<Character>();
-    ObjectTypeDB::register_type<Buff>();
-    ObjectTypeDB::register_type<BuffProcess>();
-    ObjectTypeDB::register_type<AttackArea>();
-    ObjectTypeDB::register_type<HitStatus>();
-    ObjectTypeDB::register_type<HitStatusProgress>();
-    ObjectTypeDB::register_type<CancelNode>();
-    ObjectTypeDB::register_type<Gravity>();
-    ObjectTypeDB::register_type<Action>();
-    ObjectTypeDB::register_type<AttackNode>();
-    ObjectTypeDB::register_type<FollowingCamera>();
-    ObjectTypeDB::register_type<KillZone>();
-    ObjectTypeDB::register_type<MainMap>();
-    ObjectTypeDB::register_type<SceneMap>();
-    ObjectTypeDB::register_type<ParallaxBG>();
-    ObjectTypeDB::register_type<AnimController>();
-    ObjectTypeDB::register_type<HitArea>();
-    ObjectTypeDB::register_type<Barrage>();
-    ObjectTypeDB::register_type<Bullet>();
-    ObjectTypeDB::register_type<ShootBarrage>();
-    ObjectTypeDB::register_type<ScatterBarrage>();
-    ObjectTypeDB::register_type<RandomBarrage>();
-    ObjectTypeDB::register_type<GrazeArea>();
+    HitStatusProgress::PROCESS_HIT_NAME = "process_hit";
+    HitStatusProgress::TYPE_CHANGE_NAME = "_on_type_change";
+    Action::CHECK_NAME = "_check_action";
+    
+    Character::COMBO_BEGIN_NAME = "combo_begin";
+    Character::COMBO_END_NAME = "combo_end";
+    Character::COMBO_CHANGE_NAME = "combo_change";
+
+	ClassDB::register_class<Character>();
+    ClassDB::register_class<Buff>();
+    ClassDB::register_class<BuffProcess>();
+    ClassDB::register_class<AttackArea>();
+    ClassDB::register_class<HitStatus>();
+    ClassDB::register_class<HitStatusProgress>();
+    ClassDB::register_class<CancelNode>();
+    ClassDB::register_class<Gravity>();
+    ClassDB::register_class<Action>();
+    ClassDB::register_class<AttackNode>();
+    ClassDB::register_class<FollowingCamera>();
+    ClassDB::register_class<KillZone>();
+    ClassDB::register_class<MainMap>();
+    ClassDB::register_class<SceneMap>();
+    ClassDB::register_class<ParallaxBG>();
+    ClassDB::register_class<AnimController>();
+    ClassDB::register_class<HitArea>();
+    ClassDB::register_class<Barrage>();
+    ClassDB::register_class<Bullet>();
+    ClassDB::register_class<ShootBarrage>();
+    ClassDB::register_class<ScatterBarrage>();
+    ClassDB::register_class<RandomBarrage>();
+    ClassDB::register_class<GrazeArea>();
 }
 
 void unregister_platform_game_types() {
+    HitStatusProgress::PROCESS_HIT_NAME = StringName();
+    HitStatusProgress::TYPE_CHANGE_NAME = StringName();
+    Action::CHECK_NAME = StringName();
+    Character::COMBO_BEGIN_NAME = StringName();
+    Character::COMBO_END_NAME = StringName();
+    Character::COMBO_CHANGE_NAME = StringName();
 }

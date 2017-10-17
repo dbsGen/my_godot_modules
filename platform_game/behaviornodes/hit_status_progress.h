@@ -9,10 +9,12 @@
 #include "../hit_status/hit_status.h"
 
 class HitStatusProgress : public BehaviorNode {
-    OBJ_TYPE(HitStatusProgress, BehaviorNode);
+    GDCLASS(HitStatusProgress, BehaviorNode);
 private:
     HitStatus::HSType old_hit_type;
     HitStatus::HSType hit_type;
+    Ref<HitStatus> old_status;
+
 protected:
     static void _bind_methods();
 
@@ -21,6 +23,9 @@ protected:
     virtual bool _on_type_change(HitStatus::HSType new_type) {return true;}
 
 public:
+    static StringName PROCESS_HIT_NAME;
+    static StringName TYPE_CHANGE_NAME;
+
     _FORCE_INLINE_ HitStatus::HSType get_hit_type() {return hit_type;}
     Vector2 process_hit(const Variant& target, Dictionary env);
 

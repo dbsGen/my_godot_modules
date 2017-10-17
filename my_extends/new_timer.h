@@ -9,7 +9,7 @@
 #include "../../scene/main/node.h"
 
 class TimerObject : public Reference {
-OBJ_TYPE( TimerObject, Reference );
+    GDCLASS( TimerObject, Reference );
 private:
 
     bool is_cancel;
@@ -29,7 +29,7 @@ public:
 };
 
 class TimerNode : public Node {
-OBJ_TYPE( TimerNode, Node );
+    GDCLASS( TimerNode, Node );
 public:
     Vector< Ref<TimerObject> > timer_objs;
     void check_queue();
@@ -38,9 +38,9 @@ protected:
 };
 
 class NewTimer: public Reference {
-OBJ_TYPE(NewTimer, Reference);
+    GDCLASS(NewTimer, Reference);
 private:
-    TimerNode   *timerNode;
+    TimerNode   *timer_node;
 protected:
     static void _bind_methods();
     static NewTimer *singleton;
@@ -51,7 +51,8 @@ public:
     Ref<TimerObject> wait_trigger(float p_time, Object* p_target, String p_method);
     void _add_node(Object *node);
 
-    NewTimer() {timerNode=NULL;}
+    NewTimer() {timer_node=NULL;}
+    ~NewTimer();
 };
 
 

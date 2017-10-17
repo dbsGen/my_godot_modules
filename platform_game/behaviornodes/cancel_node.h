@@ -9,7 +9,7 @@
 #include "../../../core/object.h"
 
 class CancelNode : public LinkerBNode {
-    OBJ_TYPE(CancelNode, LinkerBNode);
+    GDCLASS(CancelNode, LinkerBNode);
 
 public:
     enum CANCEL_TYPE{

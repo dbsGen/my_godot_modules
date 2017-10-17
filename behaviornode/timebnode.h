@@ -4,7 +4,7 @@
 #include "behaviornode.h"
 
 class TimerBNode : public BehaviorNode {
-OBJ_TYPE(TimerBNode, BehaviorNode);
+    GDCLASS(TimerBNode, BehaviorNode);
 private:
     float delay;
     bool _cancel;

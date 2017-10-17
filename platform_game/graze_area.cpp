@@ -3,12 +3,11 @@
 //
 
 #include "graze_area.h"
-#include "../../core/object_type_db.h"
 #include "../../servers/physics_2d_server.h"
 
 void GrazeArea::graze(RID area) {
     if (!graze_enable) return;
-    ID id = area.get_id();
+    uint32_t id = area.get_id();
     if (grazed.find(id) < 0) {
         Vector2 pos = Physics2DServer::get_singleton()->area_get_transform(area).get_origin();
         _on_graze(pos);
@@ -22,12 +21,12 @@ void GrazeArea::graze(RID area) {
 }
 
 void GrazeArea::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("set_graze_enable", "graze_enable"), &GrazeArea::set_graze_enable);
-    ObjectTypeDB::bind_method(_MD("get_graze_enable"), &GrazeArea::get_graze_enable);
+    ClassDB::bind_method(D_METHOD("set_graze_enable", "graze_enable"), &GrazeArea::set_graze_enable);
+    ClassDB::bind_method(D_METHOD("get_graze_enable"), &GrazeArea::get_graze_enable);
 
-    ObjectTypeDB::bind_method(_MD("graze", "area:RID"), &GrazeArea::graze);
+    ClassDB::bind_method(D_METHOD("graze", "area:RID"), &GrazeArea::graze);
 
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "graze_enable"), _SCS("set_graze_enable"), _SCS("get_graze_enable"));
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "graze_enable"), "set_graze_enable", "get_graze_enable");
 
     BIND_VMETHOD(MethodInfo("_on_graze", PropertyInfo(Variant::VECTOR2, "pos")));
 

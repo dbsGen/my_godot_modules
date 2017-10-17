@@ -11,7 +11,7 @@
 #include "cancel_node.h"
 
 class Action : public TimerBNode {
-OBJ_TYPE(Action, TimerBNode);
+    GDCLASS(Action, TimerBNode);
 private:
     struct CancelItem {
         int type;
@@ -57,8 +57,11 @@ protected:
     virtual bool    _check_action(const Variant& target, Dictionary env) { return false; }
     static void _bind_methods();
 public:
+    static StringName CHECK_NAME;
     bool force_enter;
     void refresh_cancel_list();
+
+    void force_focus();
 
     _FORCE_INLINE_ bool get_hit() {return _is_hit;}
     _FORCE_INLINE_ void set_hit(bool hit) {_is_hit = hit;}

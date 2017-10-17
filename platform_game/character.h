@@ -20,7 +20,7 @@
 
 
 class Character : public KinematicBody2D {
-    OBJ_TYPE(Character, KinematicBody2D);
+    GDCLASS(Character, KinematicBody2D);
 private:
     NodePath        _visibility_path;
     VisibilityNotifier2D    *_visibility_notifier;
@@ -58,6 +58,7 @@ private:
     } colliding;
     float   _move_duration;
     Vector2 _move_vec;
+    float   _move_reduction;
 
     Vector2 _move;
     Vector2 _source_scale;
@@ -78,6 +79,15 @@ private:
     float max_health;
 
     bool has_hit_area;
+
+    struct {
+        float damage_reduction = 1;
+        float stun_reduction = 1;
+        float damage = 0;
+        int hit_count = 0;
+        Vector<Ref<HitStatus> > hit_stack;
+    } combo_info;
+
     friend class HitArea;
 
 protected:
@@ -88,6 +98,10 @@ protected:
     virtual void _step(Dictionary env) {}
     virtual void kill() {queue_delete();}
 public:
+    static StringName COMBO_BEGIN_NAME;
+    static StringName COMBO_END_NAME;
+    static StringName COMBO_CHANGE_NAME;
+
     _FORCE_INLINE_ NodePath get_behavior_tree_path() {return _behavior_tree_path;}
     void set_behavior_tree_path(NodePath path);
     _FORCE_INLINE_ BehaviorNode *get_behavior_tree() {return behavior_root;}
@@ -101,7 +115,9 @@ public:
 
     _FORCE_INLINE_ bool  get_on_floor() { return on_floor; }
 
-    _FORCE_INLINE_ void set_move_vec(Vector2 p_move_vec, float p_move_duration = 0) {_move_vec=p_move_vec;_move_duration=p_move_duration;}
+    _FORCE_INLINE_ void set_move_vec(Vector2 p_move_vec, float p_move_duration = 0) {_move_vec=p_move_vec;_move_duration=p_move_duration;_move_reduction = 1;}
+
+    _FORCE_INLINE_ void set_move_vec_ex(Vector2 p_move_vec, float p_move_reduction, float p_move_duration = 0) {_move_vec=p_move_vec;_move_duration=p_move_duration;_move_reduction = p_move_reduction;}
 
     _FORCE_INLINE_ void set_move(Vector2 p_move) {_move=p_move;}
     _FORCE_INLINE_ Vector2 get_move() {return _move;}
@@ -129,7 +145,7 @@ public:
     void set_visibility_path(NodePath path);
     _FORCE_INLINE_ VisibilityNotifier2D *get_visibility() {return _visibility_notifier;}
 
-    _FORCE_INLINE_ void set_hit_status(Ref<HitStatus> hs){hit_status = hs;}
+    void set_hit_status(Ref<HitStatus> hs);
     _FORCE_INLINE_ Ref<HitStatus> get_hit_status() {return hit_status;}
 
     _FORCE_INLINE_ bool get_can_buff() {return can_buff;}
@@ -171,6 +187,9 @@ public:
     _FORCE_INLINE_ float get_max_health() {return max_health;}
     _FORCE_INLINE_ void set_max_health(float p_max_health) {max_health=p_max_health;}
 
+    _FORCE_INLINE_ float get_combo_damage() const {return combo_info.damage;}
+    _FORCE_INLINE_ int get_combo_hit() const {return combo_info.hit_count;} 
+
     Character() {
         first_set = true;
         _visibility_notifier = NULL;
@@ -182,6 +201,7 @@ public:
         guard_point = 0;
         freeze_time = 0;
         guard_percent = 0.8;
+        _move_reduction = 1;
         health=100;
         max_health=100;
         can_turn = true;

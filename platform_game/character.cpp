@@ -5,6 +5,11 @@
 #include "character.h"
 #include "../../scene/main/node.h"
 #include "../../core/math/math_2d.h"
+#include <core/bind/core_bind.h>
+
+StringName Character::COMBO_BEGIN_NAME;
+StringName Character::COMBO_END_NAME;
+StringName Character::COMBO_CHANGE_NAME;
 
 void Character::set_behavior_tree_path(NodePath path) {
     _behavior_tree_path = path;
@@ -30,7 +35,7 @@ void Character::update_visibility_notifier() {
         _visibility_notifier->disconnect("exit_screen", this, "_on_exit_screen");
     }
     if (is_inside_tree() && _visibility_path != NodePath() && has_node(_visibility_path)) {
-        _visibility_notifier = get_node(_visibility_path)->cast_to<VisibilityNotifier2D>();
+        _visibility_notifier = Object::cast_to<VisibilityNotifier2D>(get_node(_visibility_path));
         if (_visibility_notifier) {
             _visibility_notifier->connect("enter_screen", this, "_on_enter_screen");
             _visibility_notifier->connect("exit_screen", this, "_on_exit_screen");
@@ -43,16 +48,16 @@ void Character::update_visibility_notifier() {
 
 void Character::update_behavior_node() {
     if (is_inside_tree() && _behavior_tree_path != NodePath() && has_node(_behavior_tree_path)) {
-        behavior_root = get_node(_behavior_tree_path)->cast_to<BehaviorNode>();
+        behavior_root = Object::cast_to<BehaviorNode>(get_node(_behavior_tree_path));
     }else {
         behavior_root = NULL;
     }
 }
 
 void Character::update_sprite() {
-    if (!is_inside_tree() || get_tree()->is_editor_hint()) return;
+    if (!is_inside_tree() || _Engine::get_singleton()->is_editor_hint()) return;
     if (is_inside_tree() && _sprite_path != NodePath() && has_node(_sprite_path)) {
-        _cha_sprite = get_node(_sprite_path)->cast_to<Node2D>();
+        _cha_sprite = Object::cast_to<Node2D>(get_node(_sprite_path));
         if (_cha_sprite) {
             if (first_set) {
                 first_set = false;
@@ -75,8 +80,8 @@ void Character::update_sprite() {
 
 void Character::update_left_ray() {
     if (is_inside_tree() && _left_ray_path != NodePath() && has_node(_left_ray_path)) {
-        _left_ray = get_node(_left_ray_path)->cast_to<RayCast2D>();
-        _left_ray->set_layer_mask(get_collision_mask());
+        _left_ray = Object::cast_to<RayCast2D>(get_node(_left_ray_path));
+        _left_ray->set_collision_layer(get_collision_mask());
         _left_ray->add_exception(this);
     }else {
         _left_ray = NULL;
@@ -85,8 +90,8 @@ void Character::update_left_ray() {
 
 void Character::update_right_ray() {
     if (is_inside_tree() && _right_ray_path != NodePath() && has_node(_right_ray_path)) {
-        _right_ray = get_node(_right_ray_path)->cast_to<RayCast2D>();
-        _right_ray->set_layer_mask(get_collision_mask());
+        _right_ray = Object::cast_to<RayCast2D>(get_node(_right_ray_path));
+        _right_ray->set_collision_layer(get_collision_mask());
         _right_ray->add_exception(this);
     }else {
         _right_ray = NULL;
@@ -95,7 +100,7 @@ void Character::update_right_ray() {
 
 void Character::update_anim_controller() {
     if (is_inside_tree() && _anim_path != NodePath() && has_node(_anim_path)) {
-        anim_controller = get_node(_anim_path)->cast_to<AnimController>();
+        anim_controller = Object::cast_to<AnimController>(get_node(_anim_path));
     }else {
         anim_controller = NULL;
     }
@@ -104,7 +109,7 @@ void Character::update_anim_controller() {
 void Character::set_face_left(bool p_face_left) {
     if (!can_turn || face_left == p_face_left) return;
     face_left = p_face_left;
-    if (is_inside_tree() &&  !get_tree()->is_editor_hint() && _cha_sprite) {
+    if (is_inside_tree() &&  !_Engine::get_singleton()->is_editor_hint() && _cha_sprite) {
         if (face_left == default_face_left) {
             _cha_sprite->set_scale(_source_scale);
         }else {
@@ -128,7 +133,7 @@ void Character::set_health(float p_health) {
 void Character::_notification(int p_notification) {
     switch (p_notification) {
         case NOTIFICATION_ENTER_TREE: {
-            if (!is_inside_tree() || get_tree()->is_editor_hint())
+            if (!is_inside_tree() || _Engine::get_singleton()->is_editor_hint())
                 break;
             update_behavior_node();
             update_visibility_notifier();
@@ -139,7 +144,7 @@ void Character::_notification(int p_notification) {
             break;
         }
         case NOTIFICATION_FIXED_PROCESS: {
-            if (!is_inside_tree() || get_tree()->is_editor_hint())
+            if (!is_inside_tree() || _Engine::get_singleton()->is_editor_hint())
                 break;
             float fixed_process_time = get_fixed_process_delta_time();
             on_floor = (_left_ray != NULL && _left_ray->is_colliding()) || (_right_ray != NULL && _right_ray->is_colliding());
@@ -164,44 +169,13 @@ void Character::_notification(int p_notification) {
                         _move_duration -= fixed_process_time;
                         if (_move_duration < 0)
                             _move_vec = Vector2();
+                        else {
+                            _move_vec *= _move_reduction;
+                        }
                     }
                 }
-                Vector2 inv = move(_move);
+                move_and_slide(_move);
 
-                Vector2 floor_velocity;
-                colliding.left = false;
-                colliding.right = false;
-                colliding.top = false;
-                colliding.bottom = false;
-                colliding.normal = Vector2();
-                colliding.target_id = 0;
-                if (is_colliding()) {
-                    Vector2 n = get_collision_normal();
-                    colliding.normal = n;
-                    if ( Math::rad2deg(Math::acos(n.dot( Vector2(0,-1)))) < 40 ) {
-                        floor_velocity=get_collider_velocity();
-                    }
-
-                    float alpha = get_collision_normal().dot(Vector2(0,1));
-                    if (alpha > 0.6) {
-                        colliding.top = true;
-                    }else if (alpha < -0.6) {
-                        colliding.bottom = true;
-                    }
-                    alpha = get_collision_normal().dot(Vector2(1,0));
-                    if (alpha > 0.6) {
-                        colliding.left = true;
-                    }else if (alpha < -0.6) {
-                        colliding.right = true;
-                    }
-                    colliding.target_id = get_collider();
-
-                    _move = n.slide(_move);
-                    move(n.slide(inv));
-                }
-                if (floor_velocity != Vector2()) {
-                    move(floor_velocity);
-                }
                 for (int i = 0, t = buffs.size(); i < t; i++) {
                     float left_time = buffs[i]->get_life_time() - fixed_process_time;
                     buffs[i]->set_life_time(left_time);
@@ -215,7 +189,7 @@ void Character::_notification(int p_notification) {
                     float left_time = hit_status->get_life_time() - fixed_process_time;
                     hit_status->set_life_time(left_time);
                     if (left_time <= 0) {
-                        hit_status = Ref<HitStatus>(NULL);
+                        set_hit_status(NULL);
                     }
                 }else if (guard_point <= 0 && reset_guard_point > 0){
                     guard_point = reset_guard_point;
@@ -238,7 +212,7 @@ void Character::_notification(int p_notification) {
 }
 
 Dictionary Character::behavior_data() {
-    Dictionary data(true);
+    Dictionary data;
     Object *object = NULL;
     if (colliding.target_id != 0) {
         object = ObjectDB::get_instance(colliding.target_id);
@@ -298,12 +272,23 @@ bool Character::attack_by(Ref<HitStatus> p_hit_status, Character *from, bool fro
     if (has_hit_area && !from_hit_area) {
         return false;
     }else {
-        bool ret = call("attack_by", p_hit_status, from->cast_to<Object>());
-        if (ret && guard_point <= 0) {
-            hit_status = p_hit_status;
-        }
+        bool ret = call("attack_by", p_hit_status, Object::cast_to<Object>(from));
         return ret;
     }
+}
+
+void Character::set_hit_status(Ref<HitStatus> hs) {
+    if (hit_status != hs) {
+        if (hs == NULL) {
+            ProjectSettings::get_singleton()->emit_signal(COMBO_END_NAME, this);
+            combo_info.damage_reduction = 1;
+            combo_info.stun_reduction = 1;
+            combo_info.damage = 0;
+            combo_info.hit_count = 0;
+            combo_info.hit_stack.clear();
+        }
+    }
+    hit_status = hs;
 }
 
 bool Character::_attack_by(Ref<HitStatus> p_hit_status, Object *from) {
@@ -316,20 +301,76 @@ bool Character::_attack_by(Ref<HitStatus> p_hit_status, Object *from) {
         }
     }
     bool guard = guard_point > 0;
-    float nh = health - p_hit_status->get_damage();
+    float damage = p_hit_status->get_damage() * combo_info.damage_reduction;
+    p_hit_status->set_stun_time(p_hit_status->get_stun_time() * combo_info.stun_reduction);
+    p_hit_status->set_launcher_time(p_hit_status->get_launcher_time() * combo_info.stun_reduction);
+    float nh = health - damage;
 
     if (guard) {
-        nh = health - p_hit_status->get_damage() * (1-guard_percent);
+        nh = health - damage * (1-guard_percent);
         p_hit_status->set_hit_type(HitStatus::HS_GUARD);
-//        freeze(p_hit_status->get_freeze_time() * (1-guard_percent));
+        freeze(p_hit_status->get_freeze_time() * (1-guard_percent));
     }else {
-        set_hit_status(p_hit_status);
         behavior_root->reset(this);
         if (p_hit_status->get_face_me()) {
             if (p_hit_status->get_force().x > 0) {
                 set_face_left(true);
             }else if (p_hit_status->get_force().x < 0) {
                 set_face_left(false);
+            }
+        }
+        combo_info.damage += damage;
+        combo_info.hit_count += 1;
+        if (combo_info.hit_stack.size() > 0) {
+            if (combo_info.hit_stack[combo_info.hit_stack.size() - 1]->get_original_id() == p_hit_status->get_original_id()) {
+                goto combo_end;
+            }
+            for (int i = 0, t = combo_info.hit_stack.size(); i < t; ++i) {
+                if (combo_info.hit_stack[i]->get_hit_id() == p_hit_status->get_hit_id()) {
+                    combo_info.damage_reduction *= p_hit_status->get_damage_reduction();
+                    if (p_hit_status->get_damage_reduction() < 1) 
+                        combo_info.damage_reduction *= p_hit_status->get_damage_reduction();
+                    combo_info.stun_reduction *= p_hit_status->get_stun_reduction();
+                    if (p_hit_status->get_stun_reduction() < 1)
+                        combo_info.stun_reduction *= p_hit_status->get_stun_reduction();
+                    combo_info.hit_stack.push_back(p_hit_status);
+                    goto combo_end;
+                }
+            }
+        }
+        combo_info.damage_reduction *= p_hit_status->get_damage_reduction();
+        combo_info.stun_reduction *= p_hit_status->get_stun_reduction();
+        combo_info.hit_stack.push_back(p_hit_status);
+        
+        combo_end:
+        if (hit_status != p_hit_status) {
+            
+            // freeze(p_hit_status->get_freeze_time());
+            switch (p_hit_status->get_hit_type()) {
+                case HitStatus::HS_HIT_STUN:
+                    p_hit_status->set_life_time(p_hit_status->get_stun_time());
+                    break;
+                case HitStatus::HS_PURSUIT:
+                case HitStatus::HS_LAUNCHER:
+                    p_hit_status->set_life_time(p_hit_status->get_launcher_time());
+                    break;
+            }
+            
+            if (hit_status != NULL) {
+                HitStatus::HSType type = p_hit_status->get_hit_type();
+                HitStatus::HSType hit_type = hit_status->get_hit_type();
+                if (type <= HitStatus::HS_HIT_STUN) {
+                    if (hit_type > HitStatus::HS_HIT_STUN || !get_on_floor()) {
+                        p_hit_status->set_life_time(p_hit_status->get_launcher_time());
+                    }
+                }
+            }
+            if (hit_status == NULL) {
+                set_hit_status(p_hit_status);
+                ProjectSettings::get_singleton()->emit_signal(COMBO_BEGIN_NAME, this, from);
+            }else {
+                set_hit_status(p_hit_status);
+                ProjectSettings::get_singleton()->emit_signal(COMBO_CHANGE_NAME, this, from);
             }
         }
 //        freeze(p_hit_status->get_freeze_time());
@@ -351,110 +392,119 @@ Array Character::get_buffs() {
 
 void Character::_bind_methods() {
 
-    ObjectTypeDB::bind_method(_MD("set_visibility_path", "visibility_path"), &Character::set_visibility_path);
-    ObjectTypeDB::bind_method(_MD("get_visibility_path"), &Character::get_visibility_path);
-    ObjectTypeDB::bind_method(_MD("get_visibility:VisibilityNotifier2D"), &Character::get_visibility);
+    ProjectSettings::get_singleton()->add_user_signal(MethodInfo(COMBO_BEGIN_NAME, PropertyInfo(Variant::OBJECT, "hit_by"), PropertyInfo(Variant::OBJECT, "hit_to")));
+    ProjectSettings::get_singleton()->add_user_signal(MethodInfo(COMBO_CHANGE_NAME, PropertyInfo(Variant::OBJECT, "hit_by"), PropertyInfo(Variant::OBJECT, "hit_to")));
+    ProjectSettings::get_singleton()->add_user_signal(MethodInfo(COMBO_END_NAME, PropertyInfo(Variant::OBJECT, "hit_by")));
 
-    ObjectTypeDB::bind_method(_MD("set_behavior_tree_path", "tree_path"), &Character::set_behavior_tree_path);
-    ObjectTypeDB::bind_method(_MD("get_behavior_tree_path"), &Character::get_behavior_tree_path);
-    ObjectTypeDB::bind_method(_MD("get_behavior_tree:BehaviorNode"), &Character::get_behavior_tree);
-    ObjectTypeDB::bind_method(_MD("behavior_data:Dictionary"), &Character::behavior_data);
+    ClassDB::bind_method(D_METHOD("set_visibility_path", "visibility_path"), &Character::set_visibility_path);
+    ClassDB::bind_method(D_METHOD("get_visibility_path"), &Character::get_visibility_path);
+    ClassDB::bind_method(D_METHOD("get_visibility:VisibilityNotifier2D"), &Character::get_visibility);
 
-    ObjectTypeDB::bind_method(_MD("get_on_floor"), &Character::get_on_floor);
+    ClassDB::bind_method(D_METHOD("set_behavior_tree_path", "tree_path"), &Character::set_behavior_tree_path);
+    ClassDB::bind_method(D_METHOD("get_behavior_tree_path"), &Character::get_behavior_tree_path);
+    ClassDB::bind_method(D_METHOD("get_behavior_tree:BehaviorNode"), &Character::get_behavior_tree);
+    ClassDB::bind_method(D_METHOD("behavior_data:Dictionary"), &Character::behavior_data);
 
-    ObjectTypeDB::bind_method(_MD("set_move_vec", "mvoe_vec", "duration"), &Character::set_move_vec, DEFVAL(0));
+    ClassDB::bind_method(D_METHOD("get_on_floor"), &Character::get_on_floor);
 
-    ObjectTypeDB::bind_method(_MD("set_move", "move"), &Character::set_move);
-    ObjectTypeDB::bind_method(_MD("get_move"), &Character::get_move);
+    ClassDB::bind_method(D_METHOD("set_move_vec", "mvoe_vec", "duration"), &Character::set_move_vec, DEFVAL(0));
 
-    ObjectTypeDB::bind_method(_MD("stop_moving"), &Character::stop_moving);
+    ClassDB::bind_method(D_METHOD("set_move_vec_ex", "mvoe_vec", "reduction", "duration"), &Character::set_move_vec_ex, DEFVAL(0));
 
-    ObjectTypeDB::bind_method(_MD("set_anim_path", "anim_path"), &Character::set_anim_path);
-    ObjectTypeDB::bind_method(_MD("get_anim_path"), &Character::get_anim_path);
-    ObjectTypeDB::bind_method(_MD("get_anim_controller:AnimController"), &Character::get_anim_controller);
+    ClassDB::bind_method(D_METHOD("set_move", "move"), &Character::set_move);
+    ClassDB::bind_method(D_METHOD("get_move"), &Character::get_move);
 
-    ObjectTypeDB::bind_method(_MD("set_sprite_path", "sprite_path"), &Character::set_sprite_path);
-    ObjectTypeDB::bind_method(_MD("get_sprite_path"), &Character::get_sprite_path);
-    ObjectTypeDB::bind_method(_MD("get_sprite:Node2D"), &Character::get_sprite);
+    ClassDB::bind_method(D_METHOD("stop_moving"), &Character::stop_moving);
 
-    ObjectTypeDB::bind_method(_MD("set_left_ray_path", "left_ray_path"), &Character::set_left_ray_path);
-    ObjectTypeDB::bind_method(_MD("get_left_ray_path"), &Character::get_left_ray_path);
-    ObjectTypeDB::bind_method(_MD("get_left_ray:RayCast2D"), &Character::get_left_ray);
+    ClassDB::bind_method(D_METHOD("set_anim_path", "anim_path"), &Character::set_anim_path);
+    ClassDB::bind_method(D_METHOD("get_anim_path"), &Character::get_anim_path);
+    ClassDB::bind_method(D_METHOD("get_anim_controller:AnimController"), &Character::get_anim_controller);
 
-    ObjectTypeDB::bind_method(_MD("set_right_ray_path", "right_ray_path"), &Character::set_right_ray_path);
-    ObjectTypeDB::bind_method(_MD("get_right_ray_path"), &Character::get_right_ray_path);
-    ObjectTypeDB::bind_method(_MD("get_right_ray:RayCast2D"), &Character::get_right_ray);
+    ClassDB::bind_method(D_METHOD("set_sprite_path", "sprite_path"), &Character::set_sprite_path);
+    ClassDB::bind_method(D_METHOD("get_sprite_path"), &Character::get_sprite_path);
+    ClassDB::bind_method(D_METHOD("get_sprite:Node2D"), &Character::get_sprite);
 
-    ObjectTypeDB::bind_method(_MD("set_hit_status", "hit_status"), &Character::set_hit_status);
-    ObjectTypeDB::bind_method(_MD("get_hit_status:HitStatus"), &Character::get_hit_status);
+    ClassDB::bind_method(D_METHOD("set_left_ray_path", "left_ray_path"), &Character::set_left_ray_path);
+    ClassDB::bind_method(D_METHOD("get_left_ray_path"), &Character::get_left_ray_path);
+    ClassDB::bind_method(D_METHOD("get_left_ray:RayCast2D"), &Character::get_left_ray);
 
-    ObjectTypeDB::bind_method(_MD("set_can_buff", "can_buff"), &Character::set_can_buff);
-    ObjectTypeDB::bind_method(_MD("get_can_buff"), &Character::get_can_buff);
+    ClassDB::bind_method(D_METHOD("set_right_ray_path", "right_ray_path"), &Character::set_right_ray_path);
+    ClassDB::bind_method(D_METHOD("get_right_ray_path"), &Character::get_right_ray_path);
+    ClassDB::bind_method(D_METHOD("get_right_ray:RayCast2D"), &Character::get_right_ray);
 
-    ObjectTypeDB::bind_method(_MD("set_can_turn", "can_turn"), &Character::set_can_turn);
-    ObjectTypeDB::bind_method(_MD("get_can_turn"), &Character::get_can_turn);
-    ObjectTypeDB::bind_method(_MD("lock_face"), &Character::lock_face);
-    ObjectTypeDB::bind_method(_MD("unlock_face"), &Character::unlock_face);
+    ClassDB::bind_method(D_METHOD("set_hit_status", "hit_status"), &Character::set_hit_status);
+    ClassDB::bind_method(D_METHOD("get_hit_status:HitStatus"), &Character::get_hit_status);
 
-    ObjectTypeDB::bind_method(_MD("set_face_left", "face_left"), &Character::set_face_left);
-    ObjectTypeDB::bind_method(_MD("get_face_left"), &Character::get_face_left);
+    ClassDB::bind_method(D_METHOD("set_can_buff", "can_buff"), &Character::set_can_buff);
+    ClassDB::bind_method(D_METHOD("get_can_buff"), &Character::get_can_buff);
 
-    ObjectTypeDB::bind_method(_MD("freeze", "time"), &Character::freeze);
-    ObjectTypeDB::bind_method(_MD("get_freeze_time"), &Character::get_freeze_time);
+    ClassDB::bind_method(D_METHOD("set_can_turn", "can_turn"), &Character::set_can_turn);
+    ClassDB::bind_method(D_METHOD("get_can_turn"), &Character::get_can_turn);
+    ClassDB::bind_method(D_METHOD("lock_face"), &Character::lock_face);
+    ClassDB::bind_method(D_METHOD("unlock_face"), &Character::unlock_face);
 
-    ObjectTypeDB::bind_method(_MD("set_guard_point", "guard_point"), &Character::set_guard_point);
-    ObjectTypeDB::bind_method(_MD("get_guard_point"), &Character::get_guard_point);
+    ClassDB::bind_method(D_METHOD("set_face_left", "face_left"), &Character::set_face_left);
+    ClassDB::bind_method(D_METHOD("get_face_left"), &Character::get_face_left);
 
-    ObjectTypeDB::bind_method(_MD("set_reset_guard_point", "reset_guard_point"), &Character::set_reset_guard_point);
-    ObjectTypeDB::bind_method(_MD("get_reset_guard_point"), &Character::get_reset_guard_point);
+    ClassDB::bind_method(D_METHOD("freeze", "time"), &Character::freeze);
+    ClassDB::bind_method(D_METHOD("get_freeze_time"), &Character::get_freeze_time);
 
-    ObjectTypeDB::bind_method(_MD("set_max_guard_point", "max_guard_point"), &Character::set_max_guard_point);
-    ObjectTypeDB::bind_method(_MD("get_max_guard_point"), &Character::get_max_guard_point);
+    ClassDB::bind_method(D_METHOD("set_guard_point", "guard_point"), &Character::set_guard_point);
+    ClassDB::bind_method(D_METHOD("get_guard_point"), &Character::get_guard_point);
 
-    ObjectTypeDB::bind_method(_MD("set_guard_percent", "guard_percent"), &Character::set_guard_percent);
-    ObjectTypeDB::bind_method(_MD("get_guard_percent"), &Character::get_guard_percent);
+    ClassDB::bind_method(D_METHOD("set_reset_guard_point", "reset_guard_point"), &Character::set_reset_guard_point);
+    ClassDB::bind_method(D_METHOD("get_reset_guard_point"), &Character::get_reset_guard_point);
 
-    ObjectTypeDB::bind_method(_MD("set_can_attack", "can_attack"), &Character::set_can_attack);
-    ObjectTypeDB::bind_method(_MD("get_can_attack"), &Character::get_can_attack);
+    ClassDB::bind_method(D_METHOD("set_max_guard_point", "max_guard_point"), &Character::set_max_guard_point);
+    ClassDB::bind_method(D_METHOD("get_max_guard_point"), &Character::get_max_guard_point);
 
-    ObjectTypeDB::bind_method(_MD("set_health", "health"), &Character::set_health);
-    ObjectTypeDB::bind_method(_MD("get_health"), &Character::get_health);
+    ClassDB::bind_method(D_METHOD("set_guard_percent", "guard_percent"), &Character::set_guard_percent);
+    ClassDB::bind_method(D_METHOD("get_guard_percent"), &Character::get_guard_percent);
 
-    ObjectTypeDB::bind_method(_MD("set_max_health", "max_health"), &Character::set_max_health);
-    ObjectTypeDB::bind_method(_MD("get_max_health"), &Character::get_max_health);
+    ClassDB::bind_method(D_METHOD("set_can_attack", "can_attack"), &Character::set_can_attack);
+    ClassDB::bind_method(D_METHOD("get_can_attack"), &Character::get_can_attack);
 
-    ObjectTypeDB::bind_method(_MD("attack_by", "hit_status:HitStatus", "from:Character"), &Character::_attack_by);
+    ClassDB::bind_method(D_METHOD("set_health", "health"), &Character::set_health);
+    ClassDB::bind_method(D_METHOD("get_health"), &Character::get_health);
 
-    ObjectTypeDB::bind_method(_MD("_on_enter_screen"), &Character::_on_enter_screen);
-    ObjectTypeDB::bind_method(_MD("_on_exit_screen"), &Character::_on_exit_screen);
+    ClassDB::bind_method(D_METHOD("set_max_health", "max_health"), &Character::set_max_health);
+    ClassDB::bind_method(D_METHOD("get_max_health"), &Character::get_max_health);
 
-    ObjectTypeDB::bind_method(_MD("kill"), &Character::kill);
+    ClassDB::bind_method(D_METHOD("attack_by", "hit_status:HitStatus", "from:Character"), &Character::_attack_by);
+
+    ClassDB::bind_method(D_METHOD("_on_enter_screen"), &Character::_on_enter_screen);
+    ClassDB::bind_method(D_METHOD("_on_exit_screen"), &Character::_on_exit_screen);
+    
+    ClassDB::bind_method(D_METHOD("get_combo_damage"), &Character::get_combo_damage);
+    ClassDB::bind_method(D_METHOD("get_combo_hit"), &Character::get_combo_hit);
+
+    ClassDB::bind_method(D_METHOD("kill"), &Character::kill);
 
     ADD_SIGNAL(MethodInfo("health_recovery", PropertyInfo(Variant::REAL, "new_health")));
     ADD_SIGNAL(MethodInfo("health_down", PropertyInfo(Variant::REAL, "new_health")));
     ADD_SIGNAL(MethodInfo("guard_point_change", PropertyInfo(Variant::REAL, "guard_point")));
     ADD_SIGNAL(MethodInfo("guard_break", PropertyInfo(Variant::REAL, "hit_status", PROPERTY_HINT_RESOURCE_TYPE, "HitStatus")));
 
-    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/sprite" ), _SCS("set_sprite_path"),_SCS("get_sprite_path") );
-    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/behavior_tree" ), _SCS("set_behavior_tree_path"),_SCS("get_behavior_tree_path") );
-    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/visibility_path" ), _SCS("set_visibility_path"),_SCS("get_visibility_path") );
-    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/left_ray" ), _SCS("set_left_ray_path"),_SCS("get_left_ray_path") );
-    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/right_ray" ), _SCS("set_right_ray_path"),_SCS("get_right_ray_path") );
-    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/anim_path" ), _SCS("set_anim_path"),_SCS("get_anim_path") );
+    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/sprite" ), "set_sprite_path","get_sprite_path");
+    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/behavior_tree" ), "set_behavior_tree_path","get_behavior_tree_path");
+    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/visibility_path" ), "set_visibility_path","get_visibility_path");
+    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/left_ray" ), "set_left_ray_path","get_left_ray_path");
+    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/right_ray" ), "set_right_ray_path","get_right_ray_path");
+    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "platform/anim_path" ), "set_anim_path","get_anim_path");
 
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/can_buff" ), _SCS("set_can_buff"),_SCS("get_can_buff" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/can_attack" ), _SCS("set_can_attack"),_SCS("get_can_attack" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/can_turn" ), _SCS("set_can_turn"),_SCS("get_can_turn" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/face_left" ), _SCS("set_face_left"),_SCS("get_face_left" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::REAL, "guard/point" ), _SCS("set_guard_point"),_SCS("get_guard_point" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::REAL, "guard/reset" ), _SCS("set_reset_guard_point"),_SCS("get_reset_guard_point" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::REAL, "guard/max" ), _SCS("set_max_guard_point"),_SCS("get_max_guard_point" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::REAL, "guard/guard_percent" ), _SCS("set_guard_percent"),_SCS("get_guard_percent" ) );
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/can_buff" ), "set_can_buff","get_can_buff");
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/can_attack" ), "set_can_attack","get_can_attack");
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/can_turn" ), "set_can_turn","get_can_turn");
+    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "character/face_left" ), "set_face_left","get_face_left");
+    ADD_PROPERTY( PropertyInfo( Variant::REAL, "guard/point" ), "set_guard_point","get_guard_point");
+    ADD_PROPERTY( PropertyInfo( Variant::REAL, "guard/reset" ), "set_reset_guard_point","get_reset_guard_point");
+    ADD_PROPERTY( PropertyInfo( Variant::REAL, "guard/max" ), "set_max_guard_point","get_max_guard_point");
+    ADD_PROPERTY( PropertyInfo( Variant::REAL, "guard/guard_percent" ), "set_guard_percent","get_guard_percent");
 
-    ADD_PROPERTY( PropertyInfo( Variant::REAL, "status/health" ), _SCS("set_health"),_SCS("get_health" ) );
-    ADD_PROPERTY( PropertyInfo( Variant::REAL, "status/max_health" ), _SCS("set_max_health"),_SCS("get_max_health" ) );
+    ADD_PROPERTY( PropertyInfo( Variant::REAL, "status/health" ), "set_health","get_health");
+    ADD_PROPERTY( PropertyInfo( Variant::REAL, "status/max_health" ), "set_max_health","get_max_health");
 
-    ADD_PROPERTY( PropertyInfo( Variant::VECTOR2, "move" ), _SCS("set_move"), _SCS("get_move") );
+    ADD_PROPERTY( PropertyInfo( Variant::VECTOR2, "move" ), "set_move", "get_move");
 
     BIND_VMETHOD( MethodInfo("kill") );
     BIND_VMETHOD( MethodInfo("_step", PropertyInfo(Variant::DICTIONARY,"env")) );

@@ -7,7 +7,7 @@
 #include "tween_easing.h"
 #include "../../core/os/os.h"
 #include "../../scene/main/viewport.h"
-#include "../../scene/main/scene_main_loop.h"
+#include <core/os/main_loop.h>
 
 //===================TweenNode
 
@@ -91,31 +91,11 @@ Variant TweenProperty::lerp(Variant from, Variant to, float per) {
         }
             break;
 
-        case Variant::MATRIX3:
+        case Variant::TRANSFORM2D:
         {
-            Matrix3 i = from;
-            Matrix3 d = to;
-            Matrix3 r;
-
-            APPLY_EQUATION(elements[0][0]);
-            APPLY_EQUATION(elements[0][1]);
-            APPLY_EQUATION(elements[0][2]);
-            APPLY_EQUATION(elements[1][0]);
-            APPLY_EQUATION(elements[1][1]);
-            APPLY_EQUATION(elements[1][2]);
-            APPLY_EQUATION(elements[2][0]);
-            APPLY_EQUATION(elements[2][1]);
-            APPLY_EQUATION(elements[2][2]);
-
-            result = r;
-        }
-            break;
-
-        case Variant::MATRIX32:
-        {
-            Matrix3 i = from;
-            Matrix3 d = to;
-            Matrix3 r;
+            Transform2D i = from;
+            Transform2D d = to;
+            Transform2D r;
 
             APPLY_EQUATION(elements[0][0]);
             APPLY_EQUATION(elements[0][1]);
@@ -141,15 +121,15 @@ Variant TweenProperty::lerp(Variant from, Variant to, float per) {
             result = r;
         }
             break;
-        case Variant::_AABB:
+        case Variant::RECT3:
         {
-            AABB i = from;
-            AABB d = to;
-            AABB r;
+            Rect3 i = from;
+            Rect3 d = to;
+            Rect3 r;
 
-            APPLY_EQUATION(pos.x);
-            APPLY_EQUATION(pos.y);
-            APPLY_EQUATION(pos.z);
+            APPLY_EQUATION(position.x);
+            APPLY_EQUATION(position.y);
+            APPLY_EQUATION(position.z);
             APPLY_EQUATION(size.x);
             APPLY_EQUATION(size.y);
             APPLY_EQUATION(size.z);
@@ -308,18 +288,18 @@ TweenAction::~TweenAction() {
 }
 
 void TweenAction::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("add_method:TweenAction", "method_name", "from", "to"),&TweenAction::add_method);
-    ObjectTypeDB::bind_method(_MD("add_property:TweenAction", "property_name", "from", "to"),&TweenAction::add_property);
-    ObjectTypeDB::bind_method(_MD("add_callback:TweenAction", "target", "method_name", "step"),&TweenAction::add_callback);
-    ObjectTypeDB::bind_method(_MD("cancel"),&TweenAction::cancel);
-    ObjectTypeDB::bind_method(_MD("end"),&TweenAction::end);
-    ObjectTypeDB::bind_method(_MD("set_easing:TweenAction", "easing"),&TweenAction::set_easing);
-    ObjectTypeDB::bind_method(_MD("get_easing"),&TweenAction::get_easing);
-    ObjectTypeDB::bind_method(_MD("get_total_time"),&TweenAction::get_total_time);
-    ObjectTypeDB::bind_method(_MD("get_delta_time"),&TweenAction::get_delta_time);
-    ObjectTypeDB::bind_method(_MD("get_delay_time"),&TweenAction::get_delay_time);
-    ObjectTypeDB::bind_method(_MD("set_delay_time:TweenAction", "delay_time"),&TweenAction::set_delay_time);
-    ObjectTypeDB::bind_method(_MD("_on_target_exit"), &TweenAction::_on_target_exit);
+    ClassDB::bind_method(D_METHOD("add_method:TweenAction", "method_name", "from", "to"),&TweenAction::add_method);
+    ClassDB::bind_method(D_METHOD("add_property:TweenAction", "property_name", "from", "to"),&TweenAction::add_property);
+    ClassDB::bind_method(D_METHOD("add_callback:TweenAction", "target", "method_name", "step"),&TweenAction::add_callback);
+    ClassDB::bind_method(D_METHOD("cancel"),&TweenAction::cancel);
+    ClassDB::bind_method(D_METHOD("end"),&TweenAction::end);
+    ClassDB::bind_method(D_METHOD("set_easing:TweenAction", "easing"),&TweenAction::set_easing);
+    ClassDB::bind_method(D_METHOD("get_easing"),&TweenAction::get_easing);
+    ClassDB::bind_method(D_METHOD("get_total_time"),&TweenAction::get_total_time);
+    ClassDB::bind_method(D_METHOD("get_delta_time"),&TweenAction::get_delta_time);
+    ClassDB::bind_method(D_METHOD("get_delay_time"),&TweenAction::get_delay_time);
+    ClassDB::bind_method(D_METHOD("set_delay_time:TweenAction", "delay_time"),&TweenAction::set_delay_time);
+    ClassDB::bind_method(D_METHOD("_on_target_exit"), &TweenAction::_on_target_exit);
 
     ADD_SIGNAL( MethodInfo("finished") );
     ADD_SIGNAL( MethodInfo("update", PropertyInfo(Variant::REAL, "progress")) );
@@ -334,20 +314,26 @@ void TweenAction::end() {
 
 //==================NewTween
 
+NewTween::~NewTween() {
+    if (tween_node) {
+        memdelete(tween_node);
+    }
+}
+
 Ref<TweenAction> NewTween::to(Object *target, float during) {
     const String tween_key = "new_tween";
     MainLoop *main_loop = OS::get_singleton()->get_main_loop();
-    SceneTree *tree = main_loop->cast_to<SceneTree>();
+    SceneTree *tree = Object::cast_to<SceneTree>(main_loop);
     ERR_FAIL_COND_V(tree == NULL, NULL);
 
     Viewport *viewport = tree->get_root();
     ERR_FAIL_COND_V(viewport == NULL, NULL);
-    if (tweenNode == NULL) {
-        tweenNode = memnew(TweenNode);
-        tweenNode->set_name(tween_key);
+    if (tween_node == NULL) {
+        tween_node = memnew(TweenNode);
+        tween_node->set_name(tween_key);
 
         Vector<Variant> vector;
-        vector.push_back(Variant(tweenNode));
+        vector.push_back(Variant(tween_node));
 
         tree->connect(StringName("idle_frame"), this, StringName("_add_node"), vector, 0);
 
@@ -357,15 +343,15 @@ Ref<TweenAction> NewTween::to(Object *target, float during) {
     Ref<TweenAction> action = memnew(TweenAction);
     action->total_time = during;
     action->set_target(target);
-    tweenNode->actions.push_back(action);
-    tweenNode->check_queue();
+    tween_node->actions.push_back(action);
+    tween_node->check_queue();
     return action;
 }
 
 void NewTween::cancel(Object *target) {
-    if (tweenNode != NULL) {
-        for (int i = 0, t = tweenNode->actions.size(); i < t; ++i) {
-            Ref<TweenAction> action = tweenNode->actions[i];
+    if (tween_node != NULL) {
+        for (int i = 0, t = tween_node->actions.size(); i < t; ++i) {
+            Ref<TweenAction> action = tween_node->actions[i];
             if (target == action->target) {
                 action->cancel();
             }
@@ -375,17 +361,17 @@ void NewTween::cancel(Object *target) {
 
 void NewTween::_add_node(Object *node) {
     MainLoop *main_loop = OS::get_singleton()->get_main_loop();
-    SceneTree *tree = main_loop->cast_to<SceneTree>();
+    SceneTree *tree = Object::cast_to<SceneTree>(main_loop);
     ERR_FAIL_COND(tree == NULL);
 
     tree->disconnect("idle_frame", this, "_add_node");
-    tree->get_root()->add_child(node->cast_to<TweenNode>());
+    tree->get_root()->add_child(Object::cast_to<TweenNode>(node));
 }
 
 void NewTween::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("to:TweenAction", "target", "during"),&NewTween::to);
-    ObjectTypeDB::bind_method(_MD("cancel", "target"),&NewTween::cancel);
-    ObjectTypeDB::bind_method(_MD("_add_node", "node"),&NewTween::_add_node);
+    ClassDB::bind_method(D_METHOD("to:TweenAction", "target", "during"),&NewTween::to);
+    ClassDB::bind_method(D_METHOD("cancel", "target"),&NewTween::cancel);
+    ClassDB::bind_method(D_METHOD("_add_node", "node"),&NewTween::_add_node);
 
     BIND_CONSTANT(TWEEN_EASING_LINEAR);
     BIND_CONSTANT(TWEEN_EASING_QUADRATIC_IN);

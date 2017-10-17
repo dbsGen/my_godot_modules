@@ -8,12 +8,12 @@
 #include "character.h"
 
 void KillZone::_on_body_enter(Object *body) {
-    Character *cha = body->cast_to<Character>();
+    Character *cha = Object::cast_to<Character>(body);
     if (cha) {
         cha->call("kill");
     }
 }
 
 void KillZone::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("_on_body_enter", "body"), &KillZone::_on_body_enter);
+    ClassDB::bind_method(D_METHOD("_on_body_enter", "body"), &KillZone::_on_body_enter);
 }

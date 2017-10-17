@@ -1,17 +1,17 @@
 #include "timebnode.h"
 
 void TimerBNode::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("get_delay"), &TimerBNode::get_delay);
-    ObjectTypeDB::bind_method(_MD("set_delay", "delay"), &TimerBNode::set_delay);
+    ClassDB::bind_method(D_METHOD("get_delay"), &TimerBNode::get_delay);
+    ClassDB::bind_method(D_METHOD("set_delay", "delay"), &TimerBNode::set_delay);
 
-    ObjectTypeDB::bind_method(_MD("get_time"), &TimerBNode::get_time);
-    ObjectTypeDB::bind_method(_MD("time_out"), &TimerBNode::time_out);
-    ObjectTypeDB::bind_method(_MD("cancel"), &TimerBNode::cancel);
+    ClassDB::bind_method(D_METHOD("get_time"), &TimerBNode::get_time);
+    ClassDB::bind_method(D_METHOD("time_out"), &TimerBNode::time_out);
+    ClassDB::bind_method(D_METHOD("cancel"), &TimerBNode::cancel);
 
-    ObjectTypeDB::bind_method(_MD("recount"), &TimerBNode::recount);
-    ObjectTypeDB::bind_method(_MD("recount_to", "time"), &TimerBNode::recount_to);
+    ClassDB::bind_method(D_METHOD("recount"), &TimerBNode::recount);
+    ClassDB::bind_method(D_METHOD("recount_to", "time"), &TimerBNode::recount_to);
 
-    ADD_PROPERTY( PropertyInfo( Variant::REAL, "timer/delay" ), _SCS("set_delay"),_SCS("get_delay" ) );
+    ADD_PROPERTY( PropertyInfo( Variant::REAL, "timer/delay" ), "set_delay","get_delay");
     BIND_VMETHOD( MethodInfo("_during_behavior", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY,"env")) );
     BIND_VMETHOD( MethodInfo("_timeout_behavior", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY,"env")) );
     BIND_VMETHOD( MethodInfo("_cancel_behavior", PropertyInfo(Variant::OBJECT,"target"), PropertyInfo(Variant::DICTIONARY,"env")) );

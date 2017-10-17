@@ -10,7 +10,7 @@
 #include "../../../core/math/math_2d.h"
 
 class Gravity : public BehaviorNode {
-    OBJ_TYPE(Gravity, BehaviorNode);
+    GDCLASS(Gravity, BehaviorNode);
 private:
     float accelerated;
     Vector2 gravity_direction;

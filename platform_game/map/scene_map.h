@@ -9,7 +9,7 @@
 #include "../../../scene/resources/texture.h"
 
 class SceneMap : public Resource {
-    OBJ_TYPE(SceneMap, Resource);
+    GDCLASS(SceneMap, Resource);
 private:
     int start_x;
     int start_y;

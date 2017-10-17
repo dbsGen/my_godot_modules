@@ -27,7 +27,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 #include "register_types.h"
-#include "object_type_db.h"
+#include "class_db.h"
 #include "behaviornode.h"
 #include "timebnode.h"
 #include "probabilitybnode.h"
@@ -35,11 +35,11 @@
 #include "statusbnode.h"
 
 void register_behaviornode_types() {
-	ObjectTypeDB::register_type<BehaviorNode>();
-    ObjectTypeDB::register_type<TimerBNode>();
-    ObjectTypeDB::register_type<ProbabilityBNode>();
-    ObjectTypeDB::register_type<LinkerBNode>();
-    ObjectTypeDB::register_type<StatusBNode>();
+	ClassDB::register_class<BehaviorNode>();
+    ClassDB::register_class<TimerBNode>();
+    ClassDB::register_class<ProbabilityBNode>();
+    ClassDB::register_class<LinkerBNode>();
+    ClassDB::register_class<StatusBNode>();
 }
 
 

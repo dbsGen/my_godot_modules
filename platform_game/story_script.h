@@ -12,7 +12,7 @@
 class StoryScript;
 
 class StoryScriptNode : public Node {
-    OBJ_TYPE(StoryScriptNode, Node);
+    GDCLASS(StoryScriptNode, Node);
 private:
     NodePath _camera_path;
     Node *_camera;
@@ -38,11 +38,11 @@ public:
     bool run();
     void over();
 
-    StoryScriptNode() {_params = Dictionary(true);}
+    StoryScriptNode() {}
 };
 
 class StoryScript : public Resource {
-    OBJ_TYPE(StoryScript, Resource);
+    GDCLASS(StoryScript, Resource);
 private:
     Node *_camera;
     Dictionary _params;

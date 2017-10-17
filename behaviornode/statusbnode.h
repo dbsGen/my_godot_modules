@@ -9,7 +9,7 @@
 #include "../../core/typedefs.h"
 
 class StatusBNode : public BehaviorNode {
-    OBJ_TYPE(StatusBNode, BehaviorNode);
+    GDCLASS(StatusBNode, BehaviorNode);
 private:
     int _old_selected;
     int _selected;

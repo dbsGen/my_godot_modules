@@ -11,7 +11,7 @@
 #include "../../core/ustring.h"
 
 class ParallaxBG : public Node2D {
-    OBJ_TYPE(ParallaxBG, Node2D);
+    GDCLASS(ParallaxBG, Node2D);
 private:
     bool set_camera;
     Vector2 camera_base_position;
@@ -19,7 +19,7 @@ private:
     Vector2 scroll;
     String group_name;
 
-    void _camera_moved(const Matrix32& p_transform);
+    void _camera_moved(const Transform2D& p_transform);
     static void _bind_methods();
 
 protected:

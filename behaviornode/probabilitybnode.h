@@ -4,7 +4,7 @@
 #include "behaviornode.h"
 
 class ProbabilityBNode : public BehaviorNode {
-OBJ_TYPE(ProbabilityBNode, BehaviorNode);
+    GDCLASS(ProbabilityBNode, BehaviorNode);
 private:
     float probability;
 protected:

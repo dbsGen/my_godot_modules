@@ -11,7 +11,7 @@
 class Character;
 
 class Buff : public Reference {
-    OBJ_TYPE(Buff, Reference);
+    GDCLASS(Buff, Reference);
 private:
     int time_count;
     int time_skip;

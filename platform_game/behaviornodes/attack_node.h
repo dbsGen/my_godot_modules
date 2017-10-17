@@ -9,7 +9,7 @@
 #include "../attack_area.h"
 
 class AttackNode : public Action {
-OBJ_TYPE(AttackNode, Action);
+    GDCLASS(AttackNode, Action);
 private:
     AttackArea  *attack_area;
     NodePath    attack_area_path;

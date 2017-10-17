@@ -27,28 +27,29 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 #include "register_types.h"
-#include "object_type_db.h"
 #include "new_timer.h"
-#include "core/globals.h"
+#include "core/project_settings.h"
 #include "new_tween.h"
 #include "inputstorage.h"
 #include "trail_2d.h"
 #include "phantom.h"
+#include "remote_pos_rot_2d.h"
 
 void register_my_extends_types() {
-    Globals::get_singleton()->add_singleton(Globals::Singleton("NewTimer", NewTimer::get_singleton()));
-    Globals::get_singleton()->add_singleton(Globals::Singleton("NewTween", memnew(NewTween)));
-    Globals::get_singleton()->add_singleton(Globals::Singleton("InputStorage", InputStorage::get_singleton()));
-	ObjectTypeDB::register_type<NewTimer>();
-    ObjectTypeDB::register_type<TimerObject>();
-    ObjectTypeDB::register_type<NewTween>();
-    ObjectTypeDB::register_type<TweenAction>();
-    ObjectTypeDB::register_type<InputNode>();
-    ObjectTypeDB::register_type<InputStorage>();
-    ObjectTypeDB::register_type<InputStorageNode>();
-    ObjectTypeDB::register_type<TrailPoint2D>();
-    ObjectTypeDB::register_type<TrailLine2D>();
-    ObjectTypeDB::register_type<Phantom>();
+    ProjectSettings::get_singleton()->add_singleton(ProjectSettings::Singleton("NewTimer", NewTimer::get_singleton()));
+    ProjectSettings::get_singleton()->add_singleton(ProjectSettings::Singleton("NewTween", memnew(NewTween)));
+    ProjectSettings::get_singleton()->add_singleton(ProjectSettings::Singleton("InputStorage", InputStorage::get_singleton()));
+	ClassDB::register_class<NewTimer>();
+    ClassDB::register_class<TimerObject>();
+    ClassDB::register_class<NewTween>();
+    ClassDB::register_class<TweenAction>();
+    ClassDB::register_class<InputNode>();
+    ClassDB::register_class<InputStorage>();
+    ClassDB::register_class<InputStorageNode>();
+    ClassDB::register_class<TrailPoint2D>();
+    ClassDB::register_class<TrailLine2D>();
+    ClassDB::register_class<Phantom>();
+    ClassDB::register_class<RemotePosRot2D>();
 }
 
 void unregister_my_extends_types() {

@@ -6,7 +6,7 @@
 #include "../character.h"
 
 BehaviorNode::Status BuffProcess::_behavior(const Variant &target, Dictionary env) {
-    Character *character = ((Object*)target)->cast_to<Character>();
+    Character *character = Object::cast_to<Character>((Object*)target);
     Array buffs = character->get_buffs();
     for (int i = 0, t = buffs.size(); i < t; ++i) {
         Ref<Buff> buff = buffs[i];

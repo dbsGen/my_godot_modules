@@ -10,7 +10,7 @@
 #include "../../../core/typedefs.h"
 
 class FollowingCamera : public Camera2D {
-    OBJ_TYPE( FollowingCamera, Camera2D );
+    GDCLASS( FollowingCamera, Camera2D );
 private:
 
     Node2D *target;
@@ -32,7 +32,7 @@ protected:
 
     void _notification(int p_what);
     static void _bind_methods();
-    virtual Matrix32 get_camera_transform();
+    virtual Transform2D get_camera_transform();
 public:
 
     _FORCE_INLINE_ NodePath get_target_path() {return target_path;}

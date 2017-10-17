@@ -31,7 +31,7 @@ void LinkerBNode::_reset(const Variant &target) {
 
 void LinkerBNode::update_link_path() {
     if (is_inside_tree() && link_path != NodePath() && has_node(link_path)) {
-        link_target = get_node(link_path)->cast_to<BehaviorNode>();
+        link_target = Object::cast_to<BehaviorNode>(get_node(link_path));
     }else {
         link_target = NULL;
     }
@@ -47,10 +47,10 @@ void LinkerBNode::_notification(int p_notification) {
 }
 
 void LinkerBNode::_bind_methods() {
-    ObjectTypeDB::bind_method(_MD("get_link_target"),&LinkerBNode::get_link_target);
+    ClassDB::bind_method(D_METHOD("get_link_target"),&LinkerBNode::get_link_target);
 
-    ObjectTypeDB::bind_method(_MD("set_link_path","link_path"),&LinkerBNode::set_link_path);
-    ObjectTypeDB::bind_method(_MD("get_link_path"),&LinkerBNode::get_link_path);
+    ClassDB::bind_method(D_METHOD("set_link_path","link_path"),&LinkerBNode::set_link_path);
+    ClassDB::bind_method(D_METHOD("get_link_path"),&LinkerBNode::get_link_path);
 
-    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "link/path" ), _SCS("set_link_path"),_SCS("get_link_path" ) );
+    ADD_PROPERTY( PropertyInfo( Variant::NODE_PATH, "link/path" ), "set_link_path","get_link_path");
 }
